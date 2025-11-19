@@ -37,7 +37,7 @@ workflows:
             image: docker.io/library/node:18
             script:
               - rm -rf frontend/build/*
-              - cp -r /artifacts/build-frontend/build/* frontend/build/
+              - cp -r /artifacts/build-frontend/frontend/build/* frontend/build/
               - git config --global user.email "ci@sourcecraft.dev"
               - git config --global user.name "SourceCraft CI"
               - git add frontend/build/
