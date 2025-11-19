@@ -30,6 +30,8 @@ workflows:
               - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
               - echo "Backend build completed"
       - name: deploy-site
+        needs:
+          - build-frontend
         cubes:
           - name: deploy-react-app
             image: docker.io/library/node:18
