@@ -1,0 +1,37 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List
+from app import crud, schemas
+from app.database.database import get_db
+
+router = APIRouter()
+
+@router.post("/", response_model=schemas.Goal)
+def create_goal(goal: schemas.GoalCreate, user_id: int, db: Session = Depends(get_db)):
+    return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
+
+@router.get("/{goal_id}", response_model=schemas.Goal)
+def read_goal(goal_id: int, db: Session = Depends(get_db)):
+    db_goal = crud.goal.get_goal(db, goal_id=goal_id)
+    if db_goal is None:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return db_goal
+
+@router.get("/", response_model=List[schemas.Goal])
+def read_goals(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    goals = crud.goal.get_goals(db, user_id=user_id, skip=skip, limit=limit)
+    return goals
+
+@router.put("/{goal_id}", response_model=schemas.Goal)
+def update_goal(goal_id: int, goal: schemas.GoalUpdate, db: Session = Depends(get_db)):
+    db_goal = crud.goal.update_goal(db, goal_id=goal_id, goal=goal)
+    if db_goal is None:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return db_goal
+
+@router.delete("/{goal_id}", response_model=schemas.Goal)
+def delete_goal(goal_id: int, db: Session = Depends(get_db)):
+    db_goal = crud.goal.delete_goal(db, goal_id=goal_id)
+    if db_goal is None:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return db_goal
