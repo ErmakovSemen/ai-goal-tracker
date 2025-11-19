@@ -1,0 +1,86 @@
+.goal-detail {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.goal-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 300;
+  color: #333333;
+}
+
+.mascot-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.goal-progress-section {
+  margin-bottom: 30px;
+}
+
+.goal-progress-section h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #333333;
+}
+
+.goal-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.chat-section h2,
+.milestones-section h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #333333;
+}
+
+.milestones-list {
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.milestone-item:last-child {
+  border-bottom: none;
+}
+
+.milestone-item.completed .milestone-title {
+  text-decoration: line-through;
+  color: #999999;
+}
+
+.milestone-title {
+  margin-left: 10px;
+  font-size: 1rem;
+  color: #333333;
+}
+
+@media (max-width: 768px) {
+  .goal-content {
+    grid-template-columns: 1fr;
+  }
+}

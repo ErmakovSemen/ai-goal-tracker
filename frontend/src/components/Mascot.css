@@ -1,0 +1,103 @@
+.mascot {
+  display: inline-block;
+  position: relative;
+}
+
+.mascot-body {
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.mascot-ears {
+  position: absolute;
+  top: -10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.ear {
+  width: 20px;
+  height: 30px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+}
+
+.mascot-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+}
+
+.mascot-eyes {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.eye {
+  width: 8px;
+  height: 8px;
+  background-color: #333;
+  border-radius: 50%;
+}
+
+.mascot-nose {
+  width: 12px;
+  height: 8px;
+  background-color: #333;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.mascot-mouth {
+  width: 20px;
+  height: 10px;
+  border-bottom: 2px solid #333;
+  border-radius: 0 0 50% 50%;
+  margin: 5px auto 0;
+}
+
+.mascot-small {
+  width: 50px;
+  height: 50px;
+}
+
+.mascot-medium {
+  width: 80px;
+  height: 80px;
+}
+
+.mascot-large {
+  width: 120px;
+  height: 120px;
+}
+
+.mascot-happy .mascot-mouth {
+  border-radius: 50%;
+  border-top: 2px solid #333;
+  border-bottom: none;
+}
+
+.mascot-sad .mascot-mouth {
+  border-radius: 50%;
+  border-bottom: 2px solid #333;
+  border-top: none;
+  transform: rotate(180deg);
+}
+
+.mascot-excited .mascot-eyes {
+  height: 12px;
+}
+
+.mascot-excited .eye {
+  height: 12px;
+  width: 12px;
+}
