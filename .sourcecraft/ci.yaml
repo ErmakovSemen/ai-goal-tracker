@@ -1,8 +1,10 @@
 on:
   push:
-    - workflows: [build-and-deploy]
-      filter:
-        branches: ["main"]
+    workflows:
+      - build-and-deploy
+    filter:
+      branches:
+        - "main"
 
 workflows:
   build-and-deploy:
