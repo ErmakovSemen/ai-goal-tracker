@@ -27,3 +27,15 @@ workflows:
               - pip install --upgrade pip
               - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
               - echo "Backend build completed"
+      - name: deploy-site
+        cubes:
+          - name: deploy-react-app
+            image: docker.io/library/node:18
+            script:
+              - rm -rf frontend/build/*
+              - cp -r /artifacts/build-react-app/frontend/build/* frontend/build/
+              - git config --global user.email "ci@sourcecraft.dev"
+              - git config --global user.name "SourceCraft CI"
+              - git add frontend/build/
+              - git commit -m "Deploy site: update frontend build files" || echo "No changes to commit"
+              - git push origin main
