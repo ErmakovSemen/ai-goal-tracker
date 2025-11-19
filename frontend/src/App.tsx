@@ -4,6 +4,7 @@ import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import GoalDetail from './pages/GoalDetail';
 import Statistics from './pages/Statistics';
+import CreateGoal from './pages/CreateGoal';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/goal/:id" element={<GoalDetail />} />
           <Route path="/statistics" element={<Statistics />} />
+          <Route path="/create-goal" element={<CreateGoal />} />
         </Routes>
       </div>
     </Router>

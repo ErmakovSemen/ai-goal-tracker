@@ -77,3 +77,31 @@
   font-weight: 400;
   color: #333333;
 }
+
+.no-goals {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+}
+
+.no-goals p {
+  font-size: 1.1rem;
+  color: #666666;
+  margin-bottom: 20px;
+}
+
+.create-first-goal {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.create-first-goal:hover {
+  background-color: #357ae8;
+}
