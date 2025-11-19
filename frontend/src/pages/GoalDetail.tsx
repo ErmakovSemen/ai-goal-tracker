@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import ProgressBar from '../components/ProgressBar';
 import ChatInterface from '../components/ChatInterface';
 import Mascot from '../components/Mascot';
+import ReportForm from '../components/ReportForm';
+import StatisticsPanel from '../components/StatisticsPanel';
 import './GoalDetail.css';
 
 interface Message {
@@ -18,92 +20,110 @@ interface Milestone {
 }
 
 const GoalDetail: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      content: "Hello! I'm your AI assistant for this goal. Let's work together to achieve it!",
-      sender: 'ai',
-      timestamp: new Date()
-    }
-  ]);
-
-  const goal = {
-    id: 1,
-    title: "Learn React",
-    description: "Master React fundamentals and build a complete application",
-    progress: 75,
-    milestones: [
-      { id: 1, title: "Basic Concepts", completed: true },
-      { id: 2, title: "Components", completed: true },
-      { id: 3, title: "Hooks", completed: false },
-      { id: 4, title: "Advanced Topics", completed: false }
-    ] as Milestone[]
-  };
-
+  // Mock data
+  const goalTitle = "Learn React";
+  const progress = 75;
+  const streak = 5;
+  const completionRate = 75;
+  const totalTime = 24;
+  
+  const milestones: Milestone[] = [
+    { id: 1, title: "Basic Concepts", completed: true },
+    { id: 2, title: "Components", completed: true },
+    { id: 3, title: "Hooks", completed: false },
+    { id: 4, title: "Advanced Topics", completed: false }
+  ];
+  
+  const initialMessages: Message[] = [
+    { id: 1, content: "Hello! I'm your AI assistant for this goal. How can I help you today?", sender: 'ai', timestamp: new Date() },
+    { id: 2, content: "Can you help me understand React hooks better?", sender: 'user', timestamp: new Date() },
+    { id: 3, content: "Of course! React hooks are functions that let you 'hook into' React state and lifecycle features from function components.", sender: 'ai', timestamp: new Date() }
+  ];
+  
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  
   const handleSendMessage = (content: string) => {
-    // Add user message
-    const userMessage: Message = {
+    const newMessage: Message = {
       id: messages.length + 1,
       content,
       sender: 'user',
       timestamp: new Date()
     };
-
-    setMessages([...messages, userMessage]);
-
+    
+    setMessages([...messages, newMessage]);
+    
     // Simulate AI response
     setTimeout(() => {
-      const aiMessage: Message = {
+      const aiResponse: Message = {
         id: messages.length + 2,
-        content: "Thanks for your input! I'll help you with that.",
+        content: "Thanks for your message! This is a simulated response from the AI assistant.",
         sender: 'ai',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => [...prev, aiResponse]);
     }, 1000);
   };
-
+  
+  const handleReportSubmit = (content: string) => {
+    console.log("Report submitted:", content);
+    // Here you would typically send the report to your backend
+    alert("Report submitted successfully!");
+  };
+  
   return (
     <div className="goal-detail">
       <header className="goal-header">
-        <h1>{goal.title}</h1>
+        <h1>{goalTitle}</h1>
         <div className="mascot-container">
-          <Mascot mood={goal.progress > 50 ? "happy" : "neutral"} size="small" />
+          <Mascot mood={progress > 50 ? "happy" : "sad"} size="small" />
         </div>
       </header>
-
+      
       <div className="goal-progress-section">
         <h2>Progress</h2>
-        <ProgressBar progress={goal.progress} milestones={goal.milestones} />
+        <ProgressBar progress={progress} milestones={milestones} />
       </div>
-
+      
       <div className="goal-content">
-        <div className="chat-section">
-          <h2>AI Assistant</h2>
-          <ChatInterface 
-            goalId={goal.id} 
-            messages={messages} 
-            onSendMessage={handleSendMessage} 
+        <div className="main-content">
+          <div className="chat-section">
+            <h2>Chat with AI Assistant</h2>
+            <ChatInterface 
+              goalId={1} 
+              messages={messages} 
+              onSendMessage={handleSendMessage} 
+            />
+          </div>
+          
+          <StatisticsPanel 
+            goalId={1} 
+            streak={streak} 
+            completionRate={completionRate} 
+            totalTime={totalTime} 
           />
         </div>
-
-        <div className="milestones-section">
-          <h2>Milestones</h2>
-          <div className="milestones-list">
-            {goal.milestones.map((milestone) => (
-              <div 
-                key={milestone.id} 
-                className={`milestone-item ${milestone.completed ? 'completed' : ''}`}
-              >
-                <input 
-                  type="checkbox" 
-                  checked={milestone.completed} 
-                  onChange={() => {}} 
-                />
-                <span className="milestone-title">{milestone.title}</span>
-              </div>
-            ))}
+        
+        <div className="sidebar">
+          <div className="milestones-section">
+            <h2>Milestones</h2>
+            <div className="milestones-list">
+              {milestones.map((milestone) => (
+                <div 
+                  key={milestone.id} 
+                  className={`milestone-item ${milestone.completed ? 'completed' : ''}`}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={milestone.completed} 
+                    onChange={() => {}} 
+                  />
+                  <span className="milestone-title">{milestone.title}</span>
+                </div>
+              ))}
+            </div>
           </div>
+          
+          <ReportForm goalId={1} onSubmit={handleReportSubmit} />
         </div>
       </div>
     </div>
