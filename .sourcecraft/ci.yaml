@@ -1,0 +1,29 @@
+on:
+  push:
+    - workflows: [build-and-deploy]
+      filter:
+        branches: ["main"]
+
+workflows:
+  build-and-deploy:
+    tasks:
+      - name: build-frontend
+        cubes:
+          - name: build-react-app
+            image: docker.io/library/node:18
+            script:
+              - cd frontend
+              - npm ci
+              - npm run build
+            artifacts:
+              paths:
+                - frontend/build/
+      - name: build-backend
+        cubes:
+          - name: build-python-app
+            image: docker.io/library/python:3.9
+            script:
+              - cd backend
+              - pip install --upgrade pip
+              - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+              - echo "Backend build completed"

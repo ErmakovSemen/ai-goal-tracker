@@ -1,0 +1,3 @@
+site:
+  branch: main
+  root: /frontend/build
