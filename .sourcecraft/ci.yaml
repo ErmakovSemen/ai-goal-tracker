@@ -13,7 +13,7 @@ workflows:
             image: docker.io/library/node:18
             script:
               - cd frontend
-              - npm ci
+              - npm install
               - npm run build
             artifacts:
               paths:
