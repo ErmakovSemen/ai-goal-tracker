@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ChatInterface from '../components/ChatInterface';
 import Mascot from '../components/Mascot';
 import './CreateGoal.css';
@@ -11,8 +10,11 @@ interface Message {
   timestamp: Date;
 }
 
-const CreateGoal: React.FC = () => {
-  const navigate = useNavigate();
+interface CreateGoalProps {
+  onNavigate: (page: string) => void;
+}
+
+const CreateGoal: React.FC<CreateGoalProps> = ({ onNavigate }) => {
   const [goalTitle, setGoalTitle] = useState('');
   const [goalDescription, setGoalDescription] = useState('');
   const [messages, setMessages] = useState<Message[]>([
@@ -51,7 +53,7 @@ const CreateGoal: React.FC = () => {
       // Here you would typically send the goal data to your backend
       console.log("Creating goal:", { title: goalTitle, description: goalDescription });
       alert("Goal created successfully!");
-      navigate('/');
+      onNavigate('dashboard');
     }
   };
 
@@ -108,7 +110,7 @@ const CreateGoal: React.FC = () => {
         </button>
         <button 
           className="cancel-button" 
-          onClick={() => navigate('/')}
+          onClick={() => onNavigate('dashboard')}
         >
           Cancel
         </button>

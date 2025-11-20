@@ -9,7 +9,12 @@ interface Goal {
   milestones: { id: number; title: string; completed: boolean }[];
 }
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onNavigate: (page: string) => void;
+  onGoalClick: (id: number) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onGoalClick }) => {
   // Mock data for goals
   const goals: Goal[] = [
     {
@@ -36,15 +41,13 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const handleGoalClick = (id: number) => {
-    console.log(`Navigate to goal ${id}`);
-  };
-
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <h1>AI Goal Tracker</h1>
-        <button className="add-goal-button">Add New Goal</button>
+        <button className="add-goal-button" onClick={() => onNavigate('create-goal')}>
+          Add New Goal
+        </button>
       </header>
       <div className="goals-container">
         <h2>Your Goals</h2>
@@ -55,7 +58,7 @@ const Dashboard: React.FC = () => {
             title={goal.title}
             progress={goal.progress}
             milestones={goal.milestones}
-            onGoalClick={handleGoalClick}
+            onGoalClick={onGoalClick}
           />
         ))}
       </div>
