@@ -31,11 +31,8 @@ workflows:
             image: docker.io/library/node:18
             needs: [build-react-app]
             script:
-              - cd frontend
-              - pwd
-              - ls -la
               - git config --global user.email "ci@sourcecraft.dev"
               - git config --global user.name "SourceCraft CI"
-              - git add build/
+              - git add frontend/build/
               - git commit -m "Deploy site - update frontend build files" || echo "No changes to commit"
               - git push origin main
