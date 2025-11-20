@@ -3,7 +3,24 @@
   position: relative;
 }
 
+.mascot-small {
+  width: 90px;
+  height: 90px;
+}
+
+.mascot-medium {
+  width: 120px;
+  height: 120px;
+}
+
+.mascot-large {
+  width: 150px;
+  height: 150px;
+}
+
 .mascot-body {
+  width: 100%;
+  height: 100%;
   background-color: #ff6b6b;
   border-radius: 50%;
   position: relative;
@@ -14,26 +31,32 @@
   position: absolute;
   top: -10px;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 10px;
-  box-sizing: border-box;
+  height: 30px;
 }
 
 .ear {
-  width: 20px;
+  width: 30px;
   height: 30px;
   background-color: #ff6b6b;
   border-radius: 50%;
+  position: absolute;
+}
+
+.left-ear {
+  left: 15px;
+}
+
+.right-ear {
+  right: 15px;
 }
 
 .mascot-face {
   position: absolute;
-  top: 50%;
+  top: 30%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: 60%;
-  height: 60%;
+  height: 50%;
 }
 
 .mascot-eyes {
@@ -43,61 +66,38 @@
 }
 
 .eye {
-  width: 8px;
-  height: 8px;
-  background-color: #333;
+  width: 12px;
+  height: 12px;
+  background-color: #333333;
   border-radius: 50%;
 }
 
 .mascot-nose {
-  width: 12px;
-  height: 8px;
-  background-color: #333;
+  width: 15px;
+  height: 10px;
+  background-color: #333333;
   border-radius: 50%;
   margin: 0 auto;
 }
 
 .mascot-mouth {
   width: 20px;
-  height: 10px;
-  border-bottom: 2px solid #333;
+  height: 8px;
+  border-bottom: 2px solid #333333;
   border-radius: 0 0 50% 50%;
   margin: 5px auto 0;
 }
 
-.mascot-small {
-  width: 50px;
-  height: 50px;
-}
-
-.mascot-medium {
-  width: 80px;
-  height: 80px;
-}
-
-.mascot-large {
-  width: 120px;
-  height: 120px;
-}
-
 .mascot-happy .mascot-mouth {
-  border-radius: 50%;
-  border-top: 2px solid #333;
-  border-bottom: none;
+  border-radius: 0 0 50% 50%;
 }
 
 .mascot-sad .mascot-mouth {
-  border-radius: 50%;
-  border-bottom: 2px solid #333;
-  border-top: none;
+  border-radius: 50% 50% 0 0;
   transform: rotate(180deg);
 }
 
 .mascot-excited .mascot-eyes {
-  height: 12px;
-}
-
-.mascot-excited .eye {
-  height: 12px;
-  width: 12px;
+  height: 15px;
+  width: 15px;
 }

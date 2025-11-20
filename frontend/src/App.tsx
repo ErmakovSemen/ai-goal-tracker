@@ -1,25 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navigation from './components/Navigation';
-import Dashboard from './pages/Dashboard';
-import GoalDetail from './pages/GoalDetail';
-import Statistics from './pages/Statistics';
-import CreateGoal from './pages/CreateGoal';
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/goal/:id" element={<GoalDetail />} />
-          <Route path="/statistics" element={<Statistics />} />
-          <Route path="/create-goal" element={<CreateGoal />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className="App">
+      <header className="App-header">
+        <h1>AI Goal Tracker</h1>
+        <p>AI-powered goal tracking application</p>
+      </header>
+    </div>
   );
 }
 

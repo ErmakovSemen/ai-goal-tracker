@@ -25,7 +25,7 @@ const GoalDetail: React.FC = () => {
   const progress = 75;
   const streak = 5;
   const completionRate = 75;
-  const totalTime = 24;
+  const totalTime = 20;
   
   const milestones: Milestone[] = [
     { id: 1, title: "Basic Concepts", completed: true },
@@ -85,21 +85,12 @@ const GoalDetail: React.FC = () => {
       </div>
       
       <div className="goal-content">
-        <div className="main-content">
-          <div className="chat-section">
-            <h2>Chat with AI Assistant</h2>
-            <ChatInterface 
-              goalId={1} 
-              messages={messages} 
-              onSendMessage={handleSendMessage} 
-            />
-          </div>
-          
-          <StatisticsPanel 
+        <div className="chat-section">
+          <h2>Chat with AI Assistant</h2>
+          <ChatInterface 
             goalId={1} 
-            streak={streak} 
-            completionRate={completionRate} 
-            totalTime={totalTime} 
+            messages={messages} 
+            onSendMessage={handleSendMessage} 
           />
         </div>
         
@@ -124,6 +115,13 @@ const GoalDetail: React.FC = () => {
           </div>
           
           <ReportForm goalId={1} onSubmit={handleReportSubmit} />
+          
+          <StatisticsPanel 
+            goalId={1} 
+            streak={streak} 
+            completionRate={completionRate} 
+            totalTime={totalTime} 
+          />
         </div>
       </div>
     </div>
