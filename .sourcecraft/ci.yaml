@@ -21,7 +21,8 @@ workflows:
               - echo "SOURCECRAFT_WORKSPACE: $SOURCECRAFT_WORKSPACE"
               - ls -la $SOURCECRAFT_WORKSPACE/frontend/build/
             artifacts:
-              - frontend/build/
+              paths:
+                - frontend/build/
       - name: build-backend
         cubes:
           - name: build-python-app
