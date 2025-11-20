@@ -17,8 +17,6 @@ workflows:
               - cd frontend
               - npm install
               - npm run build
-              - echo "SOURCECRAFT_CUBE_ARTIFACTS: $SOURCECRAFT_CUBE_ARTIFACTS"
-              - echo "SOURCECRAFT_WORKSPACE: $SOURCECRAFT_WORKSPACE"
               - ls -la $SOURCECRAFT_WORKSPACE/frontend/build/
             artifacts:
               paths:
@@ -39,8 +37,6 @@ workflows:
           - name: deploy-react-app
             image: docker.io/library/node:18
             script:
-              - echo "SOURCECRAFT_WORKSPACE: $SOURCECRAFT_WORKSPACE"
-              - echo "SOURCECRAFT_CUBE_ARTIFACTS: $SOURCECRAFT_CUBE_ARTIFACTS"
               - pwd
               - ls -la
               - find . -name "build" -type d 2>/dev/null || echo "Build directory not found"
