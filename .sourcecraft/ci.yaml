@@ -36,15 +36,10 @@ workflows:
           - name: deploy-react-app
             image: docker.io/library/node:18
             script:
-              # Проверим, где находятся артефакты
-              - echo "=== Проверка структуры файловой системы ==="
-              - pwd
-              - ls -la
-              - echo "=== Поиск артефактов ==="
-              - find . -name "build" -type d 2>/dev/null || echo "Папка build не найдена в текущей директории"
-              - echo "=== Проверка переменных окружения ==="
-              - env | grep -i artifact || echo "Нет переменных окружения, связанных с артефактами"
-              - echo "=== Проверка возможных путей к артефактам ==="
-              - ls -la / 2>/dev/null
-              - ls -la /workspace/ 2>/dev/null || echo "Папка /workspace не существует"
-              - ls -la /artifacts/ 2>/dev/null || echo "Папка /artifacts не существует"
+              - rm -rf frontend/build/*
+              - cp -r /artifacts/build-frontend/frontend/build/* frontend/build/
+              - git config --global user.email "ci@sourcecraft.dev"
+              - git config --global user.name "SourceCraft CI"
+              - git add frontend/build/
+              - 'git commit -m "Deploy site: update frontend build files" || echo "No changes to commit"'
+              - git push origin main
