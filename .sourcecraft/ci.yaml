@@ -17,8 +17,6 @@ workflows:
               - cd frontend
               - npm install
               - npm run build
-              # Отладка: посмотрим, где создаются артефакты
-              - echo "=== Артефакты build-react-app ==="
               - echo "SOURCECRAFT_CUBE_ARTIFACTS: $SOURCECRAFT_CUBE_ARTIFACTS"
               - echo "SOURCECRAFT_WORKSPACE: $SOURCECRAFT_WORKSPACE"
               - ls -la $SOURCECRAFT_WORKSPACE/frontend/build/
@@ -41,23 +39,18 @@ workflows:
           - name: deploy-react-app
             image: docker.io/library/node:18
             script:
-              # Отладка: посмотрим, где находятся артефакты
-              - echo "=== Отладка deploy-react-app ==="
               - echo "SOURCECRAFT_WORKSPACE: $SOURCECRAFT_WORKSPACE"
               - echo "SOURCECRAFT_CUBE_ARTIFACTS: $SOURCECRAFT_CUBE_ARTIFACTS"
-              - echo "=== Проверка структуры файловой системы ==="
               - pwd
               - ls -la
-              - echo "=== Поиск артефактов ==="
-              - find . -name "build" -type d 2>/dev/null || echo "Папка build не найдена в текущей директории"
-              - ls -la $SOURCECRAFT_WORKSPACE/ 2>/dev/null || echo "SOURCECRAFT_WORKSPACE не существует"
-              - ls -la $SOURCECRAFT_WORKSPACE/frontend/ 2>/dev/null || echo "Директория frontend не найдена"
-              - ls -la $SOURCECRAFT_WORKSPACE/frontend/build/ 2>/dev/null || echo "Директория frontend/build не найдена"
-              # Копируем артефакты (используем правильный путь)
+              - find . -name "build" -type d 2>/dev/null || echo "Build directory not found"
+              - ls -la $SOURCECRAFT_WORKSPACE/ 2>/dev/null || echo "SOURCECRAFT_WORKSPACE does not exist"
+              - ls -la $SOURCECRAFT_WORKSPACE/frontend/ 2>/dev/null || echo "Frontend directory not found"
+              - ls -la $SOURCECRAFT_WORKSPACE/frontend/build/ 2>/dev/null || echo "Frontend build directory not found"
               - rm -rf frontend/build/*
               - cp -r $SOURCECRAFT_WORKSPACE/frontend/build/* frontend/build/
               - git config --global user.email "ci@sourcecraft.dev"
               - git config --global user.name "SourceCraft CI"
               - git add frontend/build/
-              - 'git commit -m "Deploy site: update frontend build files" || echo "No changes to commit"'
+              - git commit -m "Deploy site: update frontend build files" || echo "No changes to commit"
               - git push origin main
