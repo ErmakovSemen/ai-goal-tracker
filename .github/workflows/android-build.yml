@@ -1,0 +1,105 @@
+name: Android APK Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    
+    - name: Install Bubblewrap CLI
+      run: npm install -g @bubblewrap/cli
+    
+    - name: Generate keystore
+      run: |
+        keytool -genkeypair -v -keystore android-key.keystore -alias android-key-alias -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown"
+    
+    - name: Create TWA configuration
+      run: |
+        mkdir -p twa-config
+        cat > twa-config/twa-manifest.json << 'EOF'
+        {
+          "packageId": "com.example.aigoaltracker",
+          "host": "example.com",
+          "name": "AI Goal Tracker",
+          "launcherName": "Goal Tracker",
+          "display": "standalone",
+          "themeColor": "#000000",
+          "navigationColor": "#000000",
+          "navigationColorDark": "#000000",
+          "navigationDividerColor": "#000000",
+          "navigationDividerColorDark": "#000000",
+          "backgroundColor": "#FFFFFF",
+          "enableNotifications": true,
+          "startUrl": "/",
+          "icon": "frontend/public/logo192.png",
+          "maskableIcon": "frontend/public/logo512.png",
+          "monochromeIcon": "frontend/public/logo192.png",
+          "splashScreenFadeOutDuration": 300,
+          "signingKey": {
+            "path": "../android-key.keystore",
+            "alias": "android-key-alias"
+          },
+          "appVersionName": "1.0.0",
+          "appVersionCode": 1,
+          "shortcuts": [],
+          "generatorApp": "bubblewrap-cli",
+          "webManifestUrl": "https://example.com/manifest.json",
+          "fallbackType": "customtabs",
+          "features": {},
+          "enableSiteSettingsShortcut": true,
+          "isChromeOSOnly": false,
+          "isMetaQuest": false,
+          "fullScopeUrl": "https://example.com/",
+          "minSdkVersion": 19,
+          "orientation": "portrait-primary",
+          "fingerprints": [],
+          "additionalTrustedOrigins": [],
+          "retainedBundles": [],
+          "appVersion": "1.0.0"
+        }
+        EOF
+    
+    - name: Build Android APK
+      run: |
+        cd twa-config
+        bubblewrap build --skipPwaValidation
+    
+    - name: Upload APK as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-apk
+        path: twa-config/app-release-signed.apk
+        if-no-files-found: error
