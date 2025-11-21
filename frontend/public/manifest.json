@@ -1,0 +1,8 @@
+{
+  "name": "AI Goal Tracker",
+  "short_name": "Goal Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#5b50e8",
+  "theme_color": "#5b50e8"
+}
