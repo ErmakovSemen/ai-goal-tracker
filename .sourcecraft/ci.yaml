@@ -2,6 +2,7 @@ on:
   push:
     workflows:
       - build-and-deploy
+            - mirror-to-github
     filter:
       branches:
         - "main"
