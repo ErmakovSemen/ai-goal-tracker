@@ -2,7 +2,7 @@ on:
   push:
     workflows:
       - build-and-deploy
-            - mirror-to-github
+      - mirror-to-github
     filter:
       branches:
         - "main"
@@ -37,12 +37,12 @@ workflows:
               - git add -f frontend/build/
               - git commit -m "Deploy site - update frontend build files" || echo "No changes to commit"
               - git push origin main
-                mirror-to-github:
-                      tasks:
-                              - name: push-to-github
-                                      cubes:
-                                                  - name: push-changes
-                                                              image: docker.io/library/alpine/git:latest
-                                                                          script:
-                                                                                          - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
-                                                                                                        - git push github main
+  mirror-to-github:
+    tasks:
+      - name: push-to-github
+        cubes:
+          - name: push-changes
+            image: docker.io/library/alpine/git:latest
+            script:
+              - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
+              - git push github main
