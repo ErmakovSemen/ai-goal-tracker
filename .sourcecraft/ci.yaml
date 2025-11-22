@@ -42,6 +42,6 @@ workflows:
       - name: push-to-github
         cubes:
           - name: push-changes
-          image: docker.io/alpine/git:latest            script:
-              - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
+          image: docker.io/alpine/git:latest
+          script:              - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
               - git push github main
