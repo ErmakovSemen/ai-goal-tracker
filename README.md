@@ -21,4 +21,6 @@ AI-powered goal tracking application with chat-based goal formalization and prog
 - `/backend` - Python/FastAPI backend application
 - `/frontend` - React/TypeScript frontend application
 
+  <!-- Testing with fresh token -->
+
 <!-- Testing GitHub mirroring setup -->
