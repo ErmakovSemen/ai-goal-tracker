@@ -7,11 +7,6 @@ on:
       branches:
         - "main"
 
-tokens:
-  yc-token:
-    service_connection: <имя_вашего_сервисного_подключения>
-    scope: repo
-
 workflows:
   build-and-deploy:
     tasks:
@@ -70,6 +65,8 @@ workflows:
       - name: debug-token
         cubes:
           - name: print-token
+            env:
+              DEBUG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             script:
-              - echo \'DEBUG: Token value is: ${{ tokens.yc-token.id_token }}\'
-              - echo \'DEBUG: Service account ID: ${{ tokens.yc-token.service_account_id }}\'
+              - echo "DEBUG: Token value is: $DEBUG_TOKEN"
+              - echo "DEBUG: Token length: ${#DEBUG_TOKEN}"
