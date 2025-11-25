@@ -44,7 +44,7 @@ workflows:
           - name: push-changes
             image: docker.io/library/alpine:latest
             env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              GITHUB_TOKEN: \'${{ secrets.GITHUB_TOKEN }}\'
             script:
               - apk add --no-cache git
               - git init
