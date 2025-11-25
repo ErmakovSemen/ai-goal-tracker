@@ -54,6 +54,6 @@ workflows:
               - echo "=== DEBUG TOKEN INFO ==="
               - echo "Token length: ${#GITHUB_TOKEN}"
               - echo "Token first 4 chars: ${GITHUB_TOKEN:0:4}"
-              - echo "Token last 4 chars: ${GITHUB_TOKEN: -4}"
+              - echo 'Token last 4 chars:' "\${GITHUB_TOKEN: -4}"
               - echo "========================"
               - git push github main --force
