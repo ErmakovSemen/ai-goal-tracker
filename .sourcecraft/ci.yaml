@@ -46,13 +46,13 @@ workflows:
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             script:
+              - echo ${{secrets.GITHUB_TOKEN}}
               - apk add --no-cache git
               - git init
               - git config user.email "ci@sourcecraft.dev"
               - git config user.name "SourceCraft CI"
               - git add .
               - git commit -m "Mirror from SourceCraft" || echo "No changes to commit"
-              - echo "DEBUG: GITHUB_TOKEN is set: ${{ secrets.GITHUB_TOKEN != '' }}"
               - |
                 if [ -z "${GITHUB_TOKEN}" ]; then
                   echo "Error: GITHUB_TOKEN is not set"
