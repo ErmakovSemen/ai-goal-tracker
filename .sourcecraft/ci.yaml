@@ -68,5 +68,5 @@ workflows:
             env:
               DEBUG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             script:
-              - "echo "DEBUG: Checking token presence""
-              - "if [ -n "$DEBUG_TOKEN" ]; then echo "DEBUG: Token is set"; else echo "DEBUG: Token is not set"; fi"
+              - \'echo "DEBUG: Checking token presence"\'
+              - \'if [ -n "$DEBUG_TOKEN" ]; then echo "DEBUG: Token is set"; else echo "DEBUG: Token is not set"; fi\'
