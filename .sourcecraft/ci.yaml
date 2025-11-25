@@ -38,13 +38,13 @@ workflows:
               - git commit -m "Deploy site - update frontend build files" || echo "No changes to commit"
               - git push origin main
   mirror-to-github:
-    secrets:
-      - GITHUB_TOKEN
     tasks:
       - name: push-to-github
         cubes:
           - name: push-changes
             image: docker.io/library/alpine:latest
+            env:
+              GITHUB_TOKEN: $GITHUB_TOKEN
             script:
               - apk add --no-cache git
               - git init
