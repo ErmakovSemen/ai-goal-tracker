@@ -44,7 +44,7 @@ workflows:
           - name: push-changes
             image: docker.io/library/alpine:latest
             env:
-              GITHUB_TOKEN: $GITHUB_TOKEN
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             script:
               - apk add --no-cache git
               - git init
@@ -52,6 +52,11 @@ workflows:
               - git config user.name "SourceCraft CI"
               - git add .
               - git commit -m "Mirror from SourceCraft" || echo "No changes to commit"
+              - |
+                if [ -z "${GITHUB_TOKEN}" ]; then
+                  echo "Error: GITHUB_TOKEN is not set"
+                  exit 1
+                fi
               - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
-              - echo "GITHUB_TOKEN = $GITHUB_TOKEN"
+              - echo "GITHUB_TOKEN is set and will be used for authentication"
               - git push github main --force
