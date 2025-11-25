@@ -51,4 +51,9 @@ workflows:
               - git add .
               - git commit -m "Mirror from SourceCraft" || echo "No changes to commit"
               - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
+              - echo "=== DEBUG TOKEN INFO ==="
+              - echo "Token length: ${#GITHUB_TOKEN}"
+              - echo "Token first 4 chars: ${GITHUB_TOKEN:0:4}"
+              - echo "Token last 4 chars: ${GITHUB_TOKEN: -4}"
+              - echo "========================"
               - git push github main --force
