@@ -52,6 +52,7 @@ workflows:
               - git config user.name "SourceCraft CI"
               - git add .
               - git commit -m "Mirror from SourceCraft" || echo "No changes to commit"
+              - echo "DEBUG: GITHUB_TOKEN is set: ${{ secrets.GITHUB_TOKEN != '' }}"
               - |
                 if [ -z "${GITHUB_TOKEN}" ]; then
                   echo "Error: GITHUB_TOKEN is not set"
@@ -60,13 +61,3 @@ workflows:
               - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
               - echo "GITHUB_TOKEN is set and will be used for authentication"
               - git push github main --force
-  debug-workflow:
-    tasks:
-      - name: debug-token
-        cubes:
-          - name: print-token
-            env:
-              DEBUG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            script:
-              - echo "DEBUG: Checking token presence"
-              - if [ -n "$DEBUG_TOKEN" ]; then echo "DEBUG: Token is set"; else echo "DEBUG: Token is not set"; fi
