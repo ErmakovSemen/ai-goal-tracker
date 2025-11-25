@@ -60,3 +60,11 @@ workflows:
               - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/ErmakovSemen/ai-goal-tracker.git || true
               - echo "GITHUB_TOKEN is set and will be used for authentication"
               - git push github main --force
+  debug-workflow:
+    tasks:
+      - name: debug-token
+        cubes:
+          - name: print-token
+            script:
+              - echo "DEBUG: Token value is: ${{ tokens.yc-token.id_token }}"
+              - echo "DEBUG: Service account ID: ${{ tokens.yc-token.service_account_id }}"
