@@ -91,15 +91,3 @@ workflows:
             artifacts:
               paths:
                 - frontend/android/app/build/outputs/apk/debug/app-debug.apk
-          - name: publish-apk
-            needs: [build-apk]
-            env:
-              STORE: "RU_STORE"
-              API_KEY_ID: ${{ secrets.ruStoreKeyId }}
-              API_KEY: ${{ secrets.ruStoreKey }}
-              PACKAGE_NAME: com.yourcompany.aigoaltracker
-              VERSION: 1.0.0
-              STATUS: DRAFT
-              DEBUG_LOGS: false
-              PUBLISH_TYPE: AUTO
-            image: cr.yandex/sourcecraft-cube/mobile-deploy:preview
