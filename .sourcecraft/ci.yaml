@@ -79,7 +79,7 @@ workflows:
               - cd frontend
               - npm install @capacitor/core @capacitor/cli @capacitor/android
               - npx cap init "AI Goal Tracker" "com.yourcompany.aigoaltracker"
-              - echo '{"webDir": "build"}' > capacitor.config.json
+              - echo "{"webDir": "build"}" > capacitor.config.json
           - name: build-apk
             needs: [setup-capacitor]
             image: docker.io/library/node:18
