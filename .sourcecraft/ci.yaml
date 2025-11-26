@@ -78,7 +78,7 @@ workflows:
             script:
               - cd frontend
               - npm install @capacitor/core @capacitor/cli @capacitor/android
-              - npx cap init
+              - npx cap init com.yourcompany.aigoaltracker "AI Goal Tracker"
           - name: build-apk
             needs: [setup-capacitor]
             image: docker.io/library/node:18
