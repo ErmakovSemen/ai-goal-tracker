@@ -83,7 +83,11 @@ workflows:
             needs: [setup-capacitor]
             image: ubuntu:20.04
             script:
-              - apt-get update && apt-get install -y openjdk-11-jdk nodejs npm
+              - export DEBIAN_FRONTEND=noninteractive
+              - export TZ=Europe/Moscow
+              - apt-get update && apt-get install -y tzdata
+              - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+              - apt-get install -y openjdk-11-jdk nodejs npm
               - export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
               - echo JAVA_HOME is set to $JAVA_HOME
               - java -version
@@ -108,7 +112,7 @@ workflows:
               - cd android
               - echo Making gradlew executable
               - chmod +x ./gradlew
-              - echo Building APK with manual Java installation
+              - echo Building APK with manual Java installation on Ubuntu
               - ./gradlew assembleDebug
               - echo APK build completed
             artifacts:
