@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: '3.9'
   NODE_VERSION: '18'
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
 
 jobs:
   build-backend:
@@ -167,6 +167,29 @@ jobs:
         working-directory: ./frontend
         run: |
           npx cap sync android
+          
+      - name: Configure Gradle Java version
+        working-directory: ./frontend/android
+        run: |
+          # Ensure gradle.properties exists
+          if [ ! -f gradle.properties ]; then
+            touch gradle.properties
+          fi
+          # Set Java version for Gradle
+          if ! grep -q "org.gradle.java.home" gradle.properties; then
+            echo "org.gradle.java.home=$JAVA_HOME" >> gradle.properties
+          fi
+          # Set source and target compatibility
+          echo "android.defaults.buildfeatures.buildconfig=true" >> gradle.properties || true
+          
+      - name: Configure app build.gradle
+        working-directory: ./frontend/android/app
+        run: |
+          if [ -f build.gradle ]; then
+            # Ensure Java 21 compatibility (or match the installed version)
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_21/' build.gradle || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_21/' build.gradle || true
+          fi
 
       - name: Setup Android signing
         working-directory: ./frontend/android
