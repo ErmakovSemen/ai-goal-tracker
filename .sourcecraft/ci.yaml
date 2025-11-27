@@ -85,9 +85,23 @@ workflows:
             script:
               - apt-get update && apt-get install -y nodejs npm
               - export JAVA_HOME=/usr/local/openjdk-11
+              - echo "JAVA_HOME is set to: $JAVA_HOME"
+              - echo "Java version:"
+              - java -version
+              - echo "Current directory:"
+              - pwd
+              - echo "Listing frontend directory:"
+              - ls -la frontend/
+              - echo "Listing frontend/android directory:"
+              - ls -la frontend/android/ || echo "android directory does not exist yet"
               - cd frontend
+              - echo "Adding Android platform..."
               - npx cap add android
+              - echo "Copying web assets..."
               - npx cap copy
+              - echo "Listing android directory after cap commands:"
+              - ls -la android/
+              - echo "Building APK..."
               - cd android
               - ./gradlew assembleDebug
             artifacts:
