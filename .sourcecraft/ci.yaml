@@ -81,9 +81,13 @@ workflows:
               - npx cap init "AI Goal Tracker" "com.yourcompany.aigoaltracker"
           - name: build-apk
             needs: [setup-capacitor]
-            image: docker.io/library/node:18
+            image: ubuntu:20.04
             script:
-              - apt-get update && apt-get install -y openjdk-11-jdk-headless
+              - export DEBIAN_FRONTEND=noninteractive
+              - export TZ=Europe/Moscow
+              - apt-get update && apt-get install -y tzdata
+              - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+              - apt-get install -y openjdk-11-jdk nodejs npm
               - export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
               - echo JAVA_HOME is set to $JAVA_HOME
               - java -version
