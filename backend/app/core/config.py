@@ -1,11 +1,13 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Goal Tracker"
     PROJECT_VERSION: str = "0.1.0"
     PROJECT_DESCRIPTION: str = "AI-powered goal tracking application"
     
-    # Database
+    # Database - support both DATABASE_URL (for Render) and individual variables
+    DATABASE_URL: Optional[str] = None
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_SERVER: str = "localhost"
@@ -19,5 +21,6 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
+        env_file = ".env"
 
 settings = Settings()
