@@ -81,7 +81,7 @@ workflows:
               - npx cap init "AI Goal Tracker" "com.yourcompany.aigoaltracker"
           - name: build-apk
             needs: [setup-capacitor]
-            image: docker.io/library/openjdk:11
+            image: docker.io/library/openjdk:11-jdk
             script:
               - apt-get update && apt-get install -y nodejs npm
               - export JAVA_HOME=/usr/local/openjdk-11
