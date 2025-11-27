@@ -81,11 +81,11 @@ workflows:
               - npx cap init "AI Goal Tracker" "com.yourcompany.aigoaltracker"
           - name: build-apk
             needs: [setup-capacitor]
-            image: docker.io/library/openjdk:11-jdk
+            image: ubuntu:20.04
             script:
-              - apt-get update && apt-get install -y nodejs npm
-              - export JAVA_HOME=/usr/local/openjdk-11
-              - echo JAVA_HOME value $JAVA_HOME
+              - apt-get update && apt-get install -y openjdk-11-jdk nodejs npm
+              - export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+              - echo JAVA_HOME is set to: $JAVA_HOME
               - java -version
               - pwd
               - echo Current user
@@ -108,7 +108,7 @@ workflows:
               - cd android
               - echo Making gradlew executable
               - chmod +x ./gradlew
-              - echo Building APK
+              - echo Building APK with manual Java installation
               - ./gradlew assembleDebug
               - echo APK build completed
             artifacts:
