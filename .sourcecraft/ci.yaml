@@ -83,7 +83,7 @@ workflows:
             needs: [setup-capacitor]
             image: docker.io/library/node:18
             script:
-              - apt-get update && apt-get install -y openjdk-11-jdk
+              - apt-get update && apt-get install -y openjdk-11-jdk-headless
               - export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
               - echo JAVA_HOME is set to $JAVA_HOME
               - java -version
