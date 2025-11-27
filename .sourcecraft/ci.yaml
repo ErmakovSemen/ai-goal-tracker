@@ -85,7 +85,7 @@ workflows:
             script:
               - apt-get update && apt-get install -y nodejs npm
               - export JAVA_HOME=/usr/local/openjdk-11
-              - echo "JAVA_HOME is set to: $JAVA_HOME"
+              - echo JAVA_HOME is set to: $JAVA_HOME
               - java -version
               - pwd
               - ls -la frontend/
