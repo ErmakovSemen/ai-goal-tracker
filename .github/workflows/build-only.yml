@@ -141,14 +141,31 @@ jobs:
           REACT_APP_API_URL: ${REACT_APP_API_URL:-https://your-backend.onrender.com}
         run: npm run build
 
-      - name: Install Capacitor CLI
+      - name: Install Capacitor dependencies
         working-directory: ./frontend
-        run: npm install -g @capacitor/cli
-
+        run: |
+          # Install Capacitor core and Android platform
+          npm install @capacitor/core @capacitor/android @capacitor/cli --save-dev
+          
+      - name: Initialize Capacitor (if needed)
+        working-directory: ./frontend
+        run: |
+          # Initialize Capacitor if capacitor.config.json doesn't exist
+          if [ ! -f capacitor.config.json ]; then
+            npx cap init "AI Goal Tracker" "com.yourcompany.aigoaltracker" || true
+          fi
+          
       - name: Add Capacitor Android platform
         working-directory: ./frontend
         run: |
-          npx cap add android || true
+          # Add Android platform if it doesn't exist
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          
+      - name: Sync Capacitor
+        working-directory: ./frontend
+        run: |
           npx cap sync android
 
       - name: Setup Android signing
