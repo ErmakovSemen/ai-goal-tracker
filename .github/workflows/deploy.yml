@@ -94,14 +94,36 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Render
-        uses: johnbeynon/render-deploy@v0.0.8
-        with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID_BACKEND }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
+      - name: Trigger Render Deploy
+        run: |
+          if [ -z "${{ secrets.RENDER_SERVICE_ID_BACKEND }}" ] || [ -z "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "⚠️ Render secrets not configured. Skipping deploy."
+            echo "To enable auto-deploy, add RENDER_SERVICE_ID_BACKEND and RENDER_API_KEY to GitHub Secrets"
+            exit 0
+          fi
+          
+          SERVICE_ID="${{ secrets.RENDER_SERVICE_ID_BACKEND }}"
+          API_KEY="${{ secrets.RENDER_API_KEY }}"
+          
+          echo "🚀 Triggering Render deploy for service: $SERVICE_ID"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://api.render.com/v1/services/${SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Deploy triggered successfully!"
+            echo "$BODY" | jq '.' || echo "$BODY"
+          else
+            echo "❌ Failed to trigger deploy. HTTP Code: $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
 
   deploy-frontend:
     name: Deploy Frontend to Render
@@ -109,11 +131,33 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Render
-        uses: johnbeynon/render-deploy@v0.0.8
-        with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID_FRONTEND }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
+      - name: Trigger Render Deploy
+        run: |
+          if [ -z "${{ secrets.RENDER_SERVICE_ID_FRONTEND }}" ] || [ -z "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "⚠️ Render secrets not configured. Skipping deploy."
+            echo "To enable auto-deploy, add RENDER_SERVICE_ID_FRONTEND and RENDER_API_KEY to GitHub Secrets"
+            exit 0
+          fi
+          
+          SERVICE_ID="${{ secrets.RENDER_SERVICE_ID_FRONTEND }}"
+          API_KEY="${{ secrets.RENDER_API_KEY }}"
+          
+          echo "🚀 Triggering Render deploy for service: $SERVICE_ID"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://api.render.com/v1/services/${SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Deploy triggered successfully!"
+            echo "$BODY" | jq '.' || echo "$BODY"
+          else
+            echo "❌ Failed to trigger deploy. HTTP Code: $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
