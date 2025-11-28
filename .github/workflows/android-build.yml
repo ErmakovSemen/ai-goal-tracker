@@ -98,7 +98,7 @@ jobs:
         bubblewrap build --skipPwaValidation
     
     - name: Upload APK as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-apk
         path: twa-config/app-release-signed.apk
