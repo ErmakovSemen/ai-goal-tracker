@@ -148,11 +148,18 @@ jobs:
           echo "Found APK: $APK_PATH"
 
       - name: Upload APK artifact
+        if: ${{ steps.find_apk.outputs.apk_path != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: ${{ steps.find_apk.outputs.apk_path }}
           retention-days: 30
+
+      - name: Fail if APK missing
+        if: ${{ steps.find_apk.outputs.apk_path == '' }}
+        run: |
+          echo "APK file was not found. Please check the build logs for errors."
+          exit 1
 
       - name: Build AAB (optional, for Play Store)
         working-directory: ./frontend/android
