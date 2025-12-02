@@ -104,23 +104,21 @@ jobs:
       - name: Configure Android build.gradle files
         working-directory: ./frontend/android
         run: |
-          # Configure compileSdkVersion and targetSdkVersion to 34 for all build.gradle files
-          find . -name "build.gradle" -type f | while read file; do
+          # Configure compileSdkVersion and targetSdkVersion to 34 for app/build.gradle only
+          if [ -f "app/build.gradle" ]; then
             # Set compileSdkVersion to 34
-            if grep -q "compileSdkVersion" "$file"; then
-              sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' "$file" || true
-            else
-              # Add compileSdkVersion after android { if it doesn't exist
-              sed -i '/android {/a\    compileSdkVersion 34' "$file" || true
-            fi
+            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle || true
             # Set targetSdkVersion to 34
-            if grep -q "targetSdkVersion" "$file"; then
-              sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' "$file" || true
-            else
-              # Add targetSdkVersion after compileSdkVersion if it doesn't exist
-              sed -i '/compileSdkVersion/a\    targetSdkVersion 34' "$file" || true
-            fi
+            sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle || true
             # Set sourceCompatibility and targetCompatibility
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle || true
+          fi
+          
+          # Configure capacitor-android build.gradle files
+          find . -path "*/capacitor-android/*/build.gradle" -type f | while read file; do
+            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/g' "$file" || true
+            sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/g' "$file" || true
             sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' "$file" || true
             sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' "$file" || true
           done
