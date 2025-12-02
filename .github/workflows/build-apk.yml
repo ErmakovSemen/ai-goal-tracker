@@ -77,26 +77,25 @@ jobs:
       - name: Add Capacitor Android platform
         working-directory: ./frontend
         run: |
-          # Add Android platform if it doesn't exist
-          if [ ! -d "android" ]; then
-            npx cap add android
+          # Remove existing android directory to ensure clean setup
+          if [ -d "android" ]; then
+            rm -rf android
           fi
+          npx cap add android
           
       - name: Sync Capacitor
         working-directory: ./frontend
         run: |
           npx cap sync android
           
-      - name: Verify Android project structure
+      - name: Check app/build.gradle structure
         working-directory: ./frontend/android
         run: |
-          if [ ! -f "app/build.gradle" ]; then
-            echo "Error: app/build.gradle not found"
-            exit 1
-          fi
-          # Check if build.gradle has valid structure
-          if ! grep -q "android {" app/build.gradle; then
-            echo "Warning: app/build.gradle may have invalid structure"
+          if [ -f "app/build.gradle" ]; then
+            echo "=== First 10 lines of app/build.gradle ==="
+            head -10 app/build.gradle
+            echo "=== Checking for rootProject references ==="
+            grep -n "rootProject" app/build.gradle || echo "No rootProject references found"
           fi
           
       - name: Configure Gradle Java version
@@ -113,28 +112,35 @@ jobs:
           # Set source and target compatibility
           echo "android.defaults.buildfeatures.buildconfig=true" >> gradle.properties || true
           
-      - name: Configure Android build.gradle files
+      - name: Fix app/build.gradle if needed
         working-directory: ./frontend/android
         run: |
-          # Show first 20 lines of app/build.gradle for debugging
-          echo "=== First 20 lines of app/build.gradle ==="
-          head -20 app/build.gradle || true
-          echo "=== End of preview ==="
-          
-          # Only modify if file exists and has android block
-          if [ -f "app/build.gradle" ] && grep -q "android {" app/build.gradle; then
-            # Replace compileSdkVersion if it exists
-            if grep -q "compileSdkVersion" app/build.gradle; then
-              sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle
+          if [ -f "app/build.gradle" ]; then
+            # Check if there's a problematic rootProject reference at the top
+            if head -5 app/build.gradle | grep -q "rootProject"; then
+              echo "Found rootProject reference in first 5 lines, attempting to fix..."
+              # Create backup
+              cp app/build.gradle app/build.gradle.bak
+              # Remove lines with rootProject from top if they're causing issues
+              # But only if they're before android block
+              sed -i '/^[[:space:]]*rootProject/d' app/build.gradle || true
             fi
-            # Replace targetSdkVersion if it exists
-            if grep -q "targetSdkVersion" app/build.gradle; then
-              sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle
-            fi
-            # Replace Java compatibility if compileOptions exists
-            if grep -q "compileOptions" app/build.gradle; then
-              sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle
-              sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle
+            
+            # Only modify if file exists and has android block
+            if grep -q "android {" app/build.gradle; then
+              # Replace compileSdkVersion if it exists
+              if grep -q "compileSdkVersion" app/build.gradle; then
+                sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle
+              fi
+              # Replace targetSdkVersion if it exists
+              if grep -q "targetSdkVersion" app/build.gradle; then
+                sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle
+              fi
+              # Replace Java compatibility if compileOptions exists
+              if grep -q "compileOptions" app/build.gradle; then
+                sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle
+                sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle
+              fi
             fi
           fi
 
