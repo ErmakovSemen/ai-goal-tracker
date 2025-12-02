@@ -115,38 +115,36 @@ jobs:
           # Set source and target compatibility
           echo "android.defaults.buildfeatures.buildconfig=true" >> gradle.properties || true
           
-      - name: Fix app/build.gradle if needed
+      - name: Fix app/build.gradle rootProject references
         working-directory: ./frontend/android
         run: |
           if [ -f "app/build.gradle" ]; then
             # Create backup
             cp app/build.gradle app/build.gradle.bak
             
-            # Fix rootProject references - replace with project reference or remove
-            # Common pattern: rootProject.ext.something -> project.ext.something or remove
-            sed -i 's/rootProject\.ext\./project.ext./g' app/build.gradle || true
-            sed -i 's/rootProject\./project./g' app/build.gradle || true
+            # Replace rootProject.ext references with actual values
+            sed -i 's/rootProject\.ext\.compileSdkVersion/34/g' app/build.gradle
+            sed -i 's/rootProject\.ext\.minSdkVersion/22/g' app/build.gradle
+            sed -i 's/rootProject\.ext\.targetSdkVersion/34/g' app/build.gradle
             
-            # If line 4 has rootProject, comment it out or remove
-            if sed -n '4p' app/build.gradle | grep -q "rootProject"; then
-              echo "Found rootProject on line 4, commenting it out"
-              sed -i '4s/^/\/\/ /' app/build.gradle || true
-            fi
-            
-            # Only modify if file exists and has android block
-            if grep -q "android {" app/build.gradle; then
-              # Replace compileSdkVersion if it exists
-              if grep -q "compileSdkVersion" app/build.gradle; then
-                sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle
-              fi
-              # Replace targetSdkVersion if it exists
-              if grep -q "targetSdkVersion" app/build.gradle; then
-                sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle
-              fi
-              # Replace Java compatibility if compileOptions exists
-              if grep -q "compileOptions" app/build.gradle; then
-                sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle
-                sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle
+            # Also check root build.gradle and create ext block if needed
+            if [ -f "build.gradle" ] && ! grep -q "ext {" build.gradle; then
+              echo "Adding ext block to root build.gradle"
+              # Add ext block after buildscript block or at the end
+              if grep -q "buildscript {" build.gradle; then
+                # Find the end of buildscript block and add ext after it
+                awk '/^}$/ && !done {print; print ""; print "ext {"; print "    compileSdkVersion = 34"; print "    minSdkVersion = 22"; print "    targetSdkVersion = 34"; print "}"; done=1; next}1' build.gradle > build.gradle.tmp && mv build.gradle.tmp build.gradle
+              else
+                # Just add at the beginning
+                cat > build.gradle.tmp << 'EOF'
+ext {
+    compileSdkVersion = 34
+    minSdkVersion = 22
+    targetSdkVersion = 34
+}
+EOF
+                cat build.gradle >> build.gradle.tmp
+                mv build.gradle.tmp build.gradle
               fi
             fi
           fi
