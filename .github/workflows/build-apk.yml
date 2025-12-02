@@ -81,7 +81,7 @@ jobs:
           if [ -d "android" ]; then
             rm -rf android
           fi
-          npx cap add android
+            npx cap add android
           
       - name: Sync Capacitor
         working-directory: ./frontend
@@ -177,15 +177,20 @@ jobs:
         working-directory: ./frontend/android
         run: |
           APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "Found APK: $APK_PATH"
+          if [ -n "$APK_PATH" ]; then
+            echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+            echo "Found APK: $APK_PATH"
+            ls -lh "$APK_PATH" || echo "File not found: $APK_PATH"
+          else
+            echo "No APK found"
+          fi
 
       - name: Upload APK artifact
-        if: ${{ steps.find_apk.outputs.apk_path != '' }}
+        if: steps.find_apk.outputs.apk_path != ''
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: ${{ steps.find_apk.outputs.apk_path }}
+          path: frontend/android/${{ steps.find_apk.outputs.apk_path }}
           retention-days: 30
 
       - name: Fail if APK missing
@@ -209,6 +214,7 @@ jobs:
           if [ -n "$AAB_PATH" ]; then
             echo "aab_path=$AAB_PATH" >> $GITHUB_OUTPUT
             echo "Found AAB: $AAB_PATH"
+            ls -lh "$AAB_PATH" || echo "File not found: $AAB_PATH"
           fi
 
       - name: Upload AAB artifact
@@ -216,5 +222,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-aab
-          path: ${{ steps.find_aab.outputs.aab_path }}
+          path: frontend/android/${{ steps.find_aab.outputs.aab_path }}
           retention-days: 30
