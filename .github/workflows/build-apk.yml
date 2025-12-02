@@ -92,8 +92,11 @@ jobs:
         working-directory: ./frontend/android
         run: |
           if [ -f "app/build.gradle" ]; then
-            echo "=== First 10 lines of app/build.gradle ==="
-            head -10 app/build.gradle
+            echo "=== Full app/build.gradle file ==="
+            cat app/build.gradle
+            echo "=== End of file ==="
+            echo "=== Line 4 specifically ==="
+            sed -n '4p' app/build.gradle
             echo "=== Checking for rootProject references ==="
             grep -n "rootProject" app/build.gradle || echo "No rootProject references found"
           fi
@@ -116,14 +119,18 @@ jobs:
         working-directory: ./frontend/android
         run: |
           if [ -f "app/build.gradle" ]; then
-            # Check if there's a problematic rootProject reference at the top
-            if head -5 app/build.gradle | grep -q "rootProject"; then
-              echo "Found rootProject reference in first 5 lines, attempting to fix..."
-              # Create backup
-              cp app/build.gradle app/build.gradle.bak
-              # Remove lines with rootProject from top if they're causing issues
-              # But only if they're before android block
-              sed -i '/^[[:space:]]*rootProject/d' app/build.gradle || true
+            # Create backup
+            cp app/build.gradle app/build.gradle.bak
+            
+            # Fix rootProject references - replace with project reference or remove
+            # Common pattern: rootProject.ext.something -> project.ext.something or remove
+            sed -i 's/rootProject\.ext\./project.ext./g' app/build.gradle || true
+            sed -i 's/rootProject\./project./g' app/build.gradle || true
+            
+            # If line 4 has rootProject, comment it out or remove
+            if sed -n '4p' app/build.gradle | grep -q "rootProject"; then
+              echo "Found rootProject on line 4, commenting it out"
+              sed -i '4s/^/\/\/ /' app/build.gradle || true
             fi
             
             # Only modify if file exists and has android block
