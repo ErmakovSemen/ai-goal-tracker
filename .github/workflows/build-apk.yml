@@ -41,6 +41,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: 34.0.0
 
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -60,8 +63,8 @@ jobs:
       - name: Install Capacitor dependencies
         working-directory: ./frontend
         run: |
-          # Install Capacitor core and Android platform
-          npm install @capacitor/core @capacitor/android @capacitor/cli --save-dev
+          # Install Capacitor core and Android platform (using version 4.x for stability with API 34)
+          npm install @capacitor/core@^4.7.0 @capacitor/android@^4.9.0 @capacitor/cli@^4.7.0 --save-dev
           
       - name: Initialize Capacitor (if needed)
         working-directory: ./frontend
@@ -98,19 +101,29 @@ jobs:
           # Set source and target compatibility
           echo "android.defaults.buildfeatures.buildconfig=true" >> gradle.properties || true
           
-      - name: Configure app build.gradle
-        working-directory: ./frontend/android/app
-        run: |
-          if [ -f build.gradle ]; then
-            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_21/' build.gradle || true
-            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_21/' build.gradle || true
-          fi
-          
-      - name: Configure capacitor-android build.gradle
+      - name: Configure Android build.gradle files
         working-directory: ./frontend/android
         run: |
-          find . -name "build.gradle" -path "*/capacitor-android/*" -exec sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_21/g' {} \; || true
-          find . -name "build.gradle" -path "*/capacitor-android/*" -exec sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_21/g' {} \; || true
+          # Configure compileSdkVersion and targetSdkVersion to 34 for all build.gradle files
+          find . -name "build.gradle" -type f | while read file; do
+            # Set compileSdkVersion to 34
+            if grep -q "compileSdkVersion" "$file"; then
+              sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' "$file" || true
+            else
+              # Add compileSdkVersion after android { if it doesn't exist
+              sed -i '/android {/a\    compileSdkVersion 34' "$file" || true
+            fi
+            # Set targetSdkVersion to 34
+            if grep -q "targetSdkVersion" "$file"; then
+              sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' "$file" || true
+            else
+              # Add targetSdkVersion after compileSdkVersion if it doesn't exist
+              sed -i '/compileSdkVersion/a\    targetSdkVersion 34' "$file" || true
+            fi
+            # Set sourceCompatibility and targetCompatibility
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_21/g' "$file" || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_21/g' "$file" || true
+          done
 
       - name: Setup Android signing
         working-directory: ./frontend/android
