@@ -121,8 +121,8 @@ jobs:
               sed -i '/compileSdkVersion/a\    targetSdkVersion 34' "$file" || true
             fi
             # Set sourceCompatibility and targetCompatibility
-            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_21/g' "$file" || true
-            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_21/g' "$file" || true
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' "$file" || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' "$file" || true
           done
 
       - name: Setup Android signing
