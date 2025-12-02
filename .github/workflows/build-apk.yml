@@ -135,14 +135,12 @@ jobs:
                 # Find the end of buildscript block and add ext after it
                 awk '/^}$/ && !done {print; print ""; print "ext {"; print "    compileSdkVersion = 34"; print "    minSdkVersion = 22"; print "    targetSdkVersion = 34"; print "}"; done=1; next}1' build.gradle > build.gradle.tmp && mv build.gradle.tmp build.gradle
               else
-                # Just add at the beginning
-                cat > build.gradle.tmp << 'EOF'
-ext {
-    compileSdkVersion = 34
-    minSdkVersion = 22
-    targetSdkVersion = 34
-}
-EOF
+                # Just add at the beginning using echo
+                echo "ext {" > build.gradle.tmp
+                echo "    compileSdkVersion = 34" >> build.gradle.tmp
+                echo "    minSdkVersion = 22" >> build.gradle.tmp
+                echo "    targetSdkVersion = 34" >> build.gradle.tmp
+                echo "}" >> build.gradle.tmp
                 cat build.gradle >> build.gradle.tmp
                 mv build.gradle.tmp build.gradle
               fi
