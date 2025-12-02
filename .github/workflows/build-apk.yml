@@ -87,6 +87,18 @@ jobs:
         run: |
           npx cap sync android
           
+      - name: Verify Android project structure
+        working-directory: ./frontend/android
+        run: |
+          if [ ! -f "app/build.gradle" ]; then
+            echo "Error: app/build.gradle not found"
+            exit 1
+          fi
+          # Check if build.gradle has valid structure
+          if ! grep -q "android {" app/build.gradle; then
+            echo "Warning: app/build.gradle may have invalid structure"
+          fi
+          
       - name: Configure Gradle Java version
         working-directory: ./frontend/android
         run: |
@@ -104,25 +116,27 @@ jobs:
       - name: Configure Android build.gradle files
         working-directory: ./frontend/android
         run: |
-          # Configure compileSdkVersion and targetSdkVersion to 34 for app/build.gradle only
-          if [ -f "app/build.gradle" ]; then
-            # Only replace existing values, don't add new ones
-            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle || true
-            sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle || true
-            # Only replace if android block exists and has compileOptions
+          # Show first 20 lines of app/build.gradle for debugging
+          echo "=== First 20 lines of app/build.gradle ==="
+          head -20 app/build.gradle || true
+          echo "=== End of preview ==="
+          
+          # Only modify if file exists and has android block
+          if [ -f "app/build.gradle" ] && grep -q "android {" app/build.gradle; then
+            # Replace compileSdkVersion if it exists
+            if grep -q "compileSdkVersion" app/build.gradle; then
+              sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/' app/build.gradle
+            fi
+            # Replace targetSdkVersion if it exists
+            if grep -q "targetSdkVersion" app/build.gradle; then
+              sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/' app/build.gradle
+            fi
+            # Replace Java compatibility if compileOptions exists
             if grep -q "compileOptions" app/build.gradle; then
-              sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle || true
-              sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle || true
+              sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' app/build.gradle
+              sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' app/build.gradle
             fi
           fi
-          
-          # Configure capacitor-android build.gradle files
-          find . -path "*/capacitor-android/*/build.gradle" -type f 2>/dev/null | while read file; do
-            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/g' "$file" || true
-            sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/g' "$file" || true
-            sed -i 's/sourceCompatibility JavaVersion.VERSION_[0-9]*/sourceCompatibility JavaVersion.VERSION_17/g' "$file" || true
-            sed -i 's/targetCompatibility JavaVersion.VERSION_[0-9]*/targetCompatibility JavaVersion.VERSION_17/g' "$file" || true
-          done || true
 
       - name: Setup Android signing
         working-directory: ./frontend/android
