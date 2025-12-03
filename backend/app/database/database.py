@@ -8,9 +8,24 @@ if settings.DATABASE_URL:
     # Render provides postgres:// but SQLAlchemy needs postgresql://
     SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace("postgres://", "postgresql://", 1)
 else:
-    SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    # Try PostgreSQL first, fallback to SQLite for development
+    try:
+        import psycopg2
+        # Try to connect to PostgreSQL
+        SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+        # Test connection
+        test_conn = psycopg2.connect(SQLALCHEMY_DATABASE_URL)
+        test_conn.close()
+        print("✅ Using PostgreSQL database")
+    except:
+        # Fallback to SQLite for development
+        SQLALCHEMY_DATABASE_URL = "sqlite:///./ai_goal_tracker.db"
+        print("⚠️  PostgreSQL not available, using SQLite for development")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

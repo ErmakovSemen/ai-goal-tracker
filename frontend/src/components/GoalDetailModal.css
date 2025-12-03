@@ -1,0 +1,483 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.goal-detail-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.goal-title-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.goal-title-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.goal-description-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.goal-description-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.goal-stats {
+  display: flex;
+  gap: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #4a90e2;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Milestones List */
+.milestones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.milestone-row:hover {
+  background: #f0f4f8;
+}
+
+.milestone-row.completed {
+  background: #e8f5e9;
+}
+
+.milestone-row.overdue {
+  background: #ffebee;
+}
+
+.milestone-number {
+  width: 24px;
+  height: 24px;
+  background: #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.milestone-row.completed .milestone-number {
+  background: #4caf50;
+  color: white;
+}
+
+.milestone-row.overdue .milestone-number {
+  background: #e53935;
+  color: white;
+}
+
+.milestone-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: white;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.milestone-checkbox.checked {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.milestone-checkbox:hover {
+  border-color: #4a90e2;
+}
+
+.milestone-title-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: transparent;
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.milestone-title-input:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.milestone-title-input:focus {
+  outline: none;
+  background: white;
+  border-color: #4a90e2;
+}
+
+.milestone-row.completed .milestone-title-input {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.milestone-deadline {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.milestone-deadline .deadline-input {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  width: 130px;
+}
+
+.milestone-deadline .deadline-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.milestone-deadline .deadline-input.overdue {
+  border-color: #e53935;
+  color: #e53935;
+}
+
+.milestone-deadline .deadline-input::-webkit-datetime-edit {
+  color: #333;
+}
+
+.milestone-deadline .deadline-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.milestone-deadline .deadline-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Placeholder for empty date */
+.milestone-deadline .deadline-input:not(:valid)::-webkit-datetime-edit {
+  color: #999;
+}
+
+.milestone-deadline .deadline-input::placeholder {
+  color: #999;
+}
+
+.overdue-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: #e53935;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-milestone-btn {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  opacity: 0.4;
+  font-size: 16px;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.delete-milestone-btn:hover {
+  opacity: 1;
+}
+
+/* Add milestone row */
+.add-milestone-row {
+  display: flex;
+  gap: 10px;
+}
+
+.new-milestone-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.new-milestone-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  border-style: solid;
+}
+
+.add-milestone-btn {
+  padding: 12px 20px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.add-milestone-btn:hover:not(:disabled) {
+  background: #3a7bc8;
+}
+
+.add-milestone-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  border-radius: 0 0 16px 16px;
+}
+
+.save-btn {
+  padding: 12px 24px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #43a047;
+}
+
+.save-btn:disabled {
+  background: #a5d6a7;
+  cursor: not-allowed;
+}
+
+.delete-goal-modal-btn {
+  padding: 12px 24px;
+  background: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 10px;
+}
+
+.delete-goal-modal-btn:hover {
+  background: #e53935;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 82, 82, 0.3);
+}
+
+.close-modal-btn {
+  padding: 12px 24px;
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-modal-btn:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .goal-detail-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .goal-stats {
+    flex-wrap: wrap;
+  }
+  
+  .milestone-row {
+    flex-wrap: wrap;
+  }
+  
+  .milestone-deadline .deadline-input {
+    width: 100%;
+  }
+  
+  .add-milestone-row {
+    flex-direction: column;
+  }
+}
+

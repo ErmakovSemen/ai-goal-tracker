@@ -8,7 +8,14 @@ router = APIRouter()
 
 @router.post("/", response_model=schemas.Goal)
 def create_goal(goal: schemas.GoalCreate, user_id: int, db: Session = Depends(get_db)):
-    return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
+    try:
+        return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error creating goal: {e}")
+        print(f"Traceback: {error_trace}")
+        raise HTTPException(status_code=500, detail=f"Error creating goal: {str(e)}")
 
 @router.get("/{goal_id}", response_model=schemas.Goal)
 def read_goal(goal_id: int, db: Session = Depends(get_db)):

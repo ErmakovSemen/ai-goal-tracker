@@ -1,0 +1,153 @@
+.chat-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.chat-view.empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-chat {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 10px;
+}
+
+.empty-chat h2 {
+  margin: 20px 0 10px 0;
+  color: #333;
+}
+
+.empty-chat p {
+  color: #999;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.chat-header {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.chat-header-info {
+  flex: 1;
+}
+
+.chat-header-info h2 {
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.goal-description {
+  margin: 0 0 15px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.header-progress {
+  margin-top: 12px;
+  min-height: 40px;
+  position: relative;
+}
+
+.header-progress.clickable {
+  cursor: pointer;
+  padding: 10px;
+  margin: 12px -10px 0 -10px;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+}
+
+.header-progress.clickable:hover {
+  background-color: #f5f8fa;
+}
+
+.header-progress.clickable::after {
+  content: '⚙️ Детали';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: #999;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.header-progress.clickable:hover::after {
+  opacity: 1;
+}
+
+.progress-loading {
+  font-size: 0.85rem;
+  color: #999;
+  padding: 8px 0;
+}
+
+.create-plan-button {
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-plan-button:hover {
+  background-color: #0056b3;
+}
+
+.header-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.progress-percent {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.header-progress .progress-container {
+  margin: 0;
+}
+
+.header-progress .progress-bar {
+  height: 6px;
+}
+
+
+.chat-messages-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+

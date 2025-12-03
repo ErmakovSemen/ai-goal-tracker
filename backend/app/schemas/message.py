@@ -7,7 +7,7 @@ class MessageBase(BaseModel):
     sender: str
 
 class MessageCreate(MessageBase):
-    chat_id: int
+    chat_id: Optional[int] = None  # Will be set from URL parameter, not required in body
 
 class MessageUpdate(MessageBase):
     content: Optional[str] = None
@@ -18,7 +18,7 @@ class MessageInDBBase(MessageBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Message(MessageInDBBase):
     pass

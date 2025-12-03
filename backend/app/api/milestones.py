@@ -19,12 +19,24 @@ def read_milestone(milestone_id: int, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[schemas.Milestone])
 def read_milestones(goal_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    milestones = crud.milestone.get_milestones(db, goal_id=goal_id, skip=skip, limit=limit)
-    return milestones
+    try:
+        milestones = crud.milestone.get_milestones(db, goal_id=goal_id, skip=skip, limit=limit)
+        return milestones or []
+    except Exception as e:
+        import traceback
+        print(f"Error getting milestones: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Error getting milestones: {str(e)}")
 
 @router.put("/{milestone_id}", response_model=schemas.Milestone)
 def update_milestone(milestone_id: int, milestone: schemas.MilestoneUpdate, db: Session = Depends(get_db)):
-    db_milestone = crud.milestone.update_milestone(db, milestone_id=milestone_id, milestone=milestone)
+    # Handle both 'completed' and 'is_completed' fields
+    update_data = milestone.dict(exclude_unset=True)
+    if 'completed' in update_data and 'is_completed' not in update_data:
+        update_data['is_completed'] = update_data.pop('completed')
+    
+    milestone_update = schemas.MilestoneUpdate(**update_data)
+    db_milestone = crud.milestone.update_milestone(db, milestone_id=milestone_id, milestone=milestone_update)
     if db_milestone is None:
         raise HTTPException(status_code=404, detail="Milestone not found")
     return db_milestone

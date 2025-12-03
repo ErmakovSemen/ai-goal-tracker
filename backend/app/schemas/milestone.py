@@ -5,15 +5,18 @@ from datetime import datetime, date
 class MilestoneBase(BaseModel):
     title: str
     description: Optional[str] = None
-    target_date: date
+    target_date: Optional[date] = None  # Make optional for easier creation
 
 class MilestoneCreate(MilestoneBase):
     goal_id: int
 
-class MilestoneUpdate(MilestoneBase):
+class MilestoneUpdate(BaseModel):
     title: Optional[str] = None
+    description: Optional[str] = None
     is_completed: Optional[bool] = None
+    completed: Optional[bool] = None  # Alias for is_completed
     progress: Optional[float] = None
+    target_date: Optional[date] = None  # Deadline
 
 class MilestoneInDBBase(MilestoneBase):
     id: int
@@ -24,7 +27,13 @@ class MilestoneInDBBase(MilestoneBase):
     updated_at: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        from_attributes = True  # Pydantic v2
+    
+    @property
+    def completed(self) -> bool:
+        """Alias for is_completed for frontend compatibility"""
+        return self.is_completed
 
 class Milestone(MilestoneInDBBase):
     pass

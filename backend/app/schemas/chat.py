@@ -6,8 +6,9 @@ from app.schemas.message import Message
 class ChatBase(BaseModel):
     title: str
 
-class ChatCreate(ChatBase):
+class ChatCreate(BaseModel):
     goal_id: int
+    title: Optional[str] = None  # Auto-generated if not provided
 
 class ChatUpdate(ChatBase):
     title: Optional[str] = None
@@ -19,7 +20,7 @@ class ChatInDBBase(ChatBase):
     updated_at: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Chat(ChatInDBBase):
     messages: List[Message] = []

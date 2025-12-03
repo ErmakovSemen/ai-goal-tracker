@@ -1,65 +1,307 @@
 .progress-container {
   width: 100%;
-  margin: 20px 0;
+  margin: 10px 0;
+}
+
+.progress-bar-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 .progress-bar {
   width: 100%;
   height: 8px;
-  background-color: #f0f0f0;
+  background-color: #e8e8e8;
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: #4a90e2;
-  transition: width 0.3s ease;
-}
-
-.milestones {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+  background: linear-gradient(90deg, #4a90e2, #67a3eb);
+  border-radius: 4px;
+  transition: width 0.4s ease;
   position: relative;
 }
 
-.milestones::before {
-  content: '';
+/* Milestone dots overlay on the bar */
+.milestone-dots {
   position: absolute;
-  top: 12px;
+  top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background-color: #e0e0e0;
-  z-index: 1;
+  height: 8px;
+  pointer-events: none;
 }
 
-.milestone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
+.milestone-dot-container {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.milestone-dot-container.active {
+  z-index: 100;
 }
 
 .milestone-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background-color: #e0e0e0;
-  margin-bottom: 8px;
-  transition: background-color 0.3s ease;
+  background-color: #ffffff;
+  border: 3px solid #c0c0c0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-.milestone.completed .milestone-dot {
+.milestone-dot:hover {
+  transform: scale(1.2);
+  border-color: #4a90e2;
+  box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
+}
+
+/* Completed milestone */
+.milestone-dot.completed {
   background-color: #4a90e2;
+  border-color: #4a90e2;
 }
 
-.milestone-title {
+.milestone-dot.completed:hover {
+  background-color: #3a7bc8;
+  border-color: #3a7bc8;
+}
+
+/* Overdue milestone (red) */
+.milestone-dot.overdue {
+  background-color: #fff;
+  border-color: #e53935;
+  animation: pulse-red 2s infinite;
+}
+
+.milestone-dot.overdue:hover {
+  border-color: #c62828;
+  box-shadow: 0 2px 6px rgba(229, 57, 53, 0.4);
+}
+
+/* Upcoming milestone (orange/yellow) */
+.milestone-dot.upcoming {
+  background-color: #fff;
+  border-color: #ff9800;
+}
+
+.milestone-dot.upcoming:hover {
+  border-color: #f57c00;
+  box-shadow: 0 2px 6px rgba(255, 152, 0, 0.4);
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(229, 57, 53, 0);
+  }
+}
+
+/* Tooltip bubble */
+.milestone-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.15s ease;
+  z-index: 1000;
+}
+
+.milestone-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: #333;
+}
+
+/* Position adjustments for edge tooltips */
+.milestone-tooltip.left {
+  left: auto;
+  right: -10px;
+  transform: none;
+}
+
+.milestone-tooltip.left::after {
+  left: auto;
+  right: 15px;
+  transform: none;
+}
+
+.milestone-tooltip.right {
+  left: -10px;
+  transform: none;
+}
+
+.milestone-tooltip.right::after {
+  left: 15px;
+  transform: none;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltip-text {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.tooltip-deadline {
   font-size: 12px;
-  color: #666666;
-  text-align: center;
-  max-width: 80px;
-  word-wrap: break-word;
+}
+
+.deadline-text {
+  color: #aaa;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.deadline-text:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.deadline-text.overdue {
+  color: #ff6b6b;
+}
+
+.deadline-text.upcoming {
+  color: #ffc107;
+}
+
+.deadline-input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  outline: none;
+  width: 130px;
+}
+
+.deadline-input:focus {
+  border-color: #4a90e2;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Color scheme for date input */
+.deadline-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.tooltip-status-btn {
+  font-size: 18px;
+  font-weight: bold;
+  background: none;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.tooltip-status-btn.done {
+  color: #4caf50;
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.tooltip-status-btn.pending {
+  color: #888;
+  border-color: #666;
+}
+
+.tooltip-status-btn:hover {
+  transform: scale(1.1);
+}
+
+.tooltip-status-btn.pending:hover {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.tooltip-status-btn.done:hover {
+  color: #ff9800;
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.milestone-tooltip.left {
+  animation: fadeInLeft 0.15s ease;
+}
+
+.milestone-tooltip.right {
+  animation: fadeInRight 0.15s ease;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

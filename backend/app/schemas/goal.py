@@ -28,7 +28,7 @@ class GoalInDBBase(GoalBase):
     end_date: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Goal(GoalInDBBase):
     milestones: List[Milestone] = []

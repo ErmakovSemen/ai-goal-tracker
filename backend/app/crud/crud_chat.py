@@ -41,4 +41,4 @@ def create_message(db: Session, message: MessageCreate):
     return db_message
 
 def get_messages(db: Session, chat_id: int, skip: int = 0, limit: int = 100):
-    return db.query(Message).filter(Message.chat_id == chat_id).offset(skip).limit(limit).all()
+    return db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.id.asc()).offset(skip).limit(limit).all()

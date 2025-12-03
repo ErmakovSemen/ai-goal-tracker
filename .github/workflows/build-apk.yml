@@ -178,8 +178,8 @@ jobs:
         run: |
           APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
           if [ -n "$APK_PATH" ]; then
-            echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-            echo "Found APK: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK_PATH"
             ls -lh "$APK_PATH" || echo "File not found: $APK_PATH"
           else
             echo "No APK found"

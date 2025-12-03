@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "your-secret-key-here"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # LLM Configuration
+    LLM_PROVIDER: str = "ollama"  # ollama (local), groq, huggingface, together, openai, openrouter, github
+    LLM_API_KEY: Optional[str] = None  # Not needed for Ollama
+    LLM_MODEL: str = "qwen2.5:7b"  # Qwen 2.5 - great at instruction following and JSON
+    OLLAMA_URL: Optional[str] = "http://localhost:11434"  # Ollama server URL
 
     class Config:
         case_sensitive = True
