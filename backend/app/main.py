@@ -31,10 +31,15 @@ async def startup_event():
     """Create database tables on startup"""
     try:
         from app.database.database import engine, Base
-        from app.models import goal, milestone, user, chat, report
+        from app.models import goal, milestone, user, chat, report, agreement
         # Create all tables
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created/verified successfully")
+        
+        # Start proactive service
+        from app.services.proactive_service import start_proactive_service
+        start_proactive_service()
+        print("✅ Proactive messaging service started")
     except Exception as e:
         import traceback
         print(f"⚠️  Warning: Could not create database tables: {e}")

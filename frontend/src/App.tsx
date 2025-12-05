@@ -3,6 +3,7 @@ import './App.css';
 import GoalList from './components/GoalList';
 import ChatView from './pages/ChatView';
 import CreateGoal from './pages/CreateGoal';
+import QuickGoalModal from './components/QuickGoalModal';
 import DebugMenu, { DebugSettings } from './components/DebugMenu';
 import { authAPI, goalsAPI, Goal } from './services/api';
 
@@ -13,6 +14,7 @@ function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [showQuickGoalModal, setShowQuickGoalModal] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -93,6 +95,34 @@ function App() {
     } else {
       // Reload from API
       await loadGoals();
+    }
+  };
+
+  const handleGoalCreatedFromChat = (newGoal: Goal) => {
+    console.log('handleGoalCreatedFromChat called with:', newGoal);
+    // Add new goal to the list and switch to it
+    setGoals(prevGoals => {
+      // Check if goal already exists
+      if (prevGoals.some(g => g.id === newGoal.id)) {
+        console.log('Goal already exists, just switching to it');
+        return prevGoals;
+      }
+      console.log('Adding new goal to list');
+      return [...prevGoals, newGoal];
+    });
+    console.log('Setting selected goal id to:', newGoal.id);
+    setSelectedGoalId(newGoal.id);
+  };
+
+  const handleQuickGoalCreate = async (title: string, description?: string) => {
+    try {
+      const newGoal = await goalsAPI.create({ title, description }, 1);
+      setGoals([...goals, newGoal]);
+      setSelectedGoalId(newGoal.id);
+      setShowQuickGoalModal(false);
+    } catch (err) {
+      console.error('Failed to create goal:', err);
+      throw err;
     }
   };
 
@@ -209,15 +239,25 @@ function App() {
         }))}
         selectedGoalId={selectedGoalId}
         onSelectGoal={setSelectedGoalId}
-        onCreateNew={() => setShowCreateGoal(true)}
+        onCreateNew={() => setShowQuickGoalModal(true)}
         onDeleteGoal={handleDeleteGoal}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+      <QuickGoalModal
+        isOpen={showQuickGoalModal}
+        onClose={() => setShowQuickGoalModal(false)}
+        onCreateGoal={handleQuickGoalCreate}
+        onOpenFullEditor={() => {
+          setShowQuickGoalModal(false);
+          setShowCreateGoal(true);
+        }}
       />
       <ChatView
         goal={selectedGoal}
         onBack={() => setSelectedGoalId(null)}
         onDeleteGoal={handleDeleteGoal}
+        onGoalCreated={handleGoalCreatedFromChat}
         debugSettings={debugSettings}
       />
       <div className="debug-toggle-container">

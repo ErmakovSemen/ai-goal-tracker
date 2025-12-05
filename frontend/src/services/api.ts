@@ -195,7 +195,7 @@ export const milestonesAPI = {
     return apiRequest<Milestone[]>(`/api/milestones/?goal_id=${goalId}`);
   },
 
-  create: async (milestone: { title: string; description?: string; goal_id: number }): Promise<Milestone> => {
+  create: async (milestone: { title: string; description?: string; goal_id: number; target_date?: string | null }): Promise<Milestone> => {
     return apiRequest<Milestone>('/api/milestones/', {
       method: 'POST',
       body: JSON.stringify(milestone),

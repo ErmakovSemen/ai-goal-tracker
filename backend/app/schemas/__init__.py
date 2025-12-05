@@ -4,6 +4,7 @@ from .milestone import Milestone, MilestoneCreate, MilestoneUpdate, MilestoneInD
 from .chat import Chat, ChatCreate, ChatUpdate, ChatInDB
 from .report import Report, ReportCreate, ReportUpdate, ReportInDB
 from .message import Message, MessageCreate, MessageInDB
+from .agreement import Agreement, AgreementCreate, AgreementUpdate
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB", "UserBase",
@@ -12,4 +13,5 @@ __all__ = [
     "Chat", "ChatCreate", "ChatUpdate", "ChatInDB",
     "Report", "ReportCreate", "ReportUpdate", "ReportInDB",
     "Message", "MessageCreate", "MessageInDB",
+    "Agreement", "AgreementCreate", "AgreementUpdate",
 ]

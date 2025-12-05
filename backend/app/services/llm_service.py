@@ -25,7 +25,7 @@ class LLMService:
         
         # Check if API key is set (not needed for Ollama)
         if self.provider != "ollama" and not self.api_key:
-            return "AI service is not configured. Please set LLM_API_KEY environment variable. For now, I'll help you manually!"
+            return "AI сервис не настроен. Пожалуйста, установите LLM_API_KEY в переменных окружения."
         
         try:
             if self.provider == "ollama":
@@ -67,6 +67,24 @@ class LLMService:
                 "Content-Type": "application/json"
             }
             
+            # Check if we need JSON format (for structured responses)
+            # Always use JSON format if system prompt mentions JSON, actions, or structured format
+            use_json_format = False
+            for msg in messages:
+                content = msg.get("content", "")
+                role = msg.get("role", "")
+                content_upper = content.upper()
+                
+                # System prompt usually contains format instructions
+                if role == "system":
+                    if any(keyword in content_upper for keyword in ["JSON", "ФОРМАТ", "ACTIONS", "CHECKLIST"]):
+                        use_json_format = True
+                        break
+                # Or explicit JSON format request
+                if "JSON" in content_upper and ("формат" in content.lower() or "format" in content.lower()):
+                    use_json_format = True
+                    break
+            
             payload = {
                 "model": model,
                 "messages": messages,
@@ -75,8 +93,12 @@ class LLMService:
                     "num_predict": max_tokens
                 },
                 "stream": False
-                # Note: removed "format": "json" to allow natural language responses
             }
+            
+            # Add JSON format if needed (for structured responses like checklists)
+            if use_json_format:
+                payload["format"] = "json"
+                print(f"📋 Using JSON format for structured response")
             
             async with httpx.AsyncClient(timeout=120.0) as client:
                 response = await client.post(url, headers=headers, json=payload)

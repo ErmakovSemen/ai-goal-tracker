@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './ChatInterface.css';
+import ChecklistComponent, { ChecklistData } from './ChecklistComponent';
 
 interface PendingAction {
   type: string;
@@ -26,6 +27,7 @@ interface ChatInterfaceProps {
   onAction?: (action: string, data?: any) => void;
   onConfirmActions?: (actions: PendingAction[]) => Promise<void>;
   onCancelActions?: () => Promise<void>;
+  onSubmitChecklist?: (checklistId: string, answers: Record<string | number, boolean | number | string>, checklistData?: { title: string; items: any[] }) => Promise<void>;
   disabled?: boolean;
   debugMode?: boolean;
 }
@@ -45,6 +47,36 @@ const parsePendingActions = (content: string): { cleanContent: string; pendingAc
   return { cleanContent: content, pendingActions: [] };
 };
 
+// Helper to parse checklist from message content
+const parseChecklist = (content: string): { cleanContent: string; checklist: ChecklistData | null } => {
+  const match = content.match(/<!--CHECKLIST:([\s\S]*?)-->/);
+  if (match) {
+    try {
+      const checklistData = JSON.parse(match[1]);
+      const cleanContent = content.replace(/<!--CHECKLIST:[\s\S]*?-->/, '').trim();
+      return { cleanContent, checklist: checklistData as ChecklistData };
+    } catch (e) {
+      console.error('Failed to parse checklist:', e);
+    }
+  }
+  return { cleanContent: content, checklist: null };
+};
+
+// Helper to parse suggestions from message content
+const parseSuggestions = (content: string): { cleanContent: string; suggestions: string[] } => {
+  const match = content.match(/<!--SUGGESTIONS:([\s\S]*?)-->/);
+  if (match) {
+    try {
+      const suggestions = JSON.parse(match[1]);
+      const cleanContent = content.replace(/<!--SUGGESTIONS:[\s\S]*?-->/, '').trim();
+      return { cleanContent, suggestions: Array.isArray(suggestions) ? suggestions : [] };
+    } catch (e) {
+      console.error('Failed to parse suggestions:', e);
+    }
+  }
+  return { cleanContent: content, suggestions: [] };
+};
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   goalId, 
   chatId,
@@ -53,11 +85,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onAction, 
   onConfirmActions,
   onCancelActions,
+  onSubmitChecklist,
   disabled = false, 
   debugMode = false 
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [submittingChecklist, setSubmittingChecklist] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,18 +127,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const handleChecklistSubmit = async (checklistId: string, answers: Record<string | number, boolean | number | string>, checklistData?: { title: string; items: any[] }) => {
+    if (onSubmitChecklist && !submittingChecklist) {
+      setSubmittingChecklist(checklistId);
+      try {
+        await onSubmitChecklist(checklistId, answers, checklistData);
+      } catch (e) {
+        console.error('Error submitting checklist:', e);
+      } finally {
+        setSubmittingChecklist(null);
+      }
+    }
+  };
+
   return (
     <div className="chat-container">
       <div className="chat-messages">
         {messages.map((message, msgIndex) => {
-          // Parse pending actions from AI messages
-          const { cleanContent, pendingActions } = message.sender === 'ai' 
+          // Parse pending actions and checklist from AI messages
+          const { cleanContent: contentAfterActions, pendingActions } = message.sender === 'ai' 
             ? parsePendingActions(message.content)
             : { cleanContent: message.content, pendingActions: [] };
           
-          // Check if this is the last AI message with pending actions
+          const { cleanContent: contentAfterChecklist, checklist } = message.sender === 'ai'
+            ? parseChecklist(contentAfterActions)
+            : { cleanContent: contentAfterActions, checklist: null };
+          
+          // Also parse suggestions (but don't display them inline - they go above input)
+          const { cleanContent } = message.sender === 'ai'
+            ? parseSuggestions(contentAfterChecklist)
+            : { cleanContent: contentAfterChecklist };
+          
+          // Check if this is the last AI message with pending actions or checklist
           const isLastMessage = msgIndex === messages.length - 1;
           const hasPendingActions = pendingActions.length > 0 && isLastMessage;
+          const hasChecklist = checklist !== null && isLastMessage;
           
           // Clean debug markers for display
           let displayContent = cleanContent;
@@ -129,8 +186,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 ))}
               </div>
               
+              {/* Checklist Component */}
+              {hasChecklist && checklist && (
+                <ChecklistComponent
+                  checklist={checklist}
+                  onSubmit={(answers) => handleChecklistSubmit(`checklist-${message.id}`, answers, checklist)}
+                  disabled={disabled || submittingChecklist === `checklist-${message.id}`}
+                />
+              )}
+              
               {/* Pending Actions Confirmation Buttons */}
-              {hasPendingActions && (
+              {hasPendingActions && !hasChecklist && (
                 <div className="pending-actions-buttons">
                   <button
                     type="button"
@@ -189,6 +255,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           );
         })}
       </div>
+      
+      {/* Quick reply suggestions */}
+      {(() => {
+        // Get suggestions from the last AI message
+        const lastAiMessage = [...messages].reverse().find(m => m.sender === 'ai');
+        if (lastAiMessage && !disabled) {
+          const { suggestions } = parseSuggestions(lastAiMessage.content);
+          if (suggestions.length > 0) {
+            return (
+              <div className="suggestions-container">
+                {suggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="suggestion-btn"
+                    onClick={() => {
+                      onSendMessage(suggestion);
+                    }}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            );
+          }
+        }
+        return null;
+      })()}
+      
       <form className="chat-input-form" onSubmit={handleSubmit}>
         <input
           type="text"
@@ -196,9 +291,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           onChange={(e) => setInputValue(e.target.value)}
           placeholder={disabled ? "Подождите..." : "Введите сообщение..."}
           className="chat-input"
-          disabled={disabled || confirming}
+          disabled={disabled || confirming || submittingChecklist !== null}
         />
-        <button type="submit" className="send-button" disabled={disabled || confirming}>
+        <button type="submit" className="send-button" disabled={disabled || confirming || submittingChecklist !== null}>
           Отправить
         </button>
       </form>

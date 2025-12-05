@@ -35,7 +35,7 @@ const GoalDetail: React.FC = () => {
   ];
   
   const initialMessages: Message[] = [
-    { id: 1, content: "Hello! I'm your AI assistant for this goal. How can I help you today?", sender: 'ai', timestamp: new Date() },
+    { id: 1, content: "Привет! 👋 Как продвигается работа над целью? Расскажи, что удалось сделать за последнее время?", sender: 'ai', timestamp: new Date() },
     { id: 2, content: "Can you help me understand React hooks better?", sender: 'user', timestamp: new Date() },
     { id: 3, content: "Of course! React hooks are functions that let you 'hook into' React state and lifecycle features from function components.", sender: 'ai', timestamp: new Date() }
   ];

@@ -26,27 +26,21 @@ interface ChatViewProps {
   goal: Goal | null;
   onBack: () => void;
   onDeleteGoal?: (goalId: number) => void;
+  onGoalCreated?: (newGoal: ApiGoal) => void;
   debugSettings?: DebugSettings;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSettings }) => {
+const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalCreated, debugSettings }) => {
   const debugMode = debugSettings?.enabled || false;
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      content: goal 
-        ? `Hi! I'm your AI assistant for "${goal.title}". How can I help you today?`
-        : "Hi! I'm your AI assistant. What would you like to achieve?",
-      sender: 'ai',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loadingMilestones, setLoadingMilestones] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   const [chatId, setChatId] = useState<number | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [processedGoalIds, setProcessedGoalIds] = useState<Set<number>>(new Set());
+  const [lastMessageId, setLastMessageId] = useState<number>(0);
 
   const loadMilestones = async () => {
     if (!goal) return;
@@ -93,6 +87,73 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSe
     }
   }, [goal]);
 
+  // Heartbeat to register activity
+  useEffect(() => {
+    if (!chatId) return;
+    
+    const sendHeartbeat = async () => {
+      try {
+        const { getApiUrl } = await import('../config/api');
+        await fetch(getApiUrl(`/api/chats/${chatId}/heartbeat/`), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        // Ignore heartbeat errors
+      }
+    };
+    
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, [chatId]);
+
+  // Poll for proactive messages from AI
+  useEffect(() => {
+    if (!chatId || loadingAI) return;
+    
+    const checkNewMessages = async () => {
+      try {
+        const { getApiUrl } = await import('../config/api');
+        const response = await fetch(getApiUrl(`/api/chats/${chatId}/new-messages/?after_id=${lastMessageId}`));
+        if (response.ok) {
+          const newMessages = await response.json();
+          if (newMessages.length > 0) {
+            // Add new proactive messages
+            const formattedNewMessages = newMessages.map((m: any) => ({
+              id: m.id,
+              content: m.content,
+              sender: m.sender as 'user' | 'ai',
+              timestamp: new Date(m.created_at || Date.now())
+            }));
+            
+            setMessages(prev => {
+              const existingIds = new Set(prev.map(m => m.id));
+              const uniqueNew = formattedNewMessages.filter((m: Message) => !existingIds.has(m.id));
+              if (uniqueNew.length > 0) {
+                console.log('📥 Received proactive messages:', uniqueNew.length);
+                return [...prev, ...uniqueNew];
+              }
+              return prev;
+            });
+            
+            // Update last message ID
+            const maxId = Math.max(...newMessages.map((m: any) => m.id));
+            setLastMessageId(maxId);
+            
+            // Reload milestones in case of updates
+            loadMilestones();
+          }
+        }
+      } catch (err) {
+        // Ignore polling errors
+      }
+    };
+    
+    const interval = setInterval(checkNewMessages, 10000); // Every 10 seconds
+    return () => clearInterval(interval);
+  }, [chatId, lastMessageId, loadingAI]);
+
   const initializeChat = async () => {
     if (!goal) return;
     
@@ -110,26 +171,68 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSe
           sender: m.sender as 'user' | 'ai',
           timestamp: new Date(m.created_at || m.timestamp || Date.now())
         })));
+        // Track last message ID for proactive polling
+        if (messages.length > 0) {
+          const maxId = Math.max(...messages.map(m => m.id));
+          setLastMessageId(maxId);
+        }
       } else {
         // Create new chat
         const newChat = await chatsAPI.create({ goal_id: goal.id });
         setChatId(newChat.id);
-        // Set initial AI message
+        
+        // Generate AI greeting dynamically
         setMessages([{
-          id: 1,
-          content: `Hi! I'm your AI assistant for "${goal.title}". How can I help you today?`,
+          id: 0,
+          content: "...",
           sender: 'ai',
           timestamp: new Date()
         }]);
+        setLoadingAI(true);
+        
+        try {
+          const { getApiUrl } = await import('../config/api');
+          const greetingResponse = await fetch(getApiUrl(`/api/chats/${newChat.id}/generate-greeting/`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (greetingResponse.ok) {
+            const greeting = await greetingResponse.json();
+            setMessages([{
+              id: greeting.id,
+              content: greeting.content,
+              sender: 'ai',
+              timestamp: new Date(greeting.created_at || Date.now())
+            }]);
+            setLastMessageId(greeting.id);
+          } else {
+            // Fallback
+            setMessages([{
+              id: 1,
+              content: `Привет! 👋 Как дела с целью "${goal.title}"?`,
+              sender: 'ai',
+              timestamp: new Date()
+            }]);
+          }
+        } catch (err) {
+          console.error('Failed to generate greeting:', err);
+          setMessages([{
+            id: 1,
+            content: `Привет! 👋 Как дела с целью "${goal.title}"?`,
+            sender: 'ai',
+            timestamp: new Date()
+          }]);
+        } finally {
+          setLoadingAI(false);
+        }
       }
     } catch (err) {
       console.log('Failed to initialize chat:', err);
-      // Fallback to demo mode
+      // Fallback to demo mode - still try to generate greeting
       setMessages([{
         id: 1,
-        content: goal 
-          ? `Hi! I'm your AI assistant for "${goal.title}". How can I help you today?`
-          : "Hi! I'm your AI assistant. What would you like to achieve?",
+        content: `Привет! 👋 Как дела с целью "${goal?.title || 'твоей'}"?`,
         sender: 'ai',
         timestamp: new Date()
       }]);
@@ -182,7 +285,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSe
           
           if (updatedMessageCount > currentMessageCount || attempts >= maxAttempts) {
             // Update all messages - ensure content is always a string
-            setMessages(updatedMessages.map(m => {
+            const formattedMessages = updatedMessages.map(m => {
               let content = m.content;
               if (typeof content !== 'string') {
                 if (content && typeof content === 'object') {
@@ -200,7 +303,45 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSe
                 sender: m.sender as 'user' | 'ai',
                 timestamp: new Date(m.created_at || m.timestamp || Date.now())
               };
-            }));
+            });
+            setMessages(formattedMessages);
+            
+            // Update last message ID for proactive polling
+            if (formattedMessages.length > 0) {
+              const maxId = Math.max(...formattedMessages.map(m => m.id));
+              setLastMessageId(maxId);
+            }
+            
+            // Check if AI created a new goal in the LAST message
+            if (onGoalCreated && formattedMessages.length > 0) {
+              // Get the last AI message
+              const lastAiMessage = [...formattedMessages].reverse().find(m => m.sender === 'ai');
+              if (lastAiMessage) {
+                console.log('Checking last AI message for new goal:', lastAiMessage.content.substring(0, 100));
+                // Look for pattern: "Создана новая цель: {title} (ID: {id})"
+                const goalMatch = lastAiMessage.content.match(/Создана новая цель[^:]*:\s*([^(]+)\s*\(ID:\s*(\d+)\)/);
+                console.log('Goal match result:', goalMatch);
+                if (goalMatch) {
+                  const goalTitle = goalMatch[1].trim();
+                  const goalId = parseInt(goalMatch[2], 10);
+                  console.log('Found new goal:', goalTitle, goalId, 'processedGoalIds:', processedGoalIds);
+                  // Only process if not already processed
+                  if (goalId && !isNaN(goalId) && !processedGoalIds.has(goalId)) {
+                    console.log('Processing new goal:', goalId);
+                    setProcessedGoalIds(prev => new Set(prev).add(goalId));
+                    // Load the new goal and notify parent
+                    try {
+                      const { goalsAPI } = await import('../services/api');
+                      const newGoal = await goalsAPI.getById(goalId);
+                      console.log('Loaded new goal, calling onGoalCreated:', newGoal);
+                      onGoalCreated(newGoal);
+                    } catch (err) {
+                      console.error('Failed to load new goal:', err);
+                    }
+                  }
+                }
+              }
+            }
             
             // Reload milestones if AI might have created/updated them
             await loadMilestones();
@@ -347,6 +488,45 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, debugSe
           onSendMessage={handleSendMessage}
           disabled={loadingAI}
           debugMode={debugSettings?.showRawResponse || false}
+          onSubmitChecklist={async (checklistId, answers, checklistData) => {
+            if (!chatId) return;
+            try {
+              setLoadingAI(true);
+              const { getApiUrl } = await import('../config/api');
+              const response = await fetch(getApiUrl(`/api/chats/${chatId}/submit-checklist/`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  checklist_id: checklistId, 
+                  answers,
+                  title: checklistData?.title || 'Проверка',
+                  items: checklistData?.items || []
+                })
+              });
+              if (response.ok) {
+                // Reload messages to show AI response
+                const { chatsAPI } = await import('../services/api');
+                const freshMessages = await chatsAPI.getMessages(chatId);
+                setMessages(freshMessages.map((m: any) => ({
+                  id: m.id,
+                  content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+                  sender: m.sender,
+                  timestamp: new Date(m.created_at || m.timestamp || Date.now())
+                })));
+                // Reload milestones
+                await loadMilestones();
+              } else {
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                console.error('Failed to submit checklist:', errorData);
+                alert(`Ошибка при отправке чеклиста: ${errorData.detail || 'Неизвестная ошибка'}`);
+              }
+            } catch (err) {
+              console.error('Failed to submit checklist:', err);
+              alert(`Ошибка при отправке чеклиста: ${err instanceof Error ? err.message : 'Неизвестная ошибка'}`);
+            } finally {
+              setLoadingAI(false);
+            }
+          }}
           onConfirmActions={async (actions) => {
             if (!chatId) return;
             try {
