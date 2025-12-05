@@ -85,3 +85,5 @@ Thumbs.db
 *.keystore
 *.jks
 backend/ai_goal_tracker.db
+backend/goals.db
+backend/ai_goal_tracker.db
