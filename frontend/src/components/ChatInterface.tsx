@@ -47,6 +47,34 @@ const parsePendingActions = (content: string): { cleanContent: string; pendingAc
   return { cleanContent: content, pendingActions: [] };
 };
 
+// Helper to format pending action for display
+const formatActionForDisplay = (action: PendingAction): string => {
+  const { type, data } = action;
+  
+  switch (type) {
+    case 'create_milestone':
+      return `📌 Создать подцель: ${data.title || 'без названия'}`;
+    case 'complete_milestone':
+      return `✅ Отметить выполненной: подцель #${data.milestone_id}`;
+    case 'delete_milestone':
+      if (data.count) {
+        return `🗑 Удалить последние ${data.count} подцелей`;
+      }
+      return `🗑 Удалить подцель #${data.milestone_id}`;
+    case 'set_deadline':
+      const target = data.milestone_title || `#${data.milestone_id}`;
+      return `📅 Установить дедлайн для «${target}»: ${data.deadline}`;
+    case 'create_goal':
+      return `🎯 Создать цель: ${data.title || 'без названия'}`;
+    case 'create_agreement':
+      return `📝 Зафиксировать: ${data.description?.substring(0, 50) || 'договорённость'}... (до ${data.deadline})`;
+    case 'update_goal':
+      return `✏️ Обновить цель`;
+    default:
+      return `🔧 ${type}: ${JSON.stringify(data).substring(0, 50)}...`;
+  }
+};
+
 // Helper to parse checklist from message content
 const parseChecklist = (content: string): { cleanContent: string; checklist: ChecklistData | null } => {
   const match = content.match(/<!--CHECKLIST:([\s\S]*?)-->/);
@@ -195,25 +223,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 />
               )}
               
-              {/* Pending Actions Confirmation Buttons */}
+              {/* Pending Actions Preview and Confirmation Buttons */}
               {hasPendingActions && !hasChecklist && (
-                <div className="pending-actions-buttons">
-                  <button
-                    type="button"
-                    className="confirm-actions-btn"
-                    onClick={() => handleConfirm(pendingActions)}
-                    disabled={confirming || disabled}
-                  >
-                    {confirming ? '⏳ Выполняется...' : '✅ Подтвердить'}
-                  </button>
-                  <button
-                    type="button"
-                    className="cancel-actions-btn"
-                    onClick={handleCancel}
-                    disabled={confirming || disabled}
-                  >
-                    ❌ Отменить
-                  </button>
+                <div className="pending-actions-container">
+                  <div className="pending-actions-preview">
+                    <div className="pending-actions-header">📋 Предлагаемые действия:</div>
+                    <div className="pending-actions-list">
+                      {pendingActions
+                        .filter(a => a.type !== 'suggestions')
+                        .map((action, idx) => (
+                          <div key={idx} className="pending-action-item">
+                            {formatActionForDisplay(action)}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  <div className="pending-actions-buttons">
+                    <button
+                      type="button"
+                      className="confirm-actions-btn"
+                      onClick={() => handleConfirm(pendingActions)}
+                      disabled={confirming || disabled}
+                    >
+                      {confirming ? '⏳ Выполняется...' : '✅ Подтвердить'}
+                    </button>
+                    <button
+                      type="button"
+                      className="cancel-actions-btn"
+                      onClick={handleCancel}
+                      disabled={confirming || disabled}
+                    >
+                      ❌ Отменить
+                    </button>
+                  </div>
                 </div>
               )}
               

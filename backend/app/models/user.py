@@ -15,3 +15,4 @@ class User(Base):
     
     # Relationships
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
+    device_tokens = relationship("DeviceToken", back_populates="user", cascade="all, delete-orphan")

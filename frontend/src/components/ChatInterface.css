@@ -184,13 +184,51 @@
   overflow-y: auto;
 }
 
+/* Pending Actions Container */
+.pending-actions-container {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #ddd;
+}
+
+/* Pending Actions Preview */
+.pending-actions-preview {
+  margin-bottom: 15px;
+}
+
+.pending-actions-header {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.pending-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pending-action-item {
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f0f7ff, #e8f4fd);
+  border-left: 4px solid #4a90e2;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pending-action-item:hover {
+  background: linear-gradient(135deg, #e8f4fd, #d6ecff);
+}
+
 /* Pending Actions Confirmation Buttons */
 .pending-actions-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px dashed #ddd;
 }
 
 .confirm-actions-btn,

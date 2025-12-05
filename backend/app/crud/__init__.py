@@ -4,5 +4,6 @@ from . import crud_milestone as milestone
 from . import crud_chat as chat
 from . import crud_report as report
 from . import crud_agreement as agreement
+from . import crud_device_token as device_token
 
-__all__ = ["user", "goal", "milestone", "chat", "report", "agreement"]
+__all__ = ["user", "goal", "milestone", "chat", "report", "agreement", "device_token"]

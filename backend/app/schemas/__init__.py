@@ -5,6 +5,7 @@ from .chat import Chat, ChatCreate, ChatUpdate, ChatInDB
 from .report import Report, ReportCreate, ReportUpdate, ReportInDB
 from .message import Message, MessageCreate, MessageInDB
 from .agreement import Agreement, AgreementCreate, AgreementUpdate
+from .device_token import DeviceToken, DeviceTokenCreate, DeviceTokenUpdate
 
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB", "UserBase",
@@ -14,4 +15,5 @@ __all__ = [
     "Report", "ReportCreate", "ReportUpdate", "ReportInDB",
     "Message", "MessageCreate", "MessageInDB",
     "Agreement", "AgreementCreate", "AgreementUpdate",
+    "DeviceToken", "DeviceTokenCreate", "DeviceTokenUpdate",
 ]

@@ -6,6 +6,7 @@ import CreateGoal from './pages/CreateGoal';
 import QuickGoalModal from './components/QuickGoalModal';
 import DebugMenu, { DebugSettings } from './components/DebugMenu';
 import { authAPI, goalsAPI, Goal } from './services/api';
+import { pushNotificationService } from './services/pushNotifications';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,6 +43,11 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       loadGoals();
+      // Initialize push notifications
+      const userId = 1; // TODO: Get actual user ID from auth
+      pushNotificationService.initialize(userId).catch(err => {
+        console.warn('Failed to initialize push notifications:', err);
+      });
     }
   }, [isLoggedIn]);
 

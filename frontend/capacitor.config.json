@@ -1,1 +1,10 @@
-{"appId": "com.yourcompany.aigoaltracker", "appName": "AI Goal Tracker", "webDir": "build"}
+{
+  "appId": "com.yourcompany.aigoaltracker",
+  "appName": "AI Goal Tracker",
+  "webDir": "build",
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

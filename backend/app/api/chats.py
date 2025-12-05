@@ -66,6 +66,8 @@ def build_system_prompt(goal, milestones: List, agreements: List = None) -> str:
 4. ОСУЖДЕНИЕ (дружелюбное) — если не сделал, мягко пожури: "Эй, мы же договаривались! 😤"
 5. КОРРЕКТИРОВКА — если план не работает, предложи изменить
 
+⚠️ СТОП! Если пользователь говорит "давай к плану" / "давай сразу план" / "хочу план" — НЕ ЗАДАВАЙ УТОЧНЯЮЩИХ ВОПРОСОВ! Сразу предложи ГОТОВЫЙ план с 3-5 конкретными шагами через create_milestone!
+
 ТОНАЛЬНОСТЬ:
 - Когда сделал: "Ура! 🎉 Молодец! Так держать!"
 - Когда не сделал: "Хм, ты обещал сделать это вчера... 🦉 Что случилось?"
@@ -83,9 +85,10 @@ def build_system_prompt(goal, milestones: List, agreements: List = None) -> str:
 - create_milestone: создать подцель {{"type":"create_milestone","data":{{"title":"название"}}}}
 - complete_milestone: отметить выполненной {{"type":"complete_milestone","data":{{"milestone_id":123}}}}
 - delete_milestone: удалить подцель {{"type":"delete_milestone","data":{{"milestone_id":123}}}} или последние N: {{"data":{{"count":5}}}}
+- set_deadline: установить дедлайн для подцели {{"type":"set_deadline","data":{{"milestone_id":123,"deadline":"2025-12-15"}}}} или по названию: {{"data":{{"milestone_title":"Выбрать тему","deadline":"2025-12-15"}}}}
 - create_goal: создать новую цель {{"type":"create_goal","data":{{"title":"название"}}}}
 - checklist: форма для сбора данных
-- create_agreement: зафиксировать договорённость с дедлайном
+- create_agreement: зафиксировать договорённость с дедлайном {{"type":"create_agreement","data":{{"description":"что обещал","deadline":"2025-12-10 18:00"}}}}
 - suggestions: предложить варианты ответа {{"type":"suggestions","data":{{"items":["Вариант 1","Вариант 2","Вариант 3"]}}}}
 
 SUGGESTIONS — предлагай пользователю варианты ответа кнопками!
@@ -110,8 +113,15 @@ SUGGESTIONS — предлагай пользователю варианты о�
 Пользователь только начал:
 {{"message":"Привет! 🎯 Так, цель — \\"{goal.title}\\". Расскажи подробнее: почему это важно для тебя? Что изменится, когда достигнешь?","actions":[{{"type":"suggestions","data":{{"items":["Расскажу подробнее","Давай сразу к плану"]}}}}]}}
 
-Составляем КОНКРЕТНЫЙ план (не абстрактный!):
-{{"message":"Отлично! План готов:\\n\\n📌 Шаг 1: [конкретное действие]\\n📌 Шаг 2: [конкретное действие]\\n📌 Шаг 3: [конкретное действие]\\n\\nТеперь важно: давай установим дедлайны и договоримся, как будем проверять прогресс! Когда планируешь начать?","actions":[{{"type":"create_milestone","data":{{"title":"Конкретный шаг 1"}}}},{{"type":"create_milestone","data":{{"title":"Конкретный шаг 2"}}}},{{"type":"create_milestone","data":{{"title":"Конкретный шаг 3"}}}},{{"type":"suggestions","data":{{"items":["Установим дедлайны","Начну сегодня","Расскажи про проверку"]}}}}]}}
+ВАЖНО! Когда пользователь говорит "давай к плану" / "давай сразу к плану" / "хочу план" — НЕ СПРАШИВАЙ БОЛЬШЕ, а СРАЗУ предложи конкретный план!
+
+Пример для цели "Нарисовать картину":
+{{"message":"Отлично, погнали! 🎨 Вот план для создания картины:\\n\\n📌 Шаг 1: Выбрать тему и стиль (реализм, абстракция, портрет?)\\n📌 Шаг 2: Сделать эскиз и подготовить материалы\\n📌 Шаг 3: Нанести базовые цвета и тени\\n📌 Шаг 4: Проработать детали и завершить\\n\\nЭто базовый план — одобряешь или хочешь изменить?","actions":[{{"type":"create_milestone","data":{{"title":"Выбрать тему и стиль картины"}}}},{{"type":"create_milestone","data":{{"title":"Сделать эскиз и подготовить материалы"}}}},{{"type":"create_milestone","data":{{"title":"Нанести базовые цвета и тени"}}}},{{"type":"create_milestone","data":{{"title":"Проработать детали и завершить картину"}}}},{{"type":"suggestions","data":{{"items":["Отлично, одобряю!","Хочу изменить","Установим дедлайны"]}}}}]}}
+
+Пример для цели "Выучить английский":
+{{"message":"Погнали! 🚀 Вот план для изучения английского:\\n\\n📌 Шаг 1: Оценить текущий уровень (тест)\\n📌 Шаг 2: Учить 10 новых слов каждый день\\n📌 Шаг 3: Смотреть сериал на английском 30 мин/день\\n📌 Шаг 4: Практиковать разговор 2 раза в неделю\\n\\nКак тебе такой план?","actions":[{{"type":"create_milestone","data":{{"title":"Пройти тест на уровень английского"}}}},{{"type":"create_milestone","data":{{"title":"Учить 10 новых слов каждый день"}}}},{{"type":"create_milestone","data":{{"title":"Смотреть сериал на английском 30 мин/день"}}}},{{"type":"create_milestone","data":{{"title":"Практиковать разговор 2 раза в неделю"}}}},{{"type":"suggestions","data":{{"items":["Отлично!","Хочу изменить","Установим дедлайны"]}}}}]}}
+
+ПРАВИЛО: Когда пользователь просит план — ВСЕГДА создавай 3-5 конкретных шагов через create_milestone! НЕ спрашивай уточняющих вопросов, если пользователь сам сказал "давай к плану".
 
 ВАЖНО: После создания подцелей ВСЕГДА предлагай следующие шаги через suggestions:
 - Установить дедлайны
@@ -119,7 +129,10 @@ SUGGESTIONS — предлагай пользователю варианты о�
 - Начать работу
 
 После создания плана — устанавливаем дедлайны:
-{{"message":"Отлично! Теперь давай установим дедлайны. Когда планируешь начать первый шаг? А когда закончить?","actions":[{{"type":"suggestions","data":{{"items":["Начну завтра","Начну на этой неделе","Установим конкретные даты"]}}}}]}}
+{{"message":"Отлично! Давай установим дедлайны для каждого шага. Предлагаю такой график:\\n\\n📅 Шаг 1: до [дата]\\n📅 Шаг 2: до [дата]\\n📅 Шаг 3: до [дата]\\n\\nПодходит?","actions":[{{"type":"set_deadline","data":{{"milestone_title":"Шаг 1","deadline":"2025-12-10"}}}},{{"type":"set_deadline","data":{{"milestone_title":"Шаг 2","deadline":"2025-12-15"}}}},{{"type":"set_deadline","data":{{"milestone_title":"Шаг 3","deadline":"2025-12-20"}}}},{{"type":"suggestions","data":{{"items":["Подходит!","Хочу другие даты","Слишком быстро"]}}}}]}}
+
+Когда пользователь говорит "установим дедлайны" — СРАЗУ предлагай конкретные даты через set_deadline!
+Используй текущую дату {current_date} как ориентир для расчёта дедлайнов (обычно 3-7 дней на шаг).
 
 Фиксируем договорённость о проверке:
 {{"message":"Записываю! 📝 Ты обещаешь сделать [задачу] к [дате]. Я проверю тебя [когда] — не подведи меня 🦉","actions":[{{"type":"create_agreement","data":{{"description":"Описание задачи","deadline":"2025-12-10 18:00"}}}},{{"type":"suggestions","data":{{"items":["Хорошо!","Может позже?","Уточню дату"]}}}}]}}
@@ -303,7 +316,7 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
     actions = normalized.get("actions", [])
     
     if actions:
-        valid_action_types = ["create_milestone", "complete_milestone", "delete_milestone", "update_goal", "create_goal", "checklist", "create_agreement", "suggestions"]
+        valid_action_types = ["create_milestone", "complete_milestone", "delete_milestone", "update_goal", "create_goal", "checklist", "create_agreement", "suggestions", "set_deadline"]
         
         for i, action in enumerate(actions):
             if not isinstance(action, dict):
@@ -359,6 +372,12 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
                     return False, f"actions[{i}] (create_agreement) requires 'data.description'"
                 if not data.get("deadline"):
                     return False, f"actions[{i}] (create_agreement) requires 'data.deadline'"
+            
+            elif action_type == "set_deadline":
+                if not data.get("milestone_id") and not data.get("milestone_title"):
+                    return False, f"actions[{i}] (set_deadline) requires either 'data.milestone_id' or 'data.milestone_title'"
+                if not data.get("deadline"):
+                    return False, f"actions[{i}] (set_deadline) requires 'data.deadline'"
     
     return True, None
 
@@ -491,6 +510,56 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                     print(f"📝 Created agreement: {created.id} - {description[:30]}...")
                 else:
                     results.append(f"❌ Не удалось распознать дату: {deadline_str}")
+            
+            elif action_type == "set_deadline":
+                from datetime import datetime, date as date_type
+                
+                milestone_id = data.get("milestone_id")
+                milestone_title = data.get("milestone_title")
+                deadline_str = data.get("deadline", "")
+                
+                # Parse deadline
+                deadline_date = None
+                try:
+                    # Try ISO format first
+                    parsed = datetime.fromisoformat(deadline_str.replace("Z", "+00:00"))
+                    deadline_date = parsed.date()
+                except:
+                    try:
+                        # Try common formats
+                        for fmt in ["%Y-%m-%d", "%d.%m.%Y", "%Y-%m-%d %H:%M", "%d.%m.%Y %H:%M"]:
+                            try:
+                                parsed = datetime.strptime(deadline_str, fmt)
+                                deadline_date = parsed.date()
+                                break
+                            except:
+                                continue
+                    except:
+                        pass
+                
+                if not deadline_date:
+                    results.append(f"❌ Не удалось распознать дату дедлайна: {deadline_str}")
+                    continue
+                
+                # Find milestone by ID or title
+                target_milestone = None
+                if milestone_id:
+                    target_milestone = crud.milestone.get_milestone(db, milestone_id)
+                elif milestone_title:
+                    # Search by title in current goal's milestones
+                    milestones = crud.milestone.get_milestones(db, goal_id=goal_id)
+                    for m in milestones:
+                        if milestone_title.lower() in m.title.lower():
+                            target_milestone = m
+                            break
+                
+                if target_milestone:
+                    # Update milestone with deadline
+                    crud.milestone.update_milestone(db, target_milestone.id, schemas.MilestoneUpdate(target_date=deadline_date))
+                    results.append(f"📅 Дедлайн установлен: «{target_milestone.title}» — до {deadline_date.strftime('%d.%m.%Y')}")
+                    print(f"📅 Set deadline for milestone {target_milestone.id}: {deadline_date}")
+                else:
+                    results.append(f"❌ Подцель не найдена: {milestone_id or milestone_title}")
         
         except Exception as e:
             error_msg = f"❌ Ошибка выполнения {action_type}: {str(e)}"
@@ -1006,24 +1075,58 @@ async def confirm_actions(
         
         # Get current milestone count
         milestones = crud.milestone.get_milestones(db, goal_id=chat.goal_id)
-        completed = len([m for m in milestones if m.is_completed])
-        pending = len([m for m in milestones if not m.is_completed])
+        completed_count = len([m for m in milestones if m.is_completed])
+        pending_count = len([m for m in milestones if not m.is_completed])
         
-        # Build follow-up message based on what was done
-        result_text = "✅ " + "\n".join(results) if results else "✅ Готово!"
+        # Generate proactive AI follow-up instead of static message
+        from app.services.llm_service import llm_service
         
-        # Add helpful follow-up based on current state
-        if pending > 0:
-            result_text += f"\n\n📊 У тебя сейчас {len(milestones)} подцелей ({completed} выполнено, {pending} осталось)."
-            result_text += "\n\nЧто дальше?"
-            result_text += "\n• Добавить ещё подцели - просто напиши их"
-            result_text += "\n• Установить дедлайны - скажи 'установи дедлайн для...'"
-            result_text += "\n• Начать работу - скажи 'готово' или 'начать'"
-        elif len(milestones) == 0:
-            result_text += "\n\nХочешь добавить подцели для достижения цели? Просто опиши шаги."
-        else:
-            result_text += f"\n\n🎉 Отлично! Все {len(milestones)} подцелей выполнены!"
-            result_text += "\n\nХочешь добавить новые подцели или цель достигнута?"
+        # Build context for AI
+        milestones_list = "\n".join([f"- {m.title}" + (" ✅" if m.is_completed else "") for m in milestones])
+        actions_done = "\n".join(results) if results else "действия выполнены"
+        
+        follow_up_prompt = f"""Ты — коуч как сова из Duolingo. Пользователь только что подтвердил создание плана.
+
+ВЫПОЛНЕНО: {actions_done}
+
+ТЕКУЩИЕ ПОДЦЕЛИ ({pending_count} из {len(milestones)} осталось):
+{milestones_list}
+
+ТВОЯ ЗАДАЧА: Проактивно продолжи диалог! НЕ давай стандартных инструкций!
+
+Вместо этого:
+1. Похвали за создание плана (коротко!)
+2. СРАЗУ предложи установить дедлайны для первых шагов
+3. Спроси, когда пользователь планирует начать
+4. Предложи договориться о проверке прогресса
+
+Будь как Duolingo — настойчив и конкретен! Не жди, пока пользователь сам спросит.
+
+Ответь JSON: {{"message":"твой текст","actions":[{{"type":"suggestions","data":{{"items":["вариант1","вариант2","вариант3"]}}}}]}}"""
+
+        try:
+            ai_response = await llm_service.chat_completion([
+                {"role": "system", "content": follow_up_prompt}
+            ], temperature=0.7)
+            
+            # Parse AI response
+            parsed, error = parse_ai_response(ai_response)
+            if parsed and "message" in parsed:
+                result_text = parsed["message"]
+                
+                # Add suggestions if present
+                if "actions" in parsed:
+                    for action in parsed["actions"]:
+                        if action.get("type") == "suggestions":
+                            items = action.get("data", {}).get("items", [])
+                            if items:
+                                result_text += f"\n\n<!--SUGGESTIONS:{json.dumps(items, ensure_ascii=False)}-->"
+            else:
+                # Fallback if AI response is invalid
+                result_text = f"✅ Отлично! План создан — {len(milestones)} шагов.\n\nТеперь давай установим сроки! Когда планируешь начать первый шаг: «{milestones[0].title if milestones else 'первый шаг'}»?\n\n<!--SUGGESTIONS:{json.dumps(['Начну сегодня', 'Начну завтра', 'На этой неделе'], ensure_ascii=False)}-->"
+        except Exception as e:
+            print(f"Error generating follow-up: {e}")
+            result_text = f"✅ План создан — {len(milestones)} шагов!\n\nКогда начнём? Давай установим дедлайн для первого шага!\n\n<!--SUGGESTIONS:{json.dumps(['Начну сегодня', 'Завтра', 'Установим дедлайны'], ensure_ascii=False)}-->"
         
         ai_message = schemas.MessageCreate(
             content=result_text,
@@ -1056,14 +1159,10 @@ async def cancel_actions(
             milestones = crud.milestone.get_milestones(db, goal_id=chat.goal_id)
             milestones_count = len(milestones)
         
-        # Create helpful cancellation message
-        cancel_text = "❌ Хорошо, отменяю.\n\n"
-        cancel_text += "Что хочешь сделать?\n"
-        cancel_text += "• Предложить другие подцели\n"
-        cancel_text += "• Изменить формулировку\n"
-        if milestones_count > 0:
-            cancel_text += f"• Посмотреть текущие {milestones_count} подцелей\n"
-        cancel_text += "• Или просто напиши, что тебе нужно!"
+        # Create helpful cancellation message with suggestions
+        cancel_text = "Окей, отменяю! 🦉 Что не так? Расскажи, и я предложу другой вариант."
+        suggestions = ["Хочу другой план", "Изменить формулировки", "Начать заново"]
+        cancel_text += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
         
         ai_message = schemas.MessageCreate(
             content=cancel_text,
