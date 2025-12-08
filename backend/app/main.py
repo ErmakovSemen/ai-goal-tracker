@@ -16,9 +16,17 @@ app = FastAPI(
 )
 
 # CORS middleware
+# In production, allow all origins for mobile apps (Capacitor uses file:// or custom schemes)
+# For web, you can restrict to specific domains
+import os
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if cors_origins == ["*"]:
+    # Allow all for mobile apps and development
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],  # Allow all for development
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
