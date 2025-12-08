@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 100vh;
   background-color: #ffffff;
 }
 
@@ -40,6 +41,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .chat-header-info {
@@ -146,8 +149,63 @@
 
 .chat-messages-container {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .chat-view {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .chat-messages-container {
+    overflow: visible;
+  }
+
+  .chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 16px;
+  }
+
+  .chat-header-info h2 {
+    font-size: 1.25rem;
+  }
+
+  .goal-description {
+    font-size: 0.85rem;
+  }
+
+  .header-progress {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .chat-view {
+    min-height: calc(100vh - 56px);
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .header-progress.clickable {
+    margin: 8px 0 0 0;
+    padding: 8px;
+  }
+
+  .header-progress.clickable::after {
+    display: none;
+  }
 }
 

@@ -1,14 +1,17 @@
 .App {
   display: flex;
   height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
+  width: 100%;
 }
 
 .chat-layout {
   display: flex;
   flex-direction: row;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .App-header {
@@ -135,8 +138,11 @@
 .debug-toggle-container {
   position: fixed;
   bottom: 20px;
-  left: 20px;
+  right: 20px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .debug-toggle {
@@ -166,4 +172,45 @@
 
 .debug-toggle.active:hover {
   background-color: #357abd;
+}
+
+@media (max-width: 1024px) {
+  .App {
+    height: auto;
+    overflow: visible;
+  }
+
+  .chat-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .debug-toggle-container {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .debug-toggle {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 560px) {
+  .debug-toggle-container {
+    position: static;
+    flex-direction: row;
+    justify-content: center;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .debug-toggle {
+    flex: 1;
+    text-align: center;
+  }
 }

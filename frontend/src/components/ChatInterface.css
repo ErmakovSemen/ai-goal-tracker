@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  min-height: 0;
 }
 
 .chat-messages {
@@ -10,6 +11,7 @@
   padding: 20px;
   overflow-y: auto;
   background-color: #ffffff;
+  min-height: 0;
 }
 
 .message {
@@ -346,4 +348,57 @@
 
 .suggestion-btn:active {
   transform: translateY(0);
+}
+
+@media (max-width: 1024px) {
+  .chat-container {
+    height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-messages {
+    padding: 16px 14px 12px;
+  }
+
+  .message-content {
+    max-width: 100%;
+    font-size: 13px;
+  }
+
+  .chat-input-form {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .send-button {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .pending-actions-buttons {
+    flex-direction: column;
+  }
+
+  .pending-actions-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .chat-input {
+    font-size: 13px;
+  }
+
+  .suggestions-container {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 12px 14px;
+  }
+
+  .suggestion-btn {
+    flex: 0 0 auto;
+  }
 }
