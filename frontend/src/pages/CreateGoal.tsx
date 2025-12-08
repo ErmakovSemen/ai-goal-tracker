@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ChatInterface from '../components/ChatInterface';
-import { Goal, goalsAPI, milestonesAPI, chatsAPI, Milestone } from '../services/api';
+import { Goal, goalsAPI, milestonesAPI, chatsAPI } from '../services/api';
 import './CreateGoal.css';
 
 interface Message {

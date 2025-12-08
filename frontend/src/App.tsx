@@ -49,6 +49,7 @@ function App() {
         console.warn('Failed to initialize push notifications:', err);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const loadGoals = async () => {
@@ -83,14 +84,14 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = React.useCallback(() => {
     authAPI.logout();
     setIsLoggedIn(false);
     setUsername('');
     setPassword('');
     setGoals([]);
     setSelectedGoalId(null);
-  };
+  }, []);
 
   const handleGoalCreated = async (newGoal?: Goal) => {
     setShowCreateGoal(false);
@@ -273,6 +274,13 @@ function App() {
           title="Open debug settings"
         >
           🐛 Debug
+        </button>
+        <button 
+          className="debug-toggle"
+          onClick={handleLogout}
+          title="Logout"
+        >
+          🚪 Выход
         </button>
       </div>
       {showDebugMenu && (

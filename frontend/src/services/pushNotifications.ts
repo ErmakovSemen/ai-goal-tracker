@@ -13,10 +13,11 @@ export interface PushNotificationToken {
 // Helper to dynamically import modules without TypeScript checking
 async function tryImport(moduleName: string): Promise<any> {
   try {
-    // Use Function constructor to avoid TypeScript checking the import
+    // Dynamic import for Capacitor modules - only works on native platforms
+    // eslint-disable-next-line no-new-func
     const importFn = new Function('moduleName', 'return import(moduleName)');
     return await importFn(moduleName);
-  } catch (e) {
+  } catch {
     return null;
   }
 }

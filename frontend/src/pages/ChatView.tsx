@@ -31,7 +31,6 @@ interface ChatViewProps {
 }
 
 const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalCreated, debugSettings }) => {
-  const debugMode = debugSettings?.enabled || false;
   const [messages, setMessages] = useState<Message[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loadingMilestones, setLoadingMilestones] = useState(true);
@@ -85,6 +84,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       }, 3000); // Every 3 seconds
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal]);
 
   // Heartbeat to register activity
@@ -152,6 +152,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
     
     const interval = setInterval(checkNewMessages, 10000); // Every 10 seconds
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, lastMessageId, loadingAI]);
 
   const initializeChat = async () => {
@@ -264,7 +265,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       }
       
       // Send message - backend will automatically generate AI response
-      const debugModeEnabled = debugSettings?.parseJson && debugSettings?.executeActions || false;
+      const debugModeEnabled = (debugSettings?.parseJson && debugSettings?.executeActions) || false;
       await chatsAPI.sendMessage(currentChatId, content, 'user', debugModeEnabled);
       
       // Poll for AI response - check multiple times
@@ -275,8 +276,6 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       const pollForResponse = async () => {
         try {
           const updatedMessages = await chatsAPI.getMessages(currentChatId!);
-          const aiMessages = updatedMessages.filter(m => m.sender === 'ai');
-          const userMessages = updatedMessages.filter(m => m.sender === 'user');
           
           // Check if we have a new AI response
           // Compare by checking if there are more total messages than we currently have
