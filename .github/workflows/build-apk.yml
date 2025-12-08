@@ -63,8 +63,8 @@ jobs:
       - name: Install Capacitor dependencies
         working-directory: ./frontend
         run: |
-          # Install Capacitor core and Android platform (using version 4.8.2 for stability with API 34)
-          npm install @capacitor/core@4.8.2 @capacitor/android@4.8.2 @capacitor/cli@4.8.2 --save-dev
+          # Install Capacitor Android platform (version 6.x to match existing dependencies)
+          npm install @capacitor/android@6 @capacitor/cli@6 --save-dev --legacy-peer-deps
           
       - name: Initialize Capacitor (if needed)
         working-directory: ./frontend
