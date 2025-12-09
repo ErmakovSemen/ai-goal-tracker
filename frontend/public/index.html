@@ -1,12 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="manifest" href="/manifest.json">
-    <title>AI Goal Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="description" content="AI Goal Tracker — умный помощник для достижения целей с AI-коучем" />
+    <meta name="keywords" content="цели, трекер целей, AI, искусственный интеллект, продуктивность, планирование" />
+    
+    <!-- Open Graph для социальных сетей -->
+    <meta property="og:title" content="AI Goal Tracker" />
+    <meta property="og:description" content="Умный помощник для достижения целей с AI-коучем" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ai-goal-tracker.netlify.app" />
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>" />
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preconnect to API -->
+    <link rel="preconnect" href="https://ai-goal-tracker-api.onrender.com" />
+    
+    <title>AI Goal Tracker — Умный помощник для целей</title>
+    
+    <style>
+      /* Стили загрузки до загрузки React */
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      #root:empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      #root:empty::after {
+        content: '🎯';
+        font-size: 64px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+      }
+    </style>
   </head>
   <body>
+    <noscript>Для работы AI Goal Tracker необходим JavaScript.</noscript>
     <div id="root"></div>
   </body>
 </html>

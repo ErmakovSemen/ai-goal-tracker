@@ -1,5 +1,5 @@
 // API configuration
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'https://ai-goal-tracker-api.onrender.com';
 
 export const getApiUrl = (endpoint: string = ''): string => {
   const baseUrl = API_URL.replace(/\/$/, ''); // Remove trailing slash

@@ -1,11 +1,14 @@
 services:
+  # Backend API (Python/FastAPI)
   - type: web
     name: ai-goal-tracker-api
     env: python
     region: oregon
     plan: free
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -24,9 +27,25 @@ services:
       - key: PORT
         value: 8000
 
+  # Frontend (React Static Site)
+  - type: web
+    name: ai-goal-tracker-web
+    env: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://ai-goal-tracker-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
 databases:
   - name: ai-goal-tracker-db
     plan: free
     databaseName: ai_goal_tracker
     user: ai_goal_tracker_user
-

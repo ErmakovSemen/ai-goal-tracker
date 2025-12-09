@@ -1,0 +1,37 @@
+# Конфигурация Netlify для AI Goal Tracker Frontend
+
+[build]
+  # Директория с исходным кодом
+  base = "frontend"
+  # Команда сборки
+  command = "npm ci && npm run build"
+  # Директория с готовым приложением
+  publish = "build"
+
+[build.environment]
+  # Переменная окружения для API (можно переопределить в Netlify Dashboard)
+  REACT_APP_API_URL = "https://ai-goal-tracker-api.onrender.com"
+  # Версия Node.js
+  NODE_VERSION = "18"
+
+# Правила редиректов для SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Заголовки безопасности
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Кэширование статических файлов
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
