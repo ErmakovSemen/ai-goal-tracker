@@ -42,6 +42,8 @@ class LLMService:
                 return await self._openrouter_chat(messages, model or "meta-llama/llama-3.1-8b-instruct", temperature, max_tokens)
             elif self.provider == "github":
                 return await self._github_models_chat(messages, model or "meta-llama/llama-3.1-8b-instruct", temperature, max_tokens)
+            elif self.provider == "deepseek":
+                return await self._deepseek_chat(messages, model or "deepseek-chat", temperature, max_tokens)
             else:
                 raise ValueError(f"Unknown LLM provider: {self.provider}")
         except Exception as e:
@@ -414,6 +416,48 @@ class LLMService:
             import traceback
             print(traceback.format_exc())
             return "I'm having trouble connecting to the AI service. Please try again later."
+    
+    async def _deepseek_chat(
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int
+    ) -> str:
+        """DeepSeek API integration - free and powerful"""
+        try:
+            import httpx
+            
+            # DeepSeek API endpoint
+            url = "https://api.deepseek.com/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": model,  # deepseek-chat, deepseek-coder, etc.
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                # DeepSeek supports response_format for JSON mode
+                "response_format": {"type": "json_object"}
+            }
+            
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                content = data["choices"][0]["message"]["content"]
+                if isinstance(content, dict):
+                    import json
+                    content = json.dumps(content)
+                return str(content) if content else "I'm sorry, I didn't get a response."
+        except Exception as e:
+            print(f"DeepSeek API error: {e}")
+            import traceback
+            print(traceback.format_exc())
+            return f"I'm having trouble connecting to DeepSeek. Error: {str(e)}"
     
     def _messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
         """Convert messages to prompt format for models that need it"""

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # LLM Configuration
-    LLM_PROVIDER: str = "ollama"  # ollama (local), groq, huggingface, together, openai, openrouter, github
+    LLM_PROVIDER: str = "ollama"  # ollama (local), groq, huggingface, together, openai, openrouter, github, deepseek
     LLM_API_KEY: Optional[str] = None  # Not needed for Ollama
     LLM_MODEL: str = "qwen2.5:7b"  # Qwen 2.5 - great at instruction following and JSON
     OLLAMA_URL: Optional[str] = "http://localhost:11434"  # Ollama server URL

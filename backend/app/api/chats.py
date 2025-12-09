@@ -175,7 +175,7 @@ SUGGESTIONS — предлагай пользователю варианты о�
 
 def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]]:
     """
-    Parse AI response as JSON.
+    Parse AI response as JSON with improved error handling.
     Returns: (parsed_dict, error_message)
     """
     if not response_text:
@@ -190,40 +190,69 @@ def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]
     text = re.sub(r'```\s*$', '', text)
     text = text.strip()
     
-    # Fix common issues: replace actual newlines inside strings with \n
-    # This handles the case where model outputs real newlines instead of \n
-    def fix_newlines_in_json(s):
-        # Find JSON object boundaries
-        start = s.find('{')
-        end = s.rfind('}')
-        if start == -1 or end == -1:
-            return s
+    def fix_json_strings(s: str) -> str:
+        """
+        Fix JSON by properly escaping strings.
+        This handles emojis, newlines, and special characters inside strings.
+        """
+        result = []
+        i = 0
+        in_string = False
+        escape_next = False
+        string_start = None
         
-        # Extract just the JSON part
-        json_part = s[start:end+1]
+        while i < len(s):
+            char = s[i]
+            
+            if escape_next:
+                result.append(char)
+                escape_next = False
+                i += 1
+                continue
+            
+            if char == '\\':
+                result.append(char)
+                escape_next = True
+                i += 1
+                continue
+            
+            if char == '"' and (i == 0 or s[i-1] != '\\'):
+                if not in_string:
+                    in_string = True
+                    string_start = i
+                    result.append(char)
+                else:
+                    in_string = False
+                    result.append(char)
+                i += 1
+                continue
+            
+            if in_string:
+                # Inside a string - escape problematic characters
+                if char == '\n':
+                    result.append('\\n')
+                elif char == '\r':
+                    result.append('\\r')
+                elif char == '\t':
+                    result.append('\\t')
+                elif ord(char) > 127:  # Non-ASCII (emojis, etc.)
+                    # Keep emojis as-is, they should be fine in JSON strings
+                    result.append(char)
+                else:
+                    result.append(char)
+            else:
+                result.append(char)
+            
+            i += 1
         
-        # Replace newlines that are inside strings (between quotes)
-        # Simple approach: replace all newlines with space, then clean up
-        fixed = json_part.replace('\n', ' ').replace('\r', ' ')
-        # Clean up multiple spaces
-        fixed = re.sub(r'\s+', ' ', fixed)
-        return fixed
+        return ''.join(result)
     
     # Try direct parsing first
     try:
         parsed = json.loads(text)
         if isinstance(parsed, dict):
             return parsed, None
-    except json.JSONDecodeError:
-        pass
-    
-    # Try with newline fix
-    fixed_text = fix_newlines_in_json(text)
-    try:
-        parsed = json.loads(fixed_text)
-        if isinstance(parsed, dict):
-            return parsed, None
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         pass
     
     # Try to extract JSON from text (find first { and last })
@@ -241,16 +270,73 @@ def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]
         except json.JSONDecodeError:
             pass
         
-        # Try with newline fix
-        fixed_candidate = fix_newlines_in_json(json_candidate)
+        # Try with string fixing
         try:
-            parsed = json.loads(fixed_candidate)
+            fixed = fix_json_strings(json_candidate)
+            parsed = json.loads(fixed)
             if isinstance(parsed, dict):
                 return parsed, None
-        except json.JSONDecodeError as e:
-            return None, f"JSON parse error: {e.msg}"
+        except json.JSONDecodeError:
+            pass
+        
+        # Try removing problematic characters and fixing
+        try:
+            # Remove actual newlines and replace with \n
+            fixed = json_candidate.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+            # Fix double escaping
+            fixed = fixed.replace('\\\\n', '\\n').replace('\\\\r', '\\r')
+            parsed = json.loads(fixed)
+            if isinstance(parsed, dict):
+                return parsed, None
+        except json.JSONDecodeError:
+            pass
+        
+        # Last resort: try to fix common issues manually
+        try:
+            # Find all string values and fix them
+            # This is a more aggressive approach
+            import re as regex_module
+            # Match string values: "key": "value"
+            def fix_string_value(match):
+                key = match.group(1)
+                value = match.group(2)
+                # Escape newlines and other problematic chars
+                value = value.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+                # Escape quotes
+                value = value.replace('"', '\\"')
+                return f'"{key}": "{value}"'
+            
+            # Try to fix message field specifically
+            message_match = regex_module.search(r'"message"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', json_candidate)
+            if message_match:
+                # Reconstruct with proper escaping
+                message_content = message_match.group(1)
+                message_content = message_content.replace('\n', '\\n').replace('\r', '\\r')
+                fixed_json = json_candidate.replace(message_match.group(0), f'"message": "{message_content}"')
+                parsed = json.loads(fixed_json)
+                if isinstance(parsed, dict):
+                    return parsed, None
+        except (json.JSONDecodeError, AttributeError):
+            pass
     
-    return None, f"Could not find valid JSON in response"
+    # If all else fails, try to extract just the structure
+    try:
+        # Try to manually construct a valid JSON from the response
+        # Extract message and actions separately
+        message_match = re.search(r'"message"\s*:\s*"([^"]+)"', text, re.DOTALL)
+        actions_match = re.search(r'"actions"\s*:\s*(\[[^\]]+\])', text, re.DOTALL)
+        
+        if message_match and actions_match:
+            message = message_match.group(1).replace('\n', '\\n').replace('"', '\\"')
+            actions = actions_match.group(1)
+            reconstructed = f'{{"message": "{message}", "actions": {actions}}}'
+            parsed = json.loads(reconstructed)
+            if isinstance(parsed, dict):
+                return parsed, None
+    except (json.JSONDecodeError, AttributeError):
+        pass
+    
+    return None, f"Could not parse JSON. Response starts with: {text[:100]}"
 
 
 def normalize_response(parsed: Dict) -> Dict:
