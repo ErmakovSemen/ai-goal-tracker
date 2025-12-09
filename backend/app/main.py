@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -71,4 +71,35 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user_id": user.id}
+
+@app.post("/register")
+async def register(
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Register a new user or return existing user"""
+    from app import crud
+    from app.schemas.user import UserCreate
+    
+    # Check if user already exists
+    db_user = crud.user.get_user_by_username(db, username=username)
+    if db_user:
+        # User exists, return token
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": db_user.username}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer", "user_id": db_user.id}
+    
+    # Create new user
+    user_create = UserCreate(username=username, email=email, password=password)
+    new_user = crud.user.create_user(db=db, user=user_create)
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": new_user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user_id": new_user.id}

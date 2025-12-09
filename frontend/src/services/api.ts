@@ -56,6 +56,16 @@ const setToken = (token: string): void => {
 
 const removeToken = (): void => {
   localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_id');
+};
+
+const getUserId = (): number | null => {
+  const userId = localStorage.getItem('user_id');
+  return userId ? parseInt(userId, 10) : null;
+};
+
+const setUserId = (userId: number): void => {
+  localStorage.setItem('user_id', userId.toString());
 };
 
 // API request helper
@@ -119,7 +129,7 @@ const apiRequest = async <T>(
 
 // Auth API
 export const authAPI = {
-  login: async (username: string, password: string): Promise<{ access_token: string; token_type: string }> => {
+  login: async (username: string, password: string): Promise<{ access_token: string; token_type: string; user_id?: number }> => {
     const formData = new URLSearchParams();
     formData.append('username', username);
     formData.append('password', password);
@@ -139,18 +149,53 @@ export const authAPI = {
 
     const data = await response.json();
     setToken(data.access_token);
+    if (data.user_id) {
+      setUserId(data.user_id);
+    }
     return data;
+  },
+
+  register: async (username: string, email: string, password: string): Promise<{ access_token: string; token_type: string; user_id?: number }> => {
+    const response = await fetch(getApiUrl('/register'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ username, email, password }).toString(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Registration failed' }));
+      throw new Error(error.detail || 'Registration failed');
+    }
+
+    const data = await response.json();
+    setToken(data.access_token);
+    if (data.user_id) {
+      setUserId(data.user_id);
+    }
+    return data;
+  },
+
+  getCurrentUser: async (): Promise<User | null> => {
+    try {
+      const user = await apiRequest<User>('/api/users/me');
+      if (user && user.id) {
+        setUserId(user.id);
+      }
+      return user;
+    } catch (err) {
+      console.error('Failed to get current user:', err);
+      return null;
+    }
+  },
+
+  getUserId: (): number | null => {
+    return getUserId();
   },
 
   logout: (): void => {
     removeToken();
-  },
-
-  register: async (username: string, email: string, password: string): Promise<User> => {
-    return apiRequest<User>('/api/users/', {
-      method: 'POST',
-      body: JSON.stringify({ username, email, password }),
-    });
   },
 
   isAuthenticated: (): boolean => {

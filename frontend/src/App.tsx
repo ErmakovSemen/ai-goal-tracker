@@ -12,6 +12,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [userId, setUserId] = useState<number | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [showCreateGoal, setShowCreateGoal] = useState(false);
@@ -28,39 +29,62 @@ function App() {
   const [showDebugMenu, setShowDebugMenu] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in, or allow demo mode
+    // Check if user is already logged in
     const isAuth = authAPI.isAuthenticated();
-    setIsLoggedIn(isAuth);
-    
-    // If not authenticated, allow demo mode (skip login)
-    if (!isAuth) {
-      // Auto-login with demo mode - no backend required
-      setIsLoggedIn(true);
-      setUsername('Demo User');
+    if (isAuth) {
+      // Get user ID from storage or fetch from API
+      const storedUserId = authAPI.getUserId();
+      if (storedUserId) {
+        setUserId(storedUserId);
+        setIsLoggedIn(true);
+        // Fetch current user to verify and get username
+        authAPI.getCurrentUser().then(user => {
+          if (user) {
+            setUsername(user.username);
+            setUserId(user.id);
+          }
+        }).catch(() => {
+          // Token might be invalid, clear auth
+          authAPI.logout();
+          setIsLoggedIn(false);
+        });
+      } else {
+        // Try to get user from API
+        authAPI.getCurrentUser().then(user => {
+          if (user) {
+            setUsername(user.username);
+            setUserId(user.id);
+            setIsLoggedIn(true);
+          }
+        }).catch(() => {
+          authAPI.logout();
+          setIsLoggedIn(false);
+        });
+      }
     }
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && userId) {
       loadGoals();
       // Initialize push notifications
-      const userId = 1; // TODO: Get actual user ID from auth
       pushNotificationService.initialize(userId).catch(err => {
         console.warn('Failed to initialize push notifications:', err);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn]);
+  }, [isLoggedIn, userId]);
 
   const loadGoals = async () => {
+    if (!userId) return;
     try {
-      const fetchedGoals = await goalsAPI.getAll(1);
+      const fetchedGoals = await goalsAPI.getAll(userId);
       setGoals(fetchedGoals);
       if (fetchedGoals.length > 0 && !selectedGoalId) {
         setSelectedGoalId(fetchedGoals[0].id);
       }
     } catch (err) {
-      // Demo mode - empty goals
+      console.error('Failed to load goals:', err);
       setGoals([]);
     }
   };
@@ -72,13 +96,38 @@ function App() {
     
     try {
       // Try to login with backend
-      await authAPI.login(username, password);
+      const result = await authAPI.login(username, password);
+      if (result.user_id) {
+        setUserId(result.user_id);
+      }
       setIsLoggedIn(true);
-    } catch (err) {
-      // If backend is not available or login fails, use demo mode
-      console.log('Backend login failed, using demo mode:', err);
-      setIsLoggedIn(true);
-      setUsername(username || 'Demo User');
+      // Fetch user info to get username
+      const user = await authAPI.getCurrentUser();
+      if (user) {
+        setUsername(user.username);
+        setUserId(user.id);
+      }
+    } catch (err: any) {
+      // If login fails, try to register automatically
+      console.log('Login failed, trying auto-registration:', err);
+      try {
+        // Auto-register with username as email if email not provided
+        const email = username.includes('@') ? username : `${username}@example.com`;
+        const defaultPassword = password || 'password123'; // In production, require password
+        const result = await authAPI.register(username, email, defaultPassword);
+        if (result.user_id) {
+          setUserId(result.user_id);
+        }
+        setIsLoggedIn(true);
+        const user = await authAPI.getCurrentUser();
+        if (user) {
+          setUsername(user.username);
+          setUserId(user.id);
+        }
+      } catch (regErr: any) {
+        console.error('Auto-registration failed:', regErr);
+        setError(regErr.message || 'Не удалось войти или зарегистрироваться');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,6 +138,7 @@ function App() {
     setIsLoggedIn(false);
     setUsername('');
     setPassword('');
+    setUserId(null);
     setGoals([]);
     setSelectedGoalId(null);
   }, []);
@@ -122,8 +172,11 @@ function App() {
   };
 
   const handleQuickGoalCreate = async (title: string, description?: string) => {
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
     try {
-      const newGoal = await goalsAPI.create({ title, description }, 1);
+      const newGoal = await goalsAPI.create({ title, description }, userId);
       setGoals([...goals, newGoal]);
       setSelectedGoalId(newGoal.id);
       setShowQuickGoalModal(false);
@@ -224,14 +277,24 @@ function App() {
   }
 
   if (showCreateGoal) {
-  return (
-    <div className="App">
+    if (!userId) {
+      return (
+        <div className="App">
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p>Пожалуйста, войдите в систему</p>
+            <button onClick={() => setShowCreateGoal(false)}>Назад</button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="App">
         <CreateGoal 
           onNavigate={(goal?: Goal) => handleGoalCreated(goal)} 
-          userId={1}
+          userId={userId}
           debugSettings={debugSettings}
         />
-        </div>
+      </div>
     );
   }
 

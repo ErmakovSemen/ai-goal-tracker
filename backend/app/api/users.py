@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 from app import crud, schemas
 from app.database.database import get_db
+from app.core.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -38,3 +40,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+@router.get("/me", response_model=schemas.User)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current authenticated user"""
+    return current_user
