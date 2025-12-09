@@ -10,9 +10,24 @@ router = APIRouter()
 
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Validate password length
+    if len(user.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+    
+    # Validate email format
+    if "@" not in user.email or "." not in user.email.split("@")[1]:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Check if email already exists
     db_user = crud.user.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Check if username already exists
+    db_user = crud.user.get_user_by_username(db, username=user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
     return crud.user.create_user(db=db, user=user)
 
 @router.get("/{user_id}", response_model=schemas.User)

@@ -11,7 +11,9 @@ import { pushNotificationService } from './services/pushNotifications';
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
@@ -95,26 +97,20 @@ function App() {
     setLoading(true);
     
     try {
-      // Try to login with backend
-      const result = await authAPI.login(username, password);
-      if (result.user_id) {
-        setUserId(result.user_id);
-      }
-      setIsLoggedIn(true);
-      // Fetch user info to get username
-      const user = await authAPI.getCurrentUser();
-      if (user) {
-        setUsername(user.username);
-        setUserId(user.id);
-      }
-    } catch (err: any) {
-      // If login fails, try to register automatically
-      console.log('Login failed, trying auto-registration:', err);
-      try {
-        // Auto-register with username as email if email not provided
-        const email = username.includes('@') ? username : `${username}@example.com`;
-        const defaultPassword = password || 'password123'; // In production, require password
-        const result = await authAPI.register(username, email, defaultPassword);
+      if (isRegisterMode) {
+        // Registration
+        if (!email || !email.includes('@')) {
+          setError('Пожалуйста, введите корректный email');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setError('Пароль должен быть не менее 6 символов');
+          setLoading(false);
+          return;
+        }
+        
+        const result = await authAPI.register(username, email, password);
         if (result.user_id) {
           setUserId(result.user_id);
         }
@@ -124,10 +120,23 @@ function App() {
           setUsername(user.username);
           setUserId(user.id);
         }
-      } catch (regErr: any) {
-        console.error('Auto-registration failed:', regErr);
-        setError(regErr.message || 'Не удалось войти или зарегистрироваться');
+      } else {
+        // Login
+        const result = await authAPI.login(username, password);
+        if (result.user_id) {
+          setUserId(result.user_id);
+        }
+        setIsLoggedIn(true);
+        const user = await authAPI.getCurrentUser();
+        if (user) {
+          setUsername(user.username);
+          setUserId(user.id);
+        }
       }
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      const errorMessage = err.message || (isRegisterMode ? 'Не удалось зарегистрироваться' : 'Неверный логин или пароль');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -137,10 +146,12 @@ function App() {
     authAPI.logout();
     setIsLoggedIn(false);
     setUsername('');
+    setEmail('');
     setPassword('');
     setUserId(null);
     setGoals([]);
     setSelectedGoalId(null);
+    setIsRegisterMode(false);
   }, []);
 
   const handleGoalCreated = async (newGoal?: Goal) => {
@@ -213,41 +224,68 @@ function App() {
     return (
       <div className="App">
         <header className="App-header">
-          <h1>AI Goal Tracker</h1>
-          <p>AI-powered goal tracking application</p>
+          <h1>🎯 AI Goal Tracker</h1>
+          <p>Умный помощник для достижения целей</p>
         </header>
         <main className="login-container">
           <div className="login-form">
-            <h2>Welcome</h2>
+            <h2>{isRegisterMode ? 'Регистрация' : 'Вход'}</h2>
             <form onSubmit={handleLogin}>
               <div className="form-group">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">Имя пользователя</label>
                 <input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  placeholder="Введите имя пользователя"
                   required
+                  autoComplete="username"
                 />
               </div>
+              {isRegisterMode && (
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Введите email"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              )}
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Пароль</label>
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={isRegisterMode ? "Минимум 6 символов" : "Введите пароль"}
                   required
+                  autoComplete={isRegisterMode ? "new-password" : "current-password"}
+                  minLength={isRegisterMode ? 6 : undefined}
                 />
               </div>
               <button type="submit" className="login-button" disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
+                {loading 
+                  ? (isRegisterMode ? 'Регистрация...' : 'Вход...') 
+                  : (isRegisterMode ? 'Зарегистрироваться' : 'Войти')
+                }
               </button>
             </form>
             {error && (
-              <div className="error-message" style={{ color: 'red', marginTop: '10px' }}>
+              <div className="error-message" style={{ 
+                color: '#ff4444', 
+                marginTop: '10px', 
+                padding: '10px',
+                background: '#ffe6e6',
+                borderRadius: '4px',
+                fontSize: '0.9rem'
+              }}>
                 {error}
               </div>
             )}
@@ -255,19 +293,24 @@ function App() {
               <button 
                 type="button" 
                 onClick={() => {
-                  setIsLoggedIn(true);
-                  setUsername('Guest User');
+                  setIsRegisterMode(!isRegisterMode);
+                  setError(null);
+                  setPassword('');
                 }}
                 style={{
                   background: 'transparent',
-                  border: '1px solid #ccc',
-                  color: '#666',
+                  border: 'none',
+                  color: '#667eea',
                   padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontSize: '0.9rem'
                 }}
               >
-                Continue as Guest (Demo Mode)
+                {isRegisterMode 
+                  ? 'Уже есть аккаунт? Войти' 
+                  : 'Нет аккаунта? Зарегистрироваться'
+                }
               </button>
             </div>
           </div>

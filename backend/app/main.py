@@ -80,19 +80,46 @@ async def register(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    """Register a new user or return existing user"""
+    """Register a new user"""
     from app import crud
     from app.schemas.user import UserCreate
     
-    # Check if user already exists
+    # Validate password length
+    if len(password) < 6:
+        raise HTTPException(
+            status_code=400, 
+            detail="Password must be at least 6 characters long"
+        )
+    
+    # Validate email format
+    if "@" not in email or "." not in email.split("@")[1]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid email format"
+        )
+    
+    # Validate username (not empty, reasonable length)
+    if not username or len(username) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail="Username must be at least 3 characters long"
+        )
+    
+    # Check if user already exists by username
     db_user = crud.user.get_user_by_username(db, username=username)
     if db_user:
-        # User exists, return token
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": db_user.username}, expires_delta=access_token_expires
+        raise HTTPException(
+            status_code=400,
+            detail="Username already taken"
         )
-        return {"access_token": access_token, "token_type": "bearer", "user_id": db_user.id}
+    
+    # Check if user already exists by email
+    db_user = crud.user.get_user_by_email(db, email=email)
+    if db_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
     
     # Create new user
     user_create = UserCreate(username=username, email=email, password=password)
