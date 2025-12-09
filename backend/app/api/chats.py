@@ -6,6 +6,8 @@ import json
 import os
 from app import crud, schemas
 from app.database.database import get_db
+from app.core.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -786,7 +788,8 @@ async def create_message(
     chat_id: int, 
     message: schemas.MessageCreate, 
     db: Session = Depends(get_db),
-    debug_mode: bool = Query(False, description="Enable debug mode")
+    debug_mode: bool = Query(False, description="Enable debug mode"),
+    current_user: Optional[User] = Depends(lambda: None)  # Optional auth
 ):
     """Create a message and get AI response"""
     try:
@@ -961,10 +964,17 @@ async def create_message(
                                 ai_content += f"\n\n<!--SUGGESTIONS:{json.dumps(items, ensure_ascii=False)}-->"
                     
                     # Execute create_goal actions immediately (no confirmation needed)
-                    if create_goal_actions and goal and goal.user_id:
-                        goal_results = await execute_actions(db, chat.goal_id, create_goal_actions, user_id=goal.user_id)
+                    # Get user_id from goal (should always exist if goal exists)
+                    user_id_for_goal = None
+                    if goal and goal.user_id:
+                        user_id_for_goal = goal.user_id
+                    
+                    if create_goal_actions and user_id_for_goal:
+                        goal_results = await execute_actions(db, chat.goal_id, create_goal_actions, user_id=user_id_for_goal)
                         if goal_results:
                             ai_content += "\n\n" + "\n".join(goal_results)
+                    elif create_goal_actions:
+                        ai_content += "\n\n❌ Не могу создать цель: не найден user_id. Пожалуйста, убедитесь, что вы авторизованы."
                     
                     # DON'T execute other actions automatically - prepare for confirmation
                     # This includes: create_milestone, complete_milestone, delete_milestone, update_goal
@@ -1057,7 +1067,8 @@ def read_messages(chat_id: int, skip: int = 0, limit: int = 100, db: Session = D
 async def confirm_actions(
     chat_id: int,
     actions: List[Dict[str, Any]],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = None  # Will be set via dependency if auth is available
 ):
     """Execute confirmed actions from user and get AI follow-up"""
     try:
@@ -1068,7 +1079,15 @@ async def confirm_actions(
         
         # Get goal to find user_id
         goal = crud.goal.get_goal(db, chat.goal_id)
-        user_id = goal.user_id if goal else None
+        # Try to get user_id from goal first, then from current_user
+        user_id = None
+        if goal and goal.user_id:
+            user_id = goal.user_id
+        elif current_user:
+            user_id = current_user.id
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User not authenticated")
         
         # Execute the confirmed actions
         results = await execute_actions(db, chat.goal_id, actions, user_id=user_id)

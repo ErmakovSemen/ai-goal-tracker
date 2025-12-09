@@ -9,7 +9,15 @@ router = APIRouter()
 @router.post("/", response_model=schemas.Goal)
 def create_goal(goal: schemas.GoalCreate, user_id: int, db: Session = Depends(get_db)):
     try:
+        # Verify user exists before creating goal
+        from app import crud as crud_module
+        user = crud_module.user.get_user(db, user_id=user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with id {user_id} not found. Please register first.")
+        
         return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
