@@ -435,14 +435,30 @@ class LLMService:
                 "Content-Type": "application/json"
             }
             
+            # Check if we need JSON format (for structured responses)
+            use_json_format = False
+            for msg in messages:
+                content = msg.get("content", "")
+                role = msg.get("role", "")
+                content_upper = content.upper()
+                
+                # System prompt usually contains format instructions
+                if role == "system":
+                    if any(keyword in content_upper for keyword in ["JSON", "ФОРМАТ", "ACTIONS", "CHECKLIST"]):
+                        use_json_format = True
+                        break
+            
             payload = {
                 "model": model,  # deepseek-chat, deepseek-coder, etc.
                 "messages": messages,
                 "temperature": temperature,
-                "max_tokens": max_tokens,
-                # DeepSeek supports response_format for JSON mode
-                "response_format": {"type": "json_object"}
+                "max_tokens": max_tokens
             }
+            
+            # DeepSeek supports response_format for JSON mode
+            if use_json_format:
+                payload["response_format"] = {"type": "json_object"}
+                print(f"📋 Using JSON mode for DeepSeek")
             
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(url, headers=headers, json=payload)
