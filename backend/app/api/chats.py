@@ -1189,10 +1189,24 @@ async def create_message(
         
     except HTTPException:
         raise
+    except KeyError as e:
+        # Handle KeyError specifically (e.g., missing 'message' field)
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"KeyError in create_message: {e}\n{error_trace}")
+        error_msg = f"Missing required field in response: {str(e)}. The AI response may be malformed."
+        raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
         import traceback
-        print(f"Error: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_trace = traceback.format_exc()
+        print(f"Error in create_message: {e}\n{error_trace}")
+        
+        # Provide more helpful error message
+        error_detail = str(e)
+        if "'message'" in error_detail or '"message"' in error_detail:
+            error_detail = f"JSON parsing error: {error_detail}. The AI response may be missing the 'message' field or have invalid format."
+        
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.get("/{chat_id}/messages/", response_model=List[schemas.Message])
