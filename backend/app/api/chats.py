@@ -1025,8 +1025,10 @@ async def create_message(
                     print(f"📥 Raw response ({len(raw_response)} chars): {raw_response[:200]}...")
                     
                     if debug_mode:
-                        debug_log.append(f"📥 RAW RESPONSE ({len(raw_response)} chars):")
+                        debug_log.append(f"📥 RAW RESPONSE FROM MODEL ({len(raw_response)} chars):")
+                        debug_log.append("─" * 60)
                         debug_log.append(raw_response)
+                        debug_log.append("─" * 60)
                         debug_log.append("")
                     
                     # Parse response
@@ -1037,6 +1039,11 @@ async def create_message(
                         print(f"❌ Parse error: {parse_error}")
                         if debug_mode:
                             debug_log.append(f"❌ PARSE ERROR: {parse_error}")
+                            debug_log.append("")
+                            debug_log.append("📋 RAW RESPONSE THAT FAILED TO PARSE:")
+                            debug_log.append("─" * 60)
+                            debug_log.append(raw_response)
+                            debug_log.append("─" * 60)
                             debug_log.append("")
                             debug_log.append("📋 RAW RESPONSE THAT FAILED TO PARSE:")
                             debug_log.append("─" * 60)
@@ -1245,11 +1252,17 @@ async def create_message(
                     ai_content = "Извините, произошла ошибка при обработке ответа. Попробуйте ещё раз."
                 
                 if debug_mode:
-                    debug_log.append("=" * 50)
+                    debug_log.append("=" * 60)
                     debug_log.append(f"⚠️ ALL {max_retries + 1} ATTEMPTS FAILED")
                     debug_log.append(f"Last error: {last_error}")
-                    debug_log.append("Using fallback response")
-                    debug_log.append("=" * 50)
+                    debug_log.append("")
+                    debug_log.append("📋 FINAL RAW RESPONSE (used as fallback):")
+                    debug_log.append("─" * 60)
+                    debug_log.append(raw_response if raw_response else "(empty)")
+                    debug_log.append("─" * 60)
+                    debug_log.append("")
+                    debug_log.append("Using fallback response above")
+                    debug_log.append("=" * 60)
             
             # Add full debug log to response
             if debug_mode and debug_log:
