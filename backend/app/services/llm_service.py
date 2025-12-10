@@ -485,13 +485,17 @@ class LLMService:
                     error_msg = (
                         "DeepSeek API authentication failed (401 Unauthorized).\n\n"
                         "Возможные причины:\n"
-                        "1. API ключ не установлен в Render Dashboard\n"
-                        "2. API ключ неправильный или истёк\n"
-                        "3. API ключ не имеет доступа к DeepSeek API\n\n"
-                        "Проверь:\n"
-                        "- LLM_API_KEY установлен в Render Dashboard\n"
-                        "- Ключ начинается с 'sk-'\n"
-                        "- Ключ получен с https://platform.deepseek.com"
+                        "1. API ключ неправильный или истёк\n"
+                        "2. Баланс аккаунта пустой (нужно пополнить для активации)\n"
+                        "3. API ключ не активирован (проверь на platform.deepseek.com)\n"
+                        "4. Ключ не имеет доступа к API\n\n"
+                        "Как исправить:\n"
+                        "1. Зайди на https://platform.deepseek.com\n"
+                        "2. Проверь баланс аккаунта\n"
+                        "3. Пополни баланс (даже минимальная сумма активирует API)\n"
+                        "4. Проверь, что ключ активен в разделе API Keys\n"
+                        "5. Создай новый ключ, если старый не работает\n\n"
+                        "Примечание: DeepSeek может требовать пополнения баланса для активации API, даже на бесплатном плане."
                     )
                     print(f"❌ {error_msg}")
                     return error_msg
@@ -507,11 +511,16 @@ class LLMService:
             if e.response.status_code == 401:
                 error_msg = (
                     "DeepSeek API authentication failed (401 Unauthorized).\n\n"
-                    "Проверь настройки в Render Dashboard:\n"
-                    "- LLM_PROVIDER=deepseek\n"
-                    "- LLM_API_KEY=sk-твой-ключ\n"
-                    "- LLM_MODEL=deepseek-chat\n\n"
-                    "Получи новый ключ на https://platform.deepseek.com"
+                    "Возможные причины:\n"
+                    "1. Баланс аккаунта пустой (нужно пополнить для активации)\n"
+                    "2. API ключ неправильный или истёк\n"
+                    "3. Ключ не активирован\n\n"
+                    "Как исправить:\n"
+                    "1. Зайди на https://platform.deepseek.com\n"
+                    "2. Проверь баланс и пополни его (даже минимальная сумма)\n"
+                    "3. Проверь, что ключ активен в разделе API Keys\n"
+                    "4. Создай новый ключ, если нужно\n\n"
+                    "Примечание: DeepSeek может требовать пополнения баланса для активации API."
                 )
                 print(f"❌ {error_msg}")
                 return error_msg
