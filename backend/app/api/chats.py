@@ -313,16 +313,7 @@ def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]
         try:
             # Find all string values and fix them
             # This is a more aggressive approach
-            import re as regex_module
-            # Match string values: "key": "value"
-            def fix_string_value(match):
-                key = match.group(1)
-                value = match.group(2)
-                # Escape newlines and other problematic chars
-                value = value.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
-                # Escape quotes
-                value = value.replace('"', '\\"')
-                return f'"{key}": "{value}"'
+            # Note: using 're' module imported at top of file
             
             # Try to fix message field specifically
             message_match = re.search(r'"message"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', json_candidate)
