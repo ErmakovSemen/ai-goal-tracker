@@ -25,7 +25,12 @@ class LLMService:
         
         # Check if API key is set (not needed for Ollama)
         if self.provider != "ollama" and not self.api_key:
-            return "AI сервис не настроен. Пожалуйста, установите LLM_API_KEY в переменных окружения."
+            provider_name = self.provider.upper() if self.provider else "LLM"
+            return (
+                f"{provider_name} сервис не настроен.\n\n"
+                f"Установи LLM_API_KEY в переменных окружения в Render Dashboard.\n"
+                f"Для DeepSeek: получи ключ на https://platform.deepseek.com"
+            )
         
         try:
             if self.provider == "ollama":
@@ -428,12 +433,24 @@ class LLMService:
         try:
             import httpx
             
+            # Check API key
+            if not self.api_key:
+                error_msg = "DeepSeek API key not configured. Please set LLM_API_KEY environment variable."
+                print(f"❌ {error_msg}")
+                return error_msg
+            
+            # Validate API key format (should start with 'sk-')
+            if not self.api_key.startswith('sk-'):
+                print(f"⚠️ Warning: DeepSeek API key doesn't start with 'sk-'. Key preview: {self.api_key[:5]}...")
+            
             # DeepSeek API endpoint
             url = "https://api.deepseek.com/v1/chat/completions"
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             }
+            
+            print(f"🔑 Using DeepSeek API key: {self.api_key[:10]}...{self.api_key[-4:] if len(self.api_key) > 14 else '***'}")
             
             # Check if we need JSON format (for structured responses)
             use_json_format = False
@@ -462,6 +479,23 @@ class LLMService:
             
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(url, headers=headers, json=payload)
+                
+                # Handle 401 Unauthorized specifically
+                if response.status_code == 401:
+                    error_msg = (
+                        "DeepSeek API authentication failed (401 Unauthorized).\n\n"
+                        "Возможные причины:\n"
+                        "1. API ключ не установлен в Render Dashboard\n"
+                        "2. API ключ неправильный или истёк\n"
+                        "3. API ключ не имеет доступа к DeepSeek API\n\n"
+                        "Проверь:\n"
+                        "- LLM_API_KEY установлен в Render Dashboard\n"
+                        "- Ключ начинается с 'sk-'\n"
+                        "- Ключ получен с https://platform.deepseek.com"
+                    )
+                    print(f"❌ {error_msg}")
+                    return error_msg
+                
                 response.raise_for_status()
                 data = response.json()
                 content = data["choices"][0]["message"]["content"]
@@ -469,6 +503,21 @@ class LLMService:
                     import json
                     content = json.dumps(content)
                 return str(content) if content else "I'm sorry, I didn't get a response."
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                error_msg = (
+                    "DeepSeek API authentication failed (401 Unauthorized).\n\n"
+                    "Проверь настройки в Render Dashboard:\n"
+                    "- LLM_PROVIDER=deepseek\n"
+                    "- LLM_API_KEY=sk-твой-ключ\n"
+                    "- LLM_MODEL=deepseek-chat\n\n"
+                    "Получи новый ключ на https://platform.deepseek.com"
+                )
+                print(f"❌ {error_msg}")
+                return error_msg
+            else:
+                print(f"DeepSeek API HTTP error: {e.response.status_code} - {e}")
+                return f"DeepSeek API error: HTTP {e.response.status_code}"
         except Exception as e:
             print(f"DeepSeek API error: {e}")
             import traceback
