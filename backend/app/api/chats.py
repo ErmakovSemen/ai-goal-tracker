@@ -363,7 +363,19 @@ def normalize_response(parsed: Dict) -> Dict:
     Handles variations like 'action' vs 'actions', single action vs array.
     Also extracts actions from message text if model wrote them there incorrectly.
     """
-    normalized = {"message": parsed.get("message", ""), "actions": []}
+    # Safely get message field
+    message = parsed.get("message", "")
+    
+    # Handle edge cases where message might be a KeyError or other exception
+    if isinstance(message, (KeyError, Exception)):
+        message = str(message)
+    elif not isinstance(message, str):
+        try:
+            message = str(message)
+        except Exception:
+            message = ""
+    
+    normalized = {"message": message, "actions": []}
     
     # Handle both 'actions' (array) and 'action' (single object)
     actions = parsed.get("actions")
@@ -414,8 +426,16 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
     if "message" not in parsed:
         return False, "Missing required field: 'message'"
     
+    # Handle case where message might be a KeyError string (from exception)
+    if isinstance(parsed.get("message"), KeyError) or str(parsed.get("message", "")).startswith("'"):
+        return False, f"Invalid message field format: {parsed.get('message')}"
+    
     if not isinstance(parsed["message"], str):
-        return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
+        # Try to convert to string if it's not
+        try:
+            parsed["message"] = str(parsed["message"])
+        except Exception:
+            return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
     
     # Normalize the response first
     normalized = normalize_response(parsed)
@@ -1043,9 +1063,22 @@ async def create_message(
                         debug_log.append("")
                     
                     # Normalize the response
-                    normalized = normalize_response(parsed)
-                    ai_content = normalized.get("message", "")
-                    actions = normalized.get("actions", [])
+                    try:
+                        normalized = normalize_response(parsed)
+                        ai_content = normalized.get("message", "")
+                        
+                        # Ensure ai_content is a string
+                        if not isinstance(ai_content, str):
+                            ai_content = str(ai_content) if ai_content else ""
+                        
+                        actions = normalized.get("actions", [])
+                    except Exception as norm_err:
+                        print(f"Error normalizing response: {norm_err}")
+                        # Fallback: use parsed directly
+                        ai_content = parsed.get("message", "Извините, произошла ошибка при обработке ответа.")
+                        if not isinstance(ai_content, str):
+                            ai_content = str(ai_content) if ai_content else "Извините, произошла ошибка."
+                        actions = parsed.get("actions", [])
                     
                     # Handle special actions separately
                     checklist_actions = [a for a in actions if a.get("type") == "checklist"]
