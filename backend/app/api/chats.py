@@ -325,7 +325,7 @@ def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]
                 return f'"{key}": "{value}"'
             
             # Try to fix message field specifically
-            message_match = regex_module.search(r'"message"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', json_candidate)
+            message_match = re.search(r'"message"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', json_candidate)
             if message_match:
                 # Reconstruct with proper escaping
                 message_content = message_match.group(1)
@@ -1237,7 +1237,6 @@ async def create_message(
                 # Try to extract any text from raw_response as fallback
                 if raw_response:
                     # Try to find any message-like content
-                    import re
                     # Look for text that might be a message
                     message_match = re.search(r'"message"\s*:\s*"([^"]+)"', raw_response)
                     if message_match:
