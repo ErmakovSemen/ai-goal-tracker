@@ -234,7 +234,8 @@ const CreateGoal: React.FC<CreateGoalProps> = ({ onNavigate, userId, debugSettin
     if (!chatId) return;
     try {
       setLoading(true);
-      await fetch(`http://localhost:8000/api/chats/${chatId}/cancel-actions/`, {
+      const { getApiUrl } = await import('../config/api');
+      await fetch(getApiUrl(`/api/chats/${chatId}/cancel-actions/`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
