@@ -58,6 +58,41 @@ async def startup_event():
 async def root():
     return {"message": "AI Goal Tracker API"}
 
+@app.get("/test-llm")
+async def test_llm():
+    """Test endpoint for LLM configuration"""
+    from app.services.llm_service import llm_service
+    from app.core.config import settings
+    import os
+    
+    config_info = {
+        "provider": settings.LLM_PROVIDER,
+        "model": settings.LLM_MODEL,
+        "api_key_set": bool(settings.LLM_API_KEY),
+        "api_key_length": len(settings.LLM_API_KEY) if settings.LLM_API_KEY else 0,
+        "provider_from_service": llm_service.provider,
+        "model_from_service": llm_service.model
+    }
+    
+    # Test connection if DeepSeek
+    if settings.LLM_PROVIDER == "deepseek" and settings.LLM_API_KEY:
+        try:
+            messages = [
+                {"role": "system", "content": "Ты помощник. Отвечай кратко."},
+                {"role": "user", "content": "Скажи 'Тест успешен' если ты работаешь."}
+            ]
+            response = await llm_service.chat_completion(messages, temperature=0.7, max_tokens=50)
+            config_info["test_successful"] = True
+            config_info["test_response"] = response[:100]
+        except Exception as e:
+            config_info["test_successful"] = False
+            config_info["test_error"] = str(e)
+    else:
+        config_info["test_successful"] = None
+        config_info["test_message"] = "DeepSeek не настроен или не выбран"
+    
+    return config_info
+
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
