@@ -529,7 +529,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
           onConfirmActions={async (actions) => {
             if (!chatId) return;
             try {
-              const response = await fetch(`http://localhost:8000/api/chats/${chatId}/confirm-actions/`, {
+              const { getApiUrl } = await import('../config/api');
+              const response = await fetch(getApiUrl(`/api/chats/${chatId}/confirm-actions/`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(actions)
@@ -554,7 +555,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
           onCancelActions={async () => {
             if (!chatId) return;
             try {
-              const response = await fetch(`http://localhost:8000/api/chats/${chatId}/cancel-actions/`, {
+              const { getApiUrl } = await import('../config/api');
+              const response = await fetch(getApiUrl(`/api/chats/${chatId}/cancel-actions/`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
               });

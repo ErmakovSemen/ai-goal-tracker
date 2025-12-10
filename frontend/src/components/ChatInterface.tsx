@@ -130,15 +130,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleConfirm = async (actions: PendingAction[]) => {
-    if (onConfirmActions && !confirming) {
-      setConfirming(true);
-      try {
-        await onConfirmActions(actions);
-      } catch (e) {
-        console.error('Error confirming actions:', e);
-      } finally {
-        setConfirming(false);
-      }
+    if (!onConfirmActions) {
+      console.error('onConfirmActions handler not provided');
+      return;
+    }
+    if (confirming) {
+      console.log('Already confirming, skipping...');
+      return;
+    }
+    setConfirming(true);
+    try {
+      console.log('Confirming actions:', actions);
+      await onConfirmActions(actions);
+    } catch (e) {
+      console.error('Error confirming actions:', e);
+      alert(`Ошибка при подтверждении действий: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setConfirming(false);
     }
   };
 

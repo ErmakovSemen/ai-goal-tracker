@@ -206,7 +206,8 @@ const CreateGoal: React.FC<CreateGoalProps> = ({ onNavigate, userId, debugSettin
     
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/chats/${chatId}/confirm-actions/`, {
+      const { getApiUrl } = await import('../config/api');
+      const response = await fetch(getApiUrl(`/api/chats/${chatId}/confirm-actions/`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actions)
