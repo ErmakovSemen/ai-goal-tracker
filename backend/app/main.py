@@ -77,16 +77,23 @@ async def test_llm():
     # Test connection if DeepSeek
     if settings.LLM_PROVIDER == "deepseek" and settings.LLM_API_KEY:
         try:
+            # Check API key format
+            api_key = settings.LLM_API_KEY.strip()
+            config_info["api_key_preview"] = f"{api_key[:10]}...{api_key[-4:]}" if len(api_key) > 14 else "***"
+            config_info["api_key_starts_with_sk"] = api_key.startswith("sk-")
+            
             messages = [
                 {"role": "system", "content": "Ты помощник. Отвечай кратко."},
                 {"role": "user", "content": "Скажи 'Тест успешен' если ты работаешь."}
             ]
             response = await llm_service.chat_completion(messages, temperature=0.7, max_tokens=50)
             config_info["test_successful"] = True
-            config_info["test_response"] = response[:100]
+            config_info["test_response"] = response[:200]
         except Exception as e:
             config_info["test_successful"] = False
             config_info["test_error"] = str(e)
+            import traceback
+            config_info["test_error_traceback"] = traceback.format_exc()
     else:
         config_info["test_successful"] = None
         config_info["test_message"] = "DeepSeek не настроен или не выбран"

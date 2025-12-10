@@ -445,12 +445,20 @@ class LLMService:
             
             # DeepSeek API endpoint
             url = "https://api.deepseek.com/v1/chat/completions"
+            
+            # Clean API key (remove whitespace, newlines)
+            api_key_clean = self.api_key.strip()
+            if api_key_clean != self.api_key:
+                print(f"⚠️ API key had whitespace, cleaned it")
+            
             headers = {
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": f"Bearer {api_key_clean}",
                 "Content-Type": "application/json"
             }
             
-            print(f"🔑 Using DeepSeek API key: {self.api_key[:10]}...{self.api_key[-4:] if len(self.api_key) > 14 else '***'}")
+            print(f"🔑 Using DeepSeek API key: {api_key_clean[:10]}...{api_key_clean[-4:] if len(api_key_clean) > 14 else '***'}")
+            print(f"🔑 Key length: {len(api_key_clean)} chars")
+            print(f"🔑 Key starts with 'sk-': {api_key_clean.startswith('sk-')}")
             
             # Check if we need JSON format (for structured responses)
             use_json_format = False
@@ -478,10 +486,26 @@ class LLMService:
                 print(f"📋 Using JSON mode for DeepSeek")
             
             async with httpx.AsyncClient(timeout=60.0) as client:
+                # Debug: log request details (without exposing full key)
+                print(f"📤 Sending request to DeepSeek API")
+                print(f"📤 URL: {url}")
+                print(f"📤 Model: {model}")
+                print(f"📤 Headers Authorization: Bearer {api_key_clean[:10]}...{api_key_clean[-4:] if len(api_key_clean) > 14 else '***'}")
+                
                 response = await client.post(url, headers=headers, json=payload)
+                
+                print(f"📥 Response status: {response.status_code}")
                 
                 # Handle 401 Unauthorized specifically
                 if response.status_code == 401:
+                    # Try to get error details from response
+                    try:
+                        error_data = response.json()
+                        error_message = error_data.get("error", {}).get("message", "Unknown error")
+                        print(f"❌ DeepSeek API error details: {error_message}")
+                    except:
+                        error_message = response.text[:200] if hasattr(response, 'text') else "No error details"
+                        print(f"❌ DeepSeek API error response: {error_message}")
                     error_msg = (
                         "DeepSeek API authentication failed (401 Unauthorized).\n\n"
                         "Возможные причины:\n"
