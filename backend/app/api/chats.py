@@ -1099,6 +1099,11 @@ async def create_message(
                         if debug_mode:
                             debug_log.append(f"❌ VALIDATION ERROR: {validation_error}")
                             debug_log.append("")
+                            debug_log.append("📋 PARSED OBJECT THAT FAILED VALIDATION:")
+                            debug_log.append("─" * 60)
+                            debug_log.append(json.dumps(parsed, ensure_ascii=False, indent=2))
+                            debug_log.append("─" * 60)
+                            debug_log.append("")
                         continue
                     
                     # Success! Extract message and execute actions
