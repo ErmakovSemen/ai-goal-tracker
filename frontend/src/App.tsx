@@ -142,6 +142,22 @@ function App() {
     }
   };
 
+  const handleModeChange = (mode: 'login' | 'register') => {
+    if (mode === 'register') {
+      if (!isRegisterMode) {
+        setPassword('');
+      }
+      setIsRegisterMode(true);
+    } else {
+      if (isRegisterMode) {
+        setPassword('');
+        setEmail('');
+      }
+      setIsRegisterMode(false);
+    }
+    setError(null);
+  };
+
   const handleLogout = React.useCallback(() => {
     authAPI.logout();
     setIsLoggedIn(false);
@@ -229,6 +245,30 @@ function App() {
         </header>
         <main className="login-container">
           <div className="login-form">
+            <div
+              className="auth-mode-toggle"
+              role="tablist"
+              aria-label="Выбор режима авторизации"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isRegisterMode}
+                className={`auth-toggle-button ${!isRegisterMode ? 'active' : ''}`}
+                onClick={() => handleModeChange('login')}
+              >
+                Вход
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isRegisterMode}
+                className={`auth-toggle-button ${isRegisterMode ? 'active' : ''}`}
+                onClick={() => handleModeChange('register')}
+              >
+                Регистрация
+              </button>
+            </div>
             <h2>{isRegisterMode ? 'Регистрация' : 'Вход'}</h2>
             <form onSubmit={handleLogin}>
               <div className="form-group">
@@ -243,20 +283,21 @@ function App() {
                   autoComplete="username"
                 />
               </div>
-              {isRegisterMode && (
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Введите email"
-                    required
-                    autoComplete="email"
-                  />
-                </div>
-              )}
+              <div
+                className={`form-group email-field ${isRegisterMode ? 'visible' : 'hidden'}`}
+                aria-hidden={!isRegisterMode}
+              >
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Введите email"
+                  required={isRegisterMode}
+                  autoComplete="email"
+                />
+              </div>
               <div className="form-group">
                 <label htmlFor="password">Пароль</label>
                 <input
@@ -289,30 +330,6 @@ function App() {
                 {error}
               </div>
             )}
-            <div style={{ marginTop: '15px', textAlign: 'center' }}>
-              <button 
-                type="button" 
-                onClick={() => {
-                  setIsRegisterMode(!isRegisterMode);
-                  setError(null);
-                  setPassword('');
-                }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#667eea',
-                  padding: '8px 16px',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  fontSize: '0.9rem'
-                }}
-              >
-                {isRegisterMode 
-                  ? 'Уже есть аккаунт? Войти' 
-                  : 'Нет аккаунта? Зарегистрироваться'
-                }
-              </button>
-            </div>
           </div>
         </main>
       </div>

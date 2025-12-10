@@ -55,6 +55,11 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 480px;
+  box-sizing: border-box;
 }
 
 .login-form h2 {
@@ -103,6 +108,51 @@
 
 .login-button:hover {
   background-color: #357abd;
+}
+
+.auth-mode-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-toggle-button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #dcdced;
+  background: #f7f8ff;
+  color: #4a4a68;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.auth-toggle-button.active {
+  background: linear-gradient(120deg, #667eea, #764ba2);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+}
+
+.auth-toggle-button:hover:not(.active) {
+  border-color: #aab0ff;
+  color: #333366;
+}
+
+.email-field {
+  transition: opacity 0.25s ease;
+}
+
+.email-field.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.email-field.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .logout-button,
