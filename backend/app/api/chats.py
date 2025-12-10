@@ -1038,12 +1038,50 @@ async def create_message(
                         if debug_mode:
                             debug_log.append(f"❌ PARSE ERROR: {parse_error}")
                             debug_log.append("")
-                        continue
+                            debug_log.append("📋 RAW RESPONSE THAT FAILED TO PARSE:")
+                            debug_log.append("─" * 60)
+                            debug_log.append(raw_response)
+                            debug_log.append("─" * 60)
+                            debug_log.append("")
+                        
+                        # If parsing failed but we have raw_response, try to use it as fallback on last attempt
+                        if raw_response and attempt == max_retries:
+                            # Last attempt - try to create a valid response from raw text
+                            print("⚠️ Last attempt, trying to create fallback response from raw text")
+                            if debug_mode:
+                                debug_log.append("⚠️ LAST ATTEMPT: Creating fallback from raw response")
+                            try:
+                                # Create a minimal valid response
+                                fallback_parsed = {
+                                    "message": raw_response[:500] if len(raw_response) > 500 else raw_response,
+                                    "actions": []
+                                }
+                                parsed = fallback_parsed
+                                parse_error = None
+                                print("✅ Created fallback response")
+                                if debug_mode:
+                                    debug_log.append("✅ Created fallback parsed response")
+                            except Exception as fallback_err:
+                                print(f"❌ Fallback creation failed: {fallback_err}")
+                                if debug_mode:
+                                    debug_log.append(f"❌ Fallback creation failed: {fallback_err}")
+                                continue
+                        else:
+                            continue
                     
                     if debug_mode:
                         debug_log.append(f"✅ PARSED JSON:")
                         debug_log.append(json.dumps(parsed, ensure_ascii=False, indent=2))
                         debug_log.append("")
+                    
+                    # Ensure parsed is a dict
+                    if not isinstance(parsed, dict):
+                        last_error = f"Parsed response is not a dict, got {type(parsed).__name__}"
+                        print(f"❌ {last_error}")
+                        if debug_mode:
+                            debug_log.append(f"❌ TYPE ERROR: {last_error}")
+                            debug_log.append("")
+                        continue
                     
                     # Validate response
                     is_valid, validation_error = validate_response(parsed)
@@ -1067,18 +1105,40 @@ async def create_message(
                         normalized = normalize_response(parsed)
                         ai_content = normalized.get("message", "")
                         
-                        # Ensure ai_content is a string
+                        # Ensure ai_content is a string and not empty
                         if not isinstance(ai_content, str):
                             ai_content = str(ai_content) if ai_content else ""
+                        
+                        # If message is still empty after normalization, use fallback
+                        if not ai_content or not ai_content.strip():
+                            # Try to get from parsed directly
+                            ai_content = parsed.get("message", "")
+                            if not ai_content or not isinstance(ai_content, str):
+                                # Last resort: use raw response
+                                ai_content = raw_response[:500] if raw_response else "Извините, произошла ошибка при обработке ответа."
+                            if debug_mode:
+                                debug_log.append("⚠️ Message was empty after normalization, using fallback")
                         
                         actions = normalized.get("actions", [])
                     except Exception as norm_err:
                         print(f"Error normalizing response: {norm_err}")
-                        # Fallback: use parsed directly
-                        ai_content = parsed.get("message", "Извините, произошла ошибка при обработке ответа.")
+                        import traceback
+                        traceback.print_exc()
+                        if debug_mode:
+                            debug_log.append(f"❌ NORMALIZATION ERROR: {norm_err}")
+                            debug_log.append(traceback.format_exc())
+                            debug_log.append("")
+                        # Fallback: use parsed directly or raw response
+                        ai_content = parsed.get("message", "") if isinstance(parsed, dict) else ""
+                        if not ai_content or not isinstance(ai_content, str):
+                            # Try raw response
+                            if raw_response:
+                                ai_content = raw_response[:500]
+                            else:
+                                ai_content = "Извините, произошла ошибка при обработке ответа."
                         if not isinstance(ai_content, str):
                             ai_content = str(ai_content) if ai_content else "Извините, произошла ошибка."
-                        actions = parsed.get("actions", [])
+                        actions = parsed.get("actions", []) if isinstance(parsed, dict) else []
                     
                     # Handle special actions separately
                     checklist_actions = [a for a in actions if a.get("type") == "checklist"]
@@ -1162,12 +1222,33 @@ async def create_message(
             
             # If all retries failed, use fallback
             if not ai_content:
-                ai_content = raw_response if raw_response else "Извините, произошла ошибка."
+                # Try to extract any text from raw_response as fallback
+                if raw_response:
+                    # Try to find any message-like content
+                    import re
+                    # Look for text that might be a message
+                    message_match = re.search(r'"message"\s*:\s*"([^"]+)"', raw_response)
+                    if message_match:
+                        ai_content = message_match.group(1)
+                    else:
+                        # Use raw response but clean it up
+                        ai_content = raw_response.strip()
+                        # Remove markdown code blocks if present
+                        ai_content = re.sub(r'^```json\s*', '', ai_content, flags=re.IGNORECASE)
+                        ai_content = re.sub(r'^```\s*', '', ai_content)
+                        ai_content = re.sub(r'```\s*$', '', ai_content)
+                        ai_content = ai_content.strip()
+                        # Limit length
+                        if len(ai_content) > 500:
+                            ai_content = ai_content[:500] + "..."
+                else:
+                    ai_content = "Извините, произошла ошибка при обработке ответа. Попробуйте ещё раз."
+                
                 if debug_mode:
                     debug_log.append("=" * 50)
                     debug_log.append(f"⚠️ ALL {max_retries + 1} ATTEMPTS FAILED")
                     debug_log.append(f"Last error: {last_error}")
-                    debug_log.append("Using raw response as fallback")
+                    debug_log.append("Using fallback response")
                     debug_log.append("=" * 50)
             
             # Add full debug log to response
