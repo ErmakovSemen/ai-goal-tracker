@@ -511,6 +511,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                           const currentStatus = m.completed || m.is_completed || false;
                           await milestonesAPI.update(m.id, { completed: !currentStatus });
                           await loadMilestones();
+                          await loadTasks();
                           await loadNearestDeadline();
                         }
                       } catch (err) {
@@ -521,6 +522,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                       try {
                         await milestonesAPI.update(milestone.id, { target_date: date });
                         await loadMilestones();
+                        await loadTasks();
                         await loadNearestDeadline();
                       } catch (err) {
                         console.error('Failed to set deadline:', err);
@@ -602,8 +604,10 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   sender: m.sender,
                   timestamp: new Date(m.created_at || m.timestamp || Date.now())
                 })));
-                // Reload milestones
+                // Reload milestones and tasks
                 await loadMilestones();
+                await loadTasks();
+                await loadNearestDeadline();
               } else {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
                 console.error('Failed to submit checklist:', errorData);
@@ -635,8 +639,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   sender: m.sender,
                   timestamp: new Date(m.created_at || m.timestamp || Date.now())
                 })));
-                // Reload milestones and nearest deadline
+                // Reload milestones, tasks and nearest deadline
                 await loadMilestones();
+                await loadTasks();
                 await loadNearestDeadline();
               }
             } catch (err) {
