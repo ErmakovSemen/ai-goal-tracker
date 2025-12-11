@@ -81,7 +81,8 @@ def get_nearest_deadline(goal_id: int, db: Session = Depends(get_db)):
         return result
     
     print(f"ℹ️ No deadlines found for goal {goal_id}")
-    return {"deadline": None, "type": None, "formatted": None, "title": None}
+    # Return empty dict instead of None
+    return {}
 
 @router.get("/", response_model=List[schemas.Goal])
 def read_goals(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
