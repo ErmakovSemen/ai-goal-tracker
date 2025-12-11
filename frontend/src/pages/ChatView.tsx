@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ChatInterface from '../components/ChatInterface';
 import ProgressBar from '../components/ProgressBar';
 import GoalDetailModal from '../components/GoalDetailModal';
-import { milestonesAPI, Milestone, Goal as ApiGoal } from '../services/api';
+import { milestonesAPI, tasksAPI, Milestone, Task, Goal as ApiGoal } from '../services/api';
 import { DebugSettings } from '../components/DebugMenu';
 import './ChatView.css';
 
