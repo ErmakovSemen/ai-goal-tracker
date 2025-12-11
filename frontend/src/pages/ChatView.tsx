@@ -478,6 +478,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                           const currentStatus = m.completed || m.is_completed || false;
                           await milestonesAPI.update(m.id, { completed: !currentStatus });
                           await loadMilestones();
+                          await loadNearestDeadline();
                         }
                       } catch (err) {
                         console.error('Failed to toggle milestone:', err);
@@ -487,13 +488,14 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                       try {
                         await milestonesAPI.update(milestone.id, { target_date: date });
                         await loadMilestones();
+                        await loadNearestDeadline();
                       } catch (err) {
                         console.error('Failed to set deadline:', err);
                       }
                     }}
                   />
                 </div>
-                {nearestDeadline && nearestDeadline.deadline && (
+                {nearestDeadline && nearestDeadline.formatted && (
                   <div className="nearest-deadline-info" style={{
                     marginTop: '8px',
                     padding: '8px 12px',
@@ -509,7 +511,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                     <span style={{ fontSize: '18px' }}>⏰</span>
                     <span>
                       Ближайший дедлайн: <strong style={{ color: '#0066cc' }}>{nearestDeadline.formatted}</strong>
-                      {nearestDeadline.title && ` (${nearestDeadline.title})`}
+                      {nearestDeadline.title && ` (${nearestDeadline.title.substring(0, 30)}${nearestDeadline.title.length > 30 ? '...' : ''})`}
                       {nearestDeadline.type === 'task' && ' 📝 задача'}
                       {nearestDeadline.type === 'milestone' && ' 🎯 подцель'}
                     </span>
@@ -600,8 +602,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   sender: m.sender,
                   timestamp: new Date(m.created_at || m.timestamp || Date.now())
                 })));
-                // Reload milestones
+                // Reload milestones and nearest deadline
                 await loadMilestones();
+                await loadNearestDeadline();
               }
             } catch (err) {
               console.error('Failed to confirm actions:', err);
