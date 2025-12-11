@@ -720,20 +720,26 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                         if isinstance(due_date_str, str):
                             # Try ISO format first
                             due_date = datetime.fromisoformat(due_date_str.replace("Z", "+00:00"))
+                            print(f"📅 Parsed due_date from ISO: {due_date}")
                         elif isinstance(due_date_str, datetime):
                             due_date = due_date_str
-                    except:
+                            print(f"📅 Using datetime object: {due_date}")
+                    except Exception as e1:
+                        print(f"⚠️ Failed to parse ISO format: {e1}")
                         try:
                             for fmt in ["%Y-%m-%d %H:%M", "%Y-%m-%d", "%d.%m.%Y %H:%M", "%d.%m.%Y"]:
                                 try:
                                     due_date = datetime.strptime(str(due_date_str), fmt)
+                                    print(f"📅 Parsed due_date from format {fmt}: {due_date}")
                                     break
                                 except:
                                     continue
-                        except:
+                        except Exception as e2:
+                            print(f"⚠️ Failed to parse date: {e2}")
                             pass
                 
                 try:
+                    print(f"🔧 Creating task with data: goal_id={target_goal_id}, title={title}, due_date={due_date}")
                     new_task = schemas.TaskCreate(
                         goal_id=target_goal_id,
                         milestone_id=data.get("milestone_id"),
@@ -742,15 +748,17 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                         due_date=due_date,
                         priority=data.get("priority", "medium")
                     )
+                    print(f"🔧 TaskCreate schema: {new_task.dict()}")
                     created = crud.task.create_task(db=db, task=new_task)
                     db.flush()
+                    print(f"✅ Created task: ID={created.id}, title={created.title}, goal_id={created.goal_id}, due_date={created.due_date}")
                     results.append(f"✅ Создана задача: {created.title}")
-                    print(f"✅ Created task: {created.id} - {created.title} for goal {target_goal_id}")
                 except Exception as e:
                     error_msg = f"❌ Ошибка создания задачи '{title}': {str(e)}"
                     results.append(error_msg)
                     print(error_msg)
                     import traceback
+                    print("Full traceback:")
                     traceback.print_exc()
         
         except Exception as e:

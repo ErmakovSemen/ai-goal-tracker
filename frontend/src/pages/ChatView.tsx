@@ -552,6 +552,88 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                     </span>
                   </div>
                 )}
+                
+                {/* Tasks Widget */}
+                {tasks.length > 0 && (
+                  <div className="tasks-widget" style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#f9f9f9',
+                    borderRadius: '8px',
+                    border: '1px solid #e0e0e0'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px'
+                    }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#333' }}>
+                        📝 Задачи ({tasks.filter(t => !t.is_completed).length})
+                      </h4>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {tasks
+                        .filter(t => !t.is_completed)
+                        .slice(0, 3)
+                        .map(task => (
+                          <div 
+                            key={task.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '6px 8px',
+                              backgroundColor: '#fff',
+                              borderRadius: '4px',
+                              fontSize: '13px'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={false}
+                              onChange={async () => {
+                                try {
+                                  await tasksAPI.update(task.id, { is_completed: true });
+                                  await loadTasks();
+                                  await loadNearestDeadline();
+                                } catch (err) {
+                                  console.error('Failed to complete task:', err);
+                                }
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <span style={{ flex: 1, color: '#333' }}>{task.title}</span>
+                            {task.due_date && (
+                              <span style={{ 
+                                fontSize: '11px', 
+                                color: '#666',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {new Date(task.due_date).toLocaleDateString('ru-RU', { 
+                                  day: '2-digit', 
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      {tasks.filter(t => !t.is_completed).length > 3 && (
+                        <div style={{ 
+                          fontSize: '12px', 
+                          color: '#666', 
+                          textAlign: 'center',
+                          paddingTop: '4px'
+                        }}>
+                          +{tasks.filter(t => !t.is_completed).length - 3} ещё
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {milestones.length === 0 && (
                   <button 
                     className="create-plan-button"
