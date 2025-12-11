@@ -32,6 +32,40 @@ def read_goal(goal_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Goal not found")
     return db_goal
 
+@router.get("/{goal_id}/nearest-deadline/")
+def get_nearest_deadline(goal_id: int, db: Session = Depends(get_db)):
+    """Get the nearest deadline from milestones or tasks for a goal"""
+    from datetime import datetime
+    from app.crud import crud_task
+    
+    nearest = None
+    nearest_type = None
+    
+    # Check milestones with target_date
+    milestones = crud.milestone.get_milestones(db, goal_id=goal_id)
+    for m in milestones:
+        if m.target_date and not m.is_completed:
+            milestone_date = datetime.combine(m.target_date, datetime.min.time())
+            if not nearest or milestone_date < nearest:
+                nearest = milestone_date
+                nearest_type = "milestone"
+    
+    # Check tasks with due_date
+    tasks = crud.task.get_tasks(db, goal_id=goal_id, is_completed=False)
+    for t in tasks:
+        if t.due_date:
+            if not nearest or t.due_date < nearest:
+                nearest = t.due_date
+                nearest_type = "task"
+    
+    if nearest:
+        return {
+            "deadline": nearest.isoformat(),
+            "type": nearest_type,
+            "formatted": nearest.strftime("%d.%m.%Y %H:%M")
+        }
+    return None
+
 @router.get("/", response_model=List[schemas.Goal])
 def read_goals(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     goals = crud.goal.get_goals(db, user_id=user_id, skip=skip, limit=limit)

@@ -83,8 +83,17 @@ def build_system_prompt(goal, milestones: List, agreements: List = None) -> str:
 
 Используй \\n для переносов строки в message.
 
+РАЗНИЦА МЕЖДУ MILESTONE И TASK:
+- MILESTONE (подцель) — большая промежуточная цель на недели/месяцы. Примеры: "Выучить основы Python", "Подготовить портфолио", "Пройти курс по дизайну"
+- TASK (задача) — конкретное действие на сегодня/завтра/эту неделю с коротким дедлайном. Примеры: "Прочитать главу 1", "Купить материалы", "Написать письмо"
+
+ИСПОЛЬЗУЙ:
+- create_milestone для больших шагов плана (3-5 milestones на цель)
+- create_task для конкретных действий с дедлайном на ближайшие дни
+
 ТВОИ ВОЗМОЖНОСТИ (actions):
-- create_milestone: создать подцель {{"type":"create_milestone","data":{{"title":"название"}}}}
+- create_milestone: создать подцель (большой шаг) {{"type":"create_milestone","data":{{"title":"название"}}}}
+- create_task: создать задачу (конкретное действие с дедлайном) {{"type":"create_task","data":{{"title":"название","due_date":"2025-12-10 18:00","milestone_id":123}}}}
 - complete_milestone: отметить выполненной {{"type":"complete_milestone","data":{{"milestone_id":123}}}}
 - delete_milestone: удалить подцель {{"type":"delete_milestone","data":{{"milestone_id":123}}}} или последние N: {{"data":{{"count":5}}}}
 - set_deadline: установить дедлайн для подцели {{"type":"set_deadline","data":{{"milestone_id":123,"deadline":"2025-12-15"}}}} или по названию: {{"data":{{"milestone_title":"Выбрать тему","deadline":"2025-12-15"}}}}
@@ -433,7 +442,7 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
     actions = normalized.get("actions", [])
     
     if actions:
-        valid_action_types = ["create_milestone", "complete_milestone", "delete_milestone", "update_goal", "create_goal", "checklist", "create_agreement", "suggestions", "set_deadline"]
+        valid_action_types = ["create_milestone", "create_task", "complete_milestone", "delete_milestone", "update_goal", "create_goal", "checklist", "create_agreement", "suggestions", "set_deadline"]
         
         for i, action in enumerate(actions):
             if not isinstance(action, dict):
@@ -530,18 +539,32 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
             
             elif action_type == "create_milestone":
                 title = data.get("title", "")[:80]
+                if not title:
+                    results.append("❌ Не могу создать подцель: не указано название")
+                    continue
                 # Use newly created goal ID if available, otherwise current goal
                 target_goal_id = newly_created_goal_id if newly_created_goal_id else goal_id
-                new_milestone = schemas.MilestoneCreate(
-                    goal_id=target_goal_id,
-                    title=title,
-                    description=data.get("description", ""),
-                    target_date=data.get("target_date"),
-                    completed=False
-                )
-                created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
-                results.append(f"✅ Создана подцель: {created.title}")
-                print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
+                if not target_goal_id:
+                    results.append(f"❌ Не могу создать подцель: не найден goal_id")
+                    continue
+                try:
+                    new_milestone = schemas.MilestoneCreate(
+                        goal_id=target_goal_id,
+                        title=title,
+                        description=data.get("description", ""),
+                        target_date=data.get("target_date"),
+                        completed=False
+                    )
+                    created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
+                    db.flush()  # Ensure milestone is saved before continuing
+                    results.append(f"✅ Создана подцель: {created.title}")
+                    print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
+                except Exception as e:
+                    error_msg = f"❌ Ошибка создания подцели '{title}': {str(e)}"
+                    results.append(error_msg)
+                    print(error_msg)
+                    import traceback
+                    traceback.print_exc()
             
             elif action_type == "complete_milestone":
                 milestone_id = data.get("milestone_id")
@@ -677,6 +700,58 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                     print(f"📅 Set deadline for milestone {target_milestone.id}: {deadline_date}")
                 else:
                     results.append(f"❌ Подцель не найдена: {milestone_id or milestone_title}")
+            
+            elif action_type == "create_task":
+                from datetime import datetime
+                title = data.get("title", "")[:200]
+                if not title:
+                    results.append("❌ Не могу создать задачу: не указано название")
+                    continue
+                target_goal_id = newly_created_goal_id if newly_created_goal_id else goal_id
+                if not target_goal_id:
+                    results.append(f"❌ Не могу создать задачу: не найден goal_id")
+                    continue
+                
+                # Parse due_date if provided
+                due_date = None
+                due_date_str = data.get("due_date") or data.get("deadline")
+                if due_date_str:
+                    try:
+                        if isinstance(due_date_str, str):
+                            # Try ISO format first
+                            due_date = datetime.fromisoformat(due_date_str.replace("Z", "+00:00"))
+                        elif isinstance(due_date_str, datetime):
+                            due_date = due_date_str
+                    except:
+                        try:
+                            for fmt in ["%Y-%m-%d %H:%M", "%Y-%m-%d", "%d.%m.%Y %H:%M", "%d.%m.%Y"]:
+                                try:
+                                    due_date = datetime.strptime(str(due_date_str), fmt)
+                                    break
+                                except:
+                                    continue
+                        except:
+                            pass
+                
+                try:
+                    new_task = schemas.TaskCreate(
+                        goal_id=target_goal_id,
+                        milestone_id=data.get("milestone_id"),
+                        title=title,
+                        description=data.get("description", ""),
+                        due_date=due_date,
+                        priority=data.get("priority", "medium")
+                    )
+                    created = crud.task.create_task(db=db, task=new_task)
+                    db.flush()
+                    results.append(f"✅ Создана задача: {created.title}")
+                    print(f"✅ Created task: {created.id} - {created.title} for goal {target_goal_id}")
+                except Exception as e:
+                    error_msg = f"❌ Ошибка создания задачи '{title}': {str(e)}"
+                    results.append(error_msg)
+                    print(error_msg)
+                    import traceback
+                    traceback.print_exc()
         
         except Exception as e:
             error_msg = f"❌ Ошибка выполнения {action_type}: {str(e)}"
@@ -1330,10 +1405,17 @@ async def confirm_actions(
             raise HTTPException(status_code=401, detail="User not authenticated")
         
         # Execute the confirmed actions
+        print(f"🔧 Executing {len(actions)} confirmed actions for goal {chat.goal_id}")
+        print(f"🔧 Actions: {actions}")
         results = await execute_actions(db, chat.goal_id, actions, user_id=user_id)
+        print(f"🔧 Execution results: {results}")
+        
+        # Commit changes to database
+        db.commit()
         
         # Get current milestone count
         milestones = crud.milestone.get_milestones(db, goal_id=chat.goal_id)
+        print(f"🔧 Found {len(milestones)} milestones after execution")
         completed_count = len([m for m in milestones if m.is_completed])
         pending_count = len([m for m in milestones if not m.is_completed])
         

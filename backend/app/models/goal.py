@@ -21,5 +21,6 @@ class Goal(Base):
     # Relationships
     user = relationship("User", back_populates="goals")
     milestones = relationship("Milestone", back_populates="goal", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="goal", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="goal", cascade="all, delete-orphan")
     chats = relationship("Chat", back_populates="goal", cascade="all, delete-orphan")
