@@ -138,15 +138,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       console.log('Already confirming, skipping...');
       return;
     }
-    setConfirming(true);
-    try {
+      setConfirming(true);
+      try {
       console.log('Confirming actions:', actions);
-      await onConfirmActions(actions);
-    } catch (e) {
-      console.error('Error confirming actions:', e);
+        await onConfirmActions(actions);
+      } catch (e) {
+        console.error('Error confirming actions:', e);
       alert(`Ошибка при подтверждении действий: ${e instanceof Error ? e.message : 'Unknown error'}`);
-    } finally {
-      setConfirming(false);
+      } finally {
+        setConfirming(false);
     }
   };
 

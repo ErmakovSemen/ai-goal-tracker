@@ -56,7 +56,7 @@ function App() {
           if (user) {
             setUsername(user.username);
             setUserId(user.id);
-            setIsLoggedIn(true);
+      setIsLoggedIn(true);
           }
         }).catch(() => {
           authAPI.logout();
@@ -114,7 +114,7 @@ function App() {
         if (result.user_id) {
           setUserId(result.user_id);
         }
-        setIsLoggedIn(true);
+      setIsLoggedIn(true);
         const user = await authAPI.getCurrentUser();
         if (user) {
           setUsername(user.username);
@@ -126,7 +126,7 @@ function App() {
         if (result.user_id) {
           setUserId(result.user_id);
         }
-        setIsLoggedIn(true);
+      setIsLoggedIn(true);
         const user = await authAPI.getCurrentUser();
         if (user) {
           setUsername(user.username);
@@ -330,14 +330,14 @@ function App() {
         </div>
       );
     }
-    return (
-      <div className="App">
+  return (
+    <div className="App">
         <CreateGoal 
           onNavigate={(goal?: Goal) => handleGoalCreated(goal)} 
           userId={userId}
           debugSettings={debugSettings}
         />
-      </div>
+        </div>
     );
   }
 

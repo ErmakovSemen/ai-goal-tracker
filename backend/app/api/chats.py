@@ -435,7 +435,7 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
         try:
             parsed["message"] = str(parsed["message"])
         except Exception:
-            return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
+        return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
     
     # Normalize the response first
     normalized = normalize_response(parsed)
@@ -548,17 +548,17 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                     results.append(f"❌ Не могу создать подцель: не найден goal_id")
                     continue
                 try:
-                    new_milestone = schemas.MilestoneCreate(
-                        goal_id=target_goal_id,
-                        title=title,
-                        description=data.get("description", ""),
-                        target_date=data.get("target_date"),
-                        completed=False
-                    )
-                    created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
+                new_milestone = schemas.MilestoneCreate(
+                    goal_id=target_goal_id,
+                    title=title,
+                    description=data.get("description", ""),
+                    target_date=data.get("target_date"),
+                    completed=False
+                )
+                created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
                     db.flush()  # Ensure milestone is saved before continuing
-                    results.append(f"✅ Создана подцель: {created.title}")
-                    print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
+                results.append(f"✅ Создана подцель: {created.title}")
+                print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
                 except Exception as e:
                     error_msg = f"❌ Ошибка создания подцели '{title}': {str(e)}"
                     results.append(error_msg)
@@ -1140,7 +1140,7 @@ async def create_message(
                                     debug_log.append(f"❌ Fallback creation failed: {fallback_err}")
                                 continue
                         else:
-                            continue
+                        continue
                     
                     if debug_mode:
                         debug_log.append(f"✅ PARSED JSON:")
@@ -1180,8 +1180,8 @@ async def create_message(
                     
                     # Normalize the response
                     try:
-                        normalized = normalize_response(parsed)
-                        ai_content = normalized.get("message", "")
+                    normalized = normalize_response(parsed)
+                    ai_content = normalized.get("message", "")
                         
                         # Ensure ai_content is a string and not empty
                         if not isinstance(ai_content, str):
@@ -1197,7 +1197,7 @@ async def create_message(
                             if debug_mode:
                                 debug_log.append("⚠️ Message was empty after normalization, using fallback")
                         
-                        actions = normalized.get("actions", [])
+                    actions = normalized.get("actions", [])
                     except Exception as norm_err:
                         print(f"Error normalizing response: {norm_err}")
                         import traceback

@@ -35,36 +35,53 @@ def read_goal(goal_id: int, db: Session = Depends(get_db)):
 @router.get("/{goal_id}/nearest-deadline/")
 def get_nearest_deadline(goal_id: int, db: Session = Depends(get_db)):
     """Get the nearest deadline from milestones or tasks for a goal"""
-    from datetime import datetime
+    from datetime import datetime, time
     from app.crud import crud_task
     
     nearest = None
     nearest_type = None
+    nearest_title = None
     
     # Check milestones with target_date
     milestones = crud.milestone.get_milestones(db, goal_id=goal_id)
+    print(f"🔍 Checking {len(milestones)} milestones for goal {goal_id}")
     for m in milestones:
         if m.target_date and not m.is_completed:
-            milestone_date = datetime.combine(m.target_date, datetime.min.time())
+            # Convert date to datetime (start of day)
+            milestone_date = datetime.combine(m.target_date, time.min)
+            print(f"  📅 Milestone '{m.title}': {milestone_date}")
             if not nearest or milestone_date < nearest:
                 nearest = milestone_date
                 nearest_type = "milestone"
+                nearest_title = m.title
     
     # Check tasks with due_date
-    tasks = crud.task.get_tasks(db, goal_id=goal_id, is_completed=False)
-    for t in tasks:
-        if t.due_date:
-            if not nearest or t.due_date < nearest:
-                nearest = t.due_date
-                nearest_type = "task"
+    try:
+        tasks = crud.task.get_tasks(db, goal_id=goal_id, is_completed=False)
+        print(f"🔍 Checking {len(tasks)} tasks for goal {goal_id}")
+        for t in tasks:
+            if t.due_date:
+                print(f"  ⏰ Task '{t.title}': {t.due_date}")
+                if not nearest or t.due_date < nearest:
+                    nearest = t.due_date
+                    nearest_type = "task"
+                    nearest_title = t.title
+    except Exception as e:
+        print(f"⚠️ Error loading tasks: {e}")
+        # Tasks table might not exist yet, that's OK
     
     if nearest:
-        return {
+        result = {
             "deadline": nearest.isoformat(),
             "type": nearest_type,
-            "formatted": nearest.strftime("%d.%m.%Y %H:%M")
+            "formatted": nearest.strftime("%d.%m.%Y %H:%M"),
+            "title": nearest_title
         }
-    return None
+        print(f"✅ Nearest deadline: {result}")
+        return result
+    
+    print(f"ℹ️ No deadlines found for goal {goal_id}")
+    return {"deadline": None, "type": None, "formatted": None, "title": None}
 
 @router.get("/", response_model=List[schemas.Goal])
 def read_goals(user_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

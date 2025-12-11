@@ -81,12 +81,19 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       const response = await fetch(getApiUrl(`/api/goals/${goal.id}/nearest-deadline/`));
       if (response.ok) {
         const data = await response.json();
-        if (data) {
+        console.log('Nearest deadline data:', data);
+        if (data && data.deadline) {
           setNearestDeadline(data);
         } else {
+          console.log('No nearest deadline found');
           setNearestDeadline(null);
         }
+      } else if (response.status === 404) {
+        // No deadline found - this is OK
+        console.log('No deadline endpoint or no deadlines');
+        setNearestDeadline(null);
       } else {
+        console.error('Failed to load nearest deadline:', response.status, response.statusText);
         setNearestDeadline(null);
       }
     } catch (err) {
@@ -486,20 +493,25 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                     }}
                   />
                 </div>
-                {nearestDeadline && (
+                {nearestDeadline && nearestDeadline.deadline && (
                   <div className="nearest-deadline-info" style={{
                     marginTop: '8px',
+                    padding: '8px 12px',
                     fontSize: '14px',
-                    color: '#666',
+                    color: '#333',
+                    backgroundColor: '#f0f7ff',
+                    borderRadius: '6px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '8px',
+                    border: '1px solid #d0e7ff'
                   }}>
-                    <span>⏰</span>
+                    <span style={{ fontSize: '18px' }}>⏰</span>
                     <span>
-                      Ближайший дедлайн: <strong>{nearestDeadline.formatted}</strong>
-                      {nearestDeadline.type === 'task' && ' (задача)'}
-                      {nearestDeadline.type === 'milestone' && ' (подцель)'}
+                      Ближайший дедлайн: <strong style={{ color: '#0066cc' }}>{nearestDeadline.formatted}</strong>
+                      {nearestDeadline.title && ` (${nearestDeadline.title})`}
+                      {nearestDeadline.type === 'task' && ' 📝 задача'}
+                      {nearestDeadline.type === 'milestone' && ' 🎯 подцель'}
                     </span>
                   </div>
                 )}
