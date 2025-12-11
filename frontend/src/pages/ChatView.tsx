@@ -33,9 +33,11 @@ interface ChatViewProps {
 const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalCreated, debugSettings }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingMilestones, setLoadingMilestones] = useState(true);
+  const [loadingTasks, setLoadingTasks] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [nearestDeadline, setNearestDeadline] = useState<{deadline: string, type: string, formatted: string} | null>(null);
+  const [nearestDeadline, setNearestDeadline] = useState<{deadline: string, type: string, formatted: string, title?: string} | null>(null);
 
   const [chatId, setChatId] = useState<number | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -70,6 +72,29 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       // setMilestones([]);
     } finally {
       setLoadingMilestones(false);
+    }
+  };
+
+  const loadTasks = async () => {
+    if (!goal) return;
+    
+    try {
+      setLoadingTasks(true);
+      console.log(`Loading tasks for goal ${goal.id}...`);
+      const fetchedTasks = await tasksAPI.getByGoalId(goal.id, false); // Only pending tasks
+      console.log('Loaded tasks:', fetchedTasks);
+      if (Array.isArray(fetchedTasks)) {
+        setTasks(fetchedTasks);
+      } else {
+        console.warn('Tasks API returned non-array:', fetchedTasks);
+        setTasks([]);
+      }
+    } catch (err) {
+      console.error('Failed to load tasks:', err);
+      // Tasks table might not exist yet, that's OK
+      setTasks([]);
+    } finally {
+      setLoadingTasks(false);
     }
   };
 
@@ -112,9 +137,11 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
     if (goal) {
       initializeChat();
       loadMilestones();
-      // Reload milestones periodically to catch updates
+      loadTasks();
+      // Reload milestones and tasks periodically to catch updates
       const interval = setInterval(() => {
         loadMilestones();
+        loadTasks();
       }, 3000); // Every 3 seconds
       return () => clearInterval(interval);
     }
@@ -460,6 +487,11 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                       ? `${completedCount}/${milestones.length} milestones`
                       : 'No milestones yet'
                     }
+                    {tasks.length > 0 && (
+                      <span style={{ marginLeft: '12px', color: '#666' }}>
+                        • {tasks.filter(t => !t.is_completed).length} задач
+                      </span>
+                    )}
                   </span>
                   <span className="progress-percent">{progress}%</span>
                 </div>

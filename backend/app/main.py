@@ -39,7 +39,7 @@ async def startup_event():
     """Create database tables on startup"""
     try:
         from app.database.database import engine, Base
-        from app.models import goal, milestone, user, chat, report, agreement, device_token
+        from app.models import goal, milestone, task, user, chat, report, agreement, device_token
         # Create all tables
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created/verified successfully")
