@@ -80,9 +80,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
     
     try {
       setLoadingTasks(true);
-      console.log(`Loading tasks for goal ${goal.id}...`);
+      console.log(`📝 Loading tasks for goal ${goal.id}...`);
       const fetchedTasks = await tasksAPI.getByGoalId(goal.id, false); // Only pending tasks
-      console.log('Loaded tasks:', fetchedTasks);
+      console.log(`📝 Loaded ${fetchedTasks?.length || 0} tasks:`, fetchedTasks);
       if (Array.isArray(fetchedTasks)) {
         setTasks(fetchedTasks);
       } else {
