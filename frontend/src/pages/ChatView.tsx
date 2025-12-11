@@ -82,10 +82,11 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       if (response.ok) {
         const data = await response.json();
         console.log('Nearest deadline data:', data);
-        if (data && data.deadline) {
+        if (data && data.formatted && data.deadline) {
+          console.log('✅ Setting nearest deadline:', data);
           setNearestDeadline(data);
         } else {
-          console.log('No nearest deadline found');
+          console.log('ℹ️ No nearest deadline found (empty response)');
           setNearestDeadline(null);
         }
       } else if (response.status === 404) {
