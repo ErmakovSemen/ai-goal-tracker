@@ -35,6 +35,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loadingMilestones, setLoadingMilestones] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [nearestDeadline, setNearestDeadline] = useState<{deadline: string, type: string, formatted: string} | null>(null);
 
   const [chatId, setChatId] = useState<number | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -55,6 +56,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
         console.warn('Milestones API returned non-array:', fetchedMilestones);
         setMilestones([]);
       }
+      
+      // Load nearest deadline
+      await loadNearestDeadline();
     } catch (err) {
       console.error('Failed to load milestones:', err);
       // Debug mode: log full error
@@ -66,6 +70,28 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       // setMilestones([]);
     } finally {
       setLoadingMilestones(false);
+    }
+  };
+
+  const loadNearestDeadline = async () => {
+    if (!goal) return;
+    
+    try {
+      const { getApiUrl } = await import('../config/api');
+      const response = await fetch(getApiUrl(`/api/goals/${goal.id}/nearest-deadline/`));
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setNearestDeadline(data);
+        } else {
+          setNearestDeadline(null);
+        }
+      } else {
+        setNearestDeadline(null);
+      }
+    } catch (err) {
+      console.error('Failed to load nearest deadline:', err);
+      setNearestDeadline(null);
     }
   };
 
@@ -460,6 +486,23 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                     }}
                   />
                 </div>
+                {nearestDeadline && (
+                  <div className="nearest-deadline-info" style={{
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: '#666',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span>⏰</span>
+                    <span>
+                      Ближайший дедлайн: <strong>{nearestDeadline.formatted}</strong>
+                      {nearestDeadline.type === 'task' && ' (задача)'}
+                      {nearestDeadline.type === 'milestone' && ' (подцель)'}
+                    </span>
+                  </div>
+                )}
                 {milestones.length === 0 && (
                   <button 
                     className="create-plan-button"
