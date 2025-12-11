@@ -275,6 +275,37 @@ export const milestonesAPI = {
   },
 };
 
+// Tasks API
+export const tasksAPI = {
+  getByGoalId: async (goalId: number, is_completed?: boolean): Promise<Task[]> => {
+    const params = new URLSearchParams({ goal_id: String(goalId) });
+    if (is_completed !== undefined) {
+      params.append('is_completed', String(is_completed));
+    }
+    return apiRequest<Task[]>(`/api/tasks/?${params.toString()}`);
+  },
+  getUpcoming: async (goalId: number, limit: number = 5): Promise<Task[]> => {
+    return apiRequest<Task[]>(`/api/tasks/?goal_id=${goalId}&is_completed=false&limit=${limit}`);
+  },
+  create: async (task: { title: string; description?: string; goal_id: number; milestone_id?: number; due_date?: string; priority?: string }): Promise<Task> => {
+    return apiRequest<Task>(`/api/tasks/`, {
+      method: 'POST',
+      body: JSON.stringify(task),
+    });
+  },
+  update: async (id: number, updates: Partial<Task>): Promise<Task> => {
+    return apiRequest<Task>(`/api/tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  },
+  delete: async (id: number): Promise<void> => {
+    await apiRequest(`/api/tasks/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // Chats API
 export const chatsAPI = {
   getByGoalId: async (goalId: number): Promise<Chat[]> => {
