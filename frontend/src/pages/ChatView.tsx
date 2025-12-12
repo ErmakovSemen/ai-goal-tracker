@@ -36,6 +36,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingMilestones, setLoadingMilestones] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [nearestDeadline, setNearestDeadline] = useState<{deadline: string, type: string, formatted: string, title?: string} | null>(null);
 
@@ -44,11 +45,13 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const [processedGoalIds, setProcessedGoalIds] = useState<Set<number>>(new Set());
   const [lastMessageId, setLastMessageId] = useState<number>(0);
 
-  const loadMilestones = async () => {
+  const loadMilestones = async (showLoading = false) => {
     if (!goal) return;
     
     try {
-      setLoadingMilestones(true);
+      if (showLoading || isInitialLoad) {
+        setLoadingMilestones(true);
+      }
       console.log(`Loading milestones for goal ${goal.id}...`);
       const fetchedMilestones = await milestonesAPI.getByGoalId(goal.id);
       console.log('Loaded milestones:', fetchedMilestones);
@@ -72,14 +75,19 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       // setMilestones([]);
     } finally {
       setLoadingMilestones(false);
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     }
   };
 
-  const loadTasks = async () => {
+  const loadTasks = async (showLoading = false) => {
     if (!goal) return;
     
     try {
-      setLoadingTasks(true);
+      if (showLoading || isInitialLoad) {
+        setLoadingTasks(true);
+      }
       console.log(`📝 Loading tasks for goal ${goal.id}...`);
       const fetchedTasks = await tasksAPI.getByGoalId(goal.id, false); // Only pending tasks
       console.log(`📝 Loaded ${fetchedTasks?.length || 0} tasks:`, fetchedTasks);
@@ -135,14 +143,15 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
 
   useEffect(() => {
     if (goal) {
+      setIsInitialLoad(true);
       initializeChat();
-      loadMilestones();
-      loadTasks();
-      // Reload milestones and tasks periodically to catch updates
+      loadMilestones(true);
+      loadTasks(true);
+      // Reload milestones and tasks periodically to catch updates (silently, without loading indicator)
       const interval = setInterval(() => {
-        loadMilestones();
-        loadTasks();
-      }, 3000); // Every 3 seconds
+        loadMilestones(false); // Silent update
+        loadTasks(false); // Silent update
+      }, 10000); // Every 10 seconds (reduced frequency)
       return () => clearInterval(interval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,8 +211,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
             const maxId = Math.max(...newMessages.map((m: any) => m.id));
             setLastMessageId(maxId);
             
-            // Reload milestones in case of updates
-            loadMilestones();
+            // Reload milestones in case of updates (silent)
+            loadMilestones(false);
           }
         }
       } catch (err) {
@@ -403,8 +412,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
               }
             }
             
-            // Reload milestones if AI might have created/updated them
-            await loadMilestones();
+            // Reload milestones if AI might have created/updated them (silent)
+            await loadMilestones(false);
             setLoadingAI(false);
           } else {
             // Continue polling
@@ -510,8 +519,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                         if (m) {
                           const currentStatus = m.completed || m.is_completed || false;
                           await milestonesAPI.update(m.id, { completed: !currentStatus });
-                          await loadMilestones();
-                          await loadTasks();
+                          await loadMilestones(false);
+                          await loadTasks(false);
                           await loadNearestDeadline();
                         }
                       } catch (err) {
@@ -521,8 +530,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                     onSetDeadline={async (milestone, date) => {
                       try {
                         await milestonesAPI.update(milestone.id, { target_date: date });
-                        await loadMilestones();
-                        await loadTasks();
+                        await loadMilestones(false);
+                        await loadTasks(false);
                         await loadNearestDeadline();
                       } catch (err) {
                         console.error('Failed to set deadline:', err);
@@ -595,7 +604,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                               onChange={async () => {
                                 try {
                                   await tasksAPI.update(task.id, { is_completed: true });
-                                  await loadTasks();
+                                  await loadTasks(false);
                                   await loadNearestDeadline();
                                 } catch (err) {
                                   console.error('Failed to complete task:', err);
@@ -686,9 +695,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   sender: m.sender,
                   timestamp: new Date(m.created_at || m.timestamp || Date.now())
                 })));
-                // Reload milestones and tasks
-                await loadMilestones();
-                await loadTasks();
+                // Reload milestones and tasks (silent)
+                await loadMilestones(false);
+                await loadTasks(false);
                 await loadNearestDeadline();
               } else {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -721,9 +730,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   sender: m.sender,
                   timestamp: new Date(m.created_at || m.timestamp || Date.now())
                 })));
-                // Reload milestones, tasks and nearest deadline
-                await loadMilestones();
-                await loadTasks();
+                // Reload milestones, tasks and nearest deadline (silent)
+                await loadMilestones(false);
+                await loadTasks(false);
                 await loadNearestDeadline();
               }
             } catch (err) {
