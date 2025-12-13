@@ -48,8 +48,10 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const loadMilestones = async (showLoading = false) => {
     if (!goal) return;
     
+    const shouldShowLoading = showLoading || isInitialLoad;
+    
     try {
-      if (showLoading || isInitialLoad) {
+      if (shouldShowLoading) {
         setLoadingMilestones(true);
       }
       console.log(`Loading milestones for goal ${goal.id}...`);
@@ -74,7 +76,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       // Don't clear milestones on error, keep existing ones
       // setMilestones([]);
     } finally {
-      setLoadingMilestones(false);
+      if (shouldShowLoading) {
+        setLoadingMilestones(false);
+      }
       if (isInitialLoad) {
         setIsInitialLoad(false);
       }
@@ -84,8 +88,10 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const loadTasks = async (showLoading = false) => {
     if (!goal) return;
     
+    const shouldShowLoading = showLoading || isInitialLoad;
+    
     try {
-      if (showLoading || isInitialLoad) {
+      if (shouldShowLoading) {
         setLoadingTasks(true);
       }
       console.log(`📝 Loading tasks for goal ${goal.id}...`);
@@ -102,7 +108,9 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       // Tasks table might not exist yet, that's OK
       setTasks([]);
     } finally {
-      setLoadingTasks(false);
+      if (shouldShowLoading) {
+        setLoadingTasks(false);
+      }
     }
   };
 
@@ -486,7 +494,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
             onClick={() => setShowDetailModal(true)}
             title="Нажмите для просмотра деталей"
           >
-            {loadingMilestones ? (
+            {loadingMilestones && isInitialLoad ? (
               <div className="progress-loading">Loading progress...</div>
             ) : (
               <>
