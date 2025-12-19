@@ -48,7 +48,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const loadMilestones = async (showLoading = false) => {
     if (!goal) return;
     
-    const shouldShowLoading = showLoading || isInitialLoad;
+    // Only show loading indicator if explicitly requested AND it's the initial load
+    const shouldShowLoading = showLoading && isInitialLoad;
     
     try {
       if (shouldShowLoading) {
@@ -79,8 +80,12 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       if (shouldShowLoading) {
         setLoadingMilestones(false);
       }
-      if (isInitialLoad) {
+      // Mark initial load as complete after first successful load
+      if (isInitialLoad && !shouldShowLoading) {
         setIsInitialLoad(false);
+      } else if (isInitialLoad && shouldShowLoading) {
+        // Wait for loading to complete before marking as done
+        setTimeout(() => setIsInitialLoad(false), 100);
       }
     }
   };
@@ -88,7 +93,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
   const loadTasks = async (showLoading = false) => {
     if (!goal) return;
     
-    const shouldShowLoading = showLoading || isInitialLoad;
+    // Only show loading indicator if explicitly requested AND it's the initial load
+    const shouldShowLoading = showLoading && isInitialLoad;
     
     try {
       if (shouldShowLoading) {
