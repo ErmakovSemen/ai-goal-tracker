@@ -159,14 +159,32 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
     if (goal) {
       setIsInitialLoad(true);
       initializeChat();
+      // Initial load with loading indicator
       loadMilestones(true);
       loadTasks(true);
+      
+      // Mark initial load as complete after a short delay to ensure loading state is set
+      const initialLoadTimeout = setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 500);
+      
       // Reload milestones and tasks periodically to catch updates (silently, without loading indicator)
-      const interval = setInterval(() => {
-        loadMilestones(false); // Silent update
-        loadTasks(false); // Silent update
-      }, 10000); // Every 10 seconds (reduced frequency)
-      return () => clearInterval(interval);
+      // Start background updates after initial load completes
+      let interval: NodeJS.Timeout | null = null;
+      const backgroundUpdateTimeout = setTimeout(() => {
+        interval = setInterval(() => {
+          loadMilestones(false); // Silent update - never shows loading
+          loadTasks(false); // Silent update - never shows loading
+        }, 10000); // Every 10 seconds (reduced frequency)
+      }, 2000); // Start after 2 seconds
+      
+      return () => {
+        clearTimeout(initialLoadTimeout);
+        clearTimeout(backgroundUpdateTimeout);
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal]);
