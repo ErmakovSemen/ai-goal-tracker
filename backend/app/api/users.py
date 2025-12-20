@@ -56,15 +56,14 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@router.get("/me", response_model=schemas.User)
+@router.get("/me")
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user"""
-    # Ensure email is handled properly if None
-    user_dict = {
+    # Return user data directly without response_model to avoid validation issues
+    return {
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email if current_user.email else None,
-        "created_at": current_user.created_at,
-        "updated_at": current_user.updated_at
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+        "updated_at": current_user.updated_at.isoformat() if current_user.updated_at else None
     }
-    return schemas.User(**user_dict)
