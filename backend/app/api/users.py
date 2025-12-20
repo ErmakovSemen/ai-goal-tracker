@@ -59,4 +59,12 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 @router.get("/me", response_model=schemas.User)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current authenticated user"""
-    return current_user
+    # Ensure email is handled properly if None
+    user_dict = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email if current_user.email else None,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at
+    }
+    return schemas.User(**user_dict)
