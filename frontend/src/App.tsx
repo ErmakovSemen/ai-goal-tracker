@@ -348,7 +348,15 @@ function App() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'home':
-        return userId ? <Home userId={userId} /> : null;
+        return userId ? (
+          <Home 
+            userId={userId} 
+            onGoalClick={(goalId) => {
+              setSelectedGoalId(goalId);
+              setActiveTab('chat');
+            }}
+          />
+        ) : null;
       
       case 'chat':
         return (

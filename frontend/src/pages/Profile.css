@@ -1,107 +1,140 @@
 .profile-page {
-  padding: 20px;
-  padding-bottom: 80px; /* Отступ для bottom navigation */
-  max-width: 800px;
+  padding: 16px;
+  padding-bottom: 80px;
+  max-width: 900px;
   margin: 0 auto;
   min-height: calc(100vh - 60px);
+  background: #fafafa;
 }
 
 .profile-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .profile-header h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
 }
 
 .profile-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
-.profile-section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+/* Виджеты */
+.profile-widget {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
 }
 
-.profile-section h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
 }
 
-.profile-loading,
-.profile-error {
-  text-align: center;
-  padding: 40px;
+.widget-title {
+  font-size: 14px;
+  font-weight: 500;
   color: #666;
+  letter-spacing: 0.2px;
 }
 
-.profile-error {
-  color: #f5576c;
+.widget-content {
+  padding: 8px;
 }
 
 /* Аватар и информация */
 .profile-avatar {
   text-align: center;
-  margin-bottom: 20px;
+  padding: 24px 16px 16px;
 }
 
 .avatar-circle {
-  width: 100px;
-  height: 100px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4a4a4a;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 500;
   color: white;
   margin: 0 auto;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .profile-info {
   text-align: center;
+  padding: 0 16px 20px;
 }
 
 .profile-info h2 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
+  margin: 12px 0 4px 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a1a;
 }
 
 .profile-email {
   margin: 0;
-  color: #666;
-  font-size: 16px;
+  color: #999;
+  font-size: 14px;
+}
+
+/* Статистика */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: #f0f0f0;
+  padding: 8px;
+}
+
+.stat-item {
+  background: #ffffff;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.3;
 }
 
 /* Настройки */
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .settings-item {
   display: flex;
   align-items: center;
-  padding: 16px 0;
+  padding: 14px 16px;
   background: none;
   border: none;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease;
   text-align: left;
   width: 100%;
 }
@@ -111,81 +144,97 @@
 }
 
 .settings-item:hover {
-  background-color: #f9f9f9;
+  background-color: #fafafa;
 }
 
 .settings-icon {
-  font-size: 24px;
-  margin-right: 16px;
-  width: 32px;
+  font-size: 18px;
+  margin-right: 12px;
+  width: 24px;
   text-align: center;
 }
 
 .settings-label {
   flex: 1;
-  font-size: 16px;
-  color: #333;
+  font-size: 14px;
+  color: #1a1a1a;
 }
 
 .settings-arrow {
-  font-size: 24px;
-  color: #999;
+  font-size: 18px;
+  color: #ccc;
 }
 
 /* О приложении */
 .about-info {
+  padding: 16px;
   text-align: center;
 }
 
 .app-name {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
 }
 
 .app-version {
-  font-size: 14px;
+  font-size: 12px;
   color: #999;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
 }
 
 .app-description {
-  font-size: 16px;
+  font-size: 13px;
   color: #666;
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
 }
 
 /* Кнопка выхода */
 .logout-button {
   width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  padding: 14px;
+  background: transparent;
+  color: #d32f2f;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+  transition: background-color 0.15s ease;
 }
 
 .logout-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
-}
-
-.logout-icon {
-  font-size: 20px;
+  background-color: #fff5f5;
 }
 
 .logout-label {
-  font-size: 16px;
+  font-size: 14px;
 }
 
+.profile-loading,
+.profile-error {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 14px;
+}
+
+.profile-error {
+  color: #d32f2f;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 12px;
+  }
+
+  .profile-header h1 {
+    font-size: 22px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

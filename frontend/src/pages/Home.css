@@ -1,241 +1,216 @@
 .home-page {
-  padding: 20px;
-  padding-bottom: 80px; /* Отступ для bottom navigation */
-  max-width: 1200px;
+  padding: 16px;
+  padding-bottom: 80px;
+  max-width: 900px;
   margin: 0 auto;
   min-height: calc(100vh - 60px);
+  background: #fafafa;
 }
 
 .home-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .home-header h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
 }
 
 .home-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
-.home-section {
-  background: #fff;
+/* Виджеты */
+.home-widget {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.widget-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  letter-spacing: 0.2px;
+}
+
+.widget-count {
+  font-size: 12px;
+  color: #999;
+  background: #f0f0f0;
+  padding: 2px 8px;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.home-section h2 {
-  margin: 0 0 16px 0;
+.widget-content {
+  padding: 8px;
+}
+
+/* Дедлайны */
+.deadline-widget {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.deadline-widget:last-child {
+  margin-bottom: 0;
+}
+
+.deadline-widget:hover {
+  background-color: #f8f8f8;
+}
+
+.deadline-widget-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.deadline-widget-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deadline-widget-task {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deadline-widget-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.deadline-widget-icon {
   font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Цели */
+.goal-widget {
+  padding: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-bottom: 4px;
+}
+
+.goal-widget:last-child {
+  margin-bottom: 0;
+}
+
+.goal-widget:hover {
+  background-color: #f8f8f8;
+}
+
+.goal-widget-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.goal-widget-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.goal-widget-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.goal-widget-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.goal-widget-progress-fill {
+  height: 100%;
+  background: #4a4a4a;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.goal-widget-progress-text {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  min-width: 35px;
+  text-align: right;
+}
+
+.goal-widget-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.goal-widget-meta-item {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Пустое состояние */
+.empty-state {
+  text-align: center;
+  padding: 32px 20px;
+  color: #999;
+  font-size: 14px;
 }
 
 .home-loading {
   text-align: center;
   padding: 40px;
-  color: #666;
-}
-
-/* Статистика */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
-}
-
-.stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 14px;
-  opacity: 0.9;
-  line-height: 1.2;
-}
-
-/* Стрик */
-.streak-widget {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-radius: 16px;
-  padding: 32px;
-  text-align: center;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(245, 87, 108, 0.3);
-}
-
-.streak-value {
-  font-size: 64px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-
-.streak-label {
-  font-size: 18px;
-  opacity: 0.95;
-  margin-bottom: 12px;
-}
-
-.streak-emoji {
-  font-size: 48px;
-  line-height: 1;
-}
-
-/* Дедлайны */
-.deadlines-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.deadline-item {
-  padding: 16px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  border-left: 4px solid #667eea;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.deadline-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.deadline-goal {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.deadline-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.deadline-title {
-  flex: 1;
-  color: #666;
-  font-size: 14px;
-}
-
-.deadline-date {
-  color: #667eea;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.deadline-type {
-  font-size: 18px;
-}
-
-/* Виджеты целей */
-.goals-widget-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.goal-widget {
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.goal-widget:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.goal-widget-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.goal-widget-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  flex: 1;
-}
-
-.goal-progress-badge {
-  background: #667eea;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.goal-widget-progress {
-  height: 8px;
-  background: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.goal-widget-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  transition: width 0.3s ease;
-}
-
-.goal-widget-stats {
-  display: flex;
-  gap: 16px;
-  font-size: 14px;
-  color: #666;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
   color: #999;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
   .home-page {
-    padding: 16px;
+    padding: 12px;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .home-header h1 {
+    font-size: 22px;
   }
 
-  .streak-value {
-    font-size: 48px;
+  .widget-header {
+    padding: 12px 14px;
   }
 }
-

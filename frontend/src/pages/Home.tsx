@@ -4,6 +4,7 @@ import './Home.css';
 
 interface HomeProps {
   userId: number;
+  onGoalClick?: (goalId: number) => void;
 }
 
 interface GoalStats {
@@ -22,15 +23,12 @@ interface GoalStats {
   completedTasks: number;
 }
 
-const Home: React.FC<HomeProps> = ({ userId }) => {
+const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   const [goals, setGoals] = useState<GoalStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalStreak, setTotalStreak] = useState(0);
-  const [todayCompletion, setTodayCompletion] = useState(0);
 
   useEffect(() => {
     loadData();
-    // Обновляем данные каждые 30 секунд
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, [userId]);
@@ -45,23 +43,19 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
       const goalsWithStats = await Promise.all(
         fetchedGoals.map(async (goal) => {
           try {
-            // Загружаем milestones
             const milestones = await milestonesAPI.getByGoalId(goal.id);
             const completedMilestones = milestones.filter(m => m.completed || m.is_completed).length;
             const progress = milestones.length > 0 
               ? Math.round((completedMilestones / milestones.length) * 100) 
               : 0;
 
-            // Загружаем tasks
             let tasks: any[] = [];
             try {
               tasks = await tasksAPI.getByGoalId(goal.id, false);
             } catch (err) {
               console.log('Tasks not available yet');
             }
-            const completedTasks = tasks.filter(t => t.is_completed).length;
 
-            // Загружаем ближайший дедлайн
             let nearestDeadline = undefined;
             try {
               const { getApiUrl } = await import('../config/api');
@@ -90,7 +84,7 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
               milestoneCount: milestones.length,
               completedMilestones,
               taskCount: tasks.length,
-              completedTasks,
+              completedTasks: tasks.filter(t => t.is_completed).length,
             };
           } catch (err) {
             console.error(`Error loading stats for goal ${goal.id}:`, err);
@@ -108,24 +102,11 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
       );
 
       setGoals(goalsWithStats);
-      
-      // Вычисляем стрик (пока заглушка, нужно будет добавить API)
-      const calculatedStreak = calculateStreak(goalsWithStats);
-      setTotalStreak(calculatedStreak);
-      
-      // Вычисляем выполнение за сегодня
-      const todayTasks = goalsWithStats.reduce((sum, g) => sum + g.completedTasks, 0);
-      setTodayCompletion(todayTasks);
     } catch (err) {
       console.error('Failed to load home data:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateStreak = (goals: GoalStats[]): number => {
-    // Заглушка для стрика - в реальности нужно проверять активность за последние дни
-    return Math.floor(Math.random() * 7) + 1;
   };
 
   const upcomingDeadlines = goals
@@ -134,7 +115,18 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
       if (!a.nearestDeadline || !b.nearestDeadline) return 0;
       return new Date(a.nearestDeadline.deadline).getTime() - new Date(b.nearestDeadline.deadline).getTime();
     })
-    .slice(0, 5);
+    .slice(0, 3);
+
+  const handleGoalClick = (goalId: number) => {
+    if (onGoalClick) {
+      onGoalClick(goalId);
+      // Switch to chat tab
+      const chatTab = document.querySelector('[aria-label="Общение"]') as HTMLElement;
+      if (chatTab) {
+        chatTab.click();
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -151,95 +143,79 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
       </div>
 
       <div className="home-content">
-        {/* Статистика */}
-        <section className="home-section">
-          <h2>📊 Статистика</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-value">{goals.length}</div>
-              <div className="stat-label">Активных целей</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{totalStreak}</div>
-              <div className="stat-label">Дней подряд</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{todayCompletion}</div>
-              <div className="stat-label">Задач сегодня</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">
-                {goals.reduce((sum, g) => sum + g.completedMilestones, 0)}
-              </div>
-              <div className="stat-label">Выполнено milestones</div>
-            </div>
-          </div>
-        </section>
-
-        {/* Стрик */}
-        <section className="home-section">
-          <h2>🔥 Стрик</h2>
-          <div className="streak-widget">
-            <div className="streak-value">{totalStreak}</div>
-            <div className="streak-label">дней подряд!</div>
-            <div className="streak-emoji">🔥</div>
-          </div>
-        </section>
-
         {/* Ближайшие дедлайны */}
-        <section className="home-section">
-          <h2>⏰ Ближайшие дедлайны</h2>
-          {upcomingDeadlines.length > 0 ? (
-            <div className="deadlines-list">
+        {upcomingDeadlines.length > 0 && (
+          <section className="home-widget">
+            <div className="widget-header">
+              <span className="widget-title">Ближайшие дедлайны</span>
+            </div>
+            <div className="widget-content">
               {upcomingDeadlines.map((goal) => (
                 goal.nearestDeadline && (
-                  <div key={goal.id} className="deadline-item">
-                    <div className="deadline-goal">{goal.title}</div>
-                    <div className="deadline-info">
-                      <span className="deadline-title">{goal.nearestDeadline.title}</span>
-                      <span className="deadline-date">{goal.nearestDeadline.formatted}</span>
-                      <span className="deadline-type">
-                        {goal.nearestDeadline.type === 'milestone' ? '🎯' : '📝'}
-                      </span>
+                  <div 
+                    key={goal.id} 
+                    className="deadline-widget"
+                    onClick={() => handleGoalClick(goal.id)}
+                  >
+                    <div className="deadline-widget-content">
+                      <div className="deadline-widget-title">{goal.title}</div>
+                      <div className="deadline-widget-task">{goal.nearestDeadline.title}</div>
+                      <div className="deadline-widget-date">{goal.nearestDeadline.formatted}</div>
+                    </div>
+                    <div className="deadline-widget-icon">
+                      {goal.nearestDeadline.type === 'milestone' ? '🎯' : '📝'}
                     </div>
                   </div>
                 )
               ))}
             </div>
-          ) : (
-            <div className="empty-state">Нет ближайших дедлайнов</div>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* Виджеты целей */}
-        <section className="home-section">
-          <h2>🎯 Все цели</h2>
-          {goals.length > 0 ? (
-            <div className="goals-widget-list">
-              {goals.map((goal) => (
-                <div key={goal.id} className="goal-widget">
-                  <div className="goal-widget-header">
-                    <h3>{goal.title}</h3>
-                    <span className="goal-progress-badge">{goal.progress}%</span>
-                  </div>
-                  <div className="goal-widget-progress">
-                    <div 
-                      className="goal-widget-progress-bar" 
-                      style={{ width: `${goal.progress}%` }}
-                    />
-                  </div>
-                  <div className="goal-widget-stats">
-                    <span>{goal.completedMilestones}/{goal.milestoneCount} milestones</span>
-                    {goal.taskCount > 0 && (
-                      <span>{goal.completedTasks}/{goal.taskCount} задач</span>
-                    )}
+        {/* Цели */}
+        <section className="home-widget">
+          <div className="widget-header">
+            <span className="widget-title">Мои цели</span>
+            <span className="widget-count">{goals.length}</span>
+          </div>
+          <div className="widget-content">
+            {goals.length > 0 ? (
+              goals.map((goal) => (
+                <div 
+                  key={goal.id} 
+                  className="goal-widget"
+                  onClick={() => handleGoalClick(goal.id)}
+                >
+                  <div className="goal-widget-content">
+                    <div className="goal-widget-title">{goal.title}</div>
+                    <div className="goal-widget-progress-container">
+                      <div className="goal-widget-progress-bar">
+                        <div 
+                          className="goal-widget-progress-fill" 
+                          style={{ width: `${goal.progress}%` }}
+                        />
+                      </div>
+                      <span className="goal-widget-progress-text">{goal.progress}%</span>
+                    </div>
+                    <div className="goal-widget-meta">
+                      {goal.milestoneCount > 0 && (
+                        <span className="goal-widget-meta-item">
+                          {goal.completedMilestones}/{goal.milestoneCount} milestones
+                        </span>
+                      )}
+                      {goal.taskCount > 0 && (
+                        <span className="goal-widget-meta-item">
+                          {goal.completedTasks}/{goal.taskCount} задач
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">У вас пока нет целей. Создайте первую!</div>
-          )}
+              ))
+            ) : (
+              <div className="empty-state">У вас пока нет целей. Создайте первую!</div>
+            )}
+          </div>
         </section>
       </div>
     </div>
@@ -247,4 +223,3 @@ const Home: React.FC<HomeProps> = ({ userId }) => {
 };
 
 export default Home;
-
