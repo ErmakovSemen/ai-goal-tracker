@@ -3,15 +3,25 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app import crud, schemas
 from app.database.database import get_db
+from app.core.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
 @router.post("/", response_model=schemas.Task)
-def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
+def create_task(
+    task: schemas.TaskCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     return crud.task.create_task(db=db, task=task)
 
 @router.get("/{task_id}", response_model=schemas.Task)
-def read_task(task_id: int, db: Session = Depends(get_db)):
+def read_task(
+    task_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     db_task = crud.task.get_task(db, task_id=task_id)
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -24,7 +34,8 @@ def read_tasks(
     is_completed: Optional[bool] = None,
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     tasks = crud.task.get_tasks(
         db,
@@ -37,14 +48,23 @@ def read_tasks(
     return tasks
 
 @router.put("/{task_id}", response_model=schemas.Task)
-def update_task(task_id: int, task: schemas.TaskUpdate, db: Session = Depends(get_db)):
+def update_task(
+    task_id: int, 
+    task: schemas.TaskUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     db_task = crud.task.update_task(db, task_id=task_id, task=task)
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     return db_task
 
 @router.delete("/{task_id}", response_model=schemas.Task)
-def delete_task(task_id: int, db: Session = Depends(get_db)):
+def delete_task(
+    task_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     db_task = crud.task.delete_task(db, task_id=task_id)
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
