@@ -5,6 +5,9 @@ import ChatView from './pages/ChatView';
 import CreateGoal from './pages/CreateGoal';
 import QuickGoalModal from './components/QuickGoalModal';
 import DebugMenu, { DebugSettings } from './components/DebugMenu';
+import BottomNavigation, { TabType } from './components/BottomNavigation';
+import Home from './pages/Home';
+import Profile from './pages/Profile';
 import { authAPI, goalsAPI, Goal } from './services/api';
 import { pushNotificationService } from './services/pushNotifications';
 
@@ -29,6 +32,7 @@ function App() {
     executeActions: true,
   });
   const [showDebugMenu, setShowDebugMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('home');
 
   useEffect(() => {
     // Check if user is already logged in
@@ -341,59 +345,87 @@ function App() {
     );
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return userId ? <Home userId={userId} /> : null;
+      
+      case 'chat':
+        return (
+          <>
+            <GoalList
+              goals={goals.map(g => ({
+                ...g,
+                progress: 0,
+                lastMessage: "Click to start chatting",
+                lastMessageTime: "Just now"
+              }))}
+              selectedGoalId={selectedGoalId}
+              onSelectGoal={setSelectedGoalId}
+              onCreateNew={() => setShowQuickGoalModal(true)}
+              onDeleteGoal={handleDeleteGoal}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
+            <QuickGoalModal
+              isOpen={showQuickGoalModal}
+              onClose={() => setShowQuickGoalModal(false)}
+              onCreateGoal={handleQuickGoalCreate}
+              onOpenFullEditor={() => {
+                setShowQuickGoalModal(false);
+                setShowCreateGoal(true);
+              }}
+            />
+            <ChatView
+              goal={selectedGoal}
+              onBack={() => setSelectedGoalId(null)}
+              onDeleteGoal={handleDeleteGoal}
+              onGoalCreated={handleGoalCreatedFromChat}
+              debugSettings={debugSettings}
+            />
+          </>
+        );
+      
+      case 'profile':
+        return userId ? <Profile userId={userId} onLogout={handleLogout} /> : null;
+      
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="App chat-layout">
-      <GoalList
-        goals={goals.map(g => ({
-          ...g,
-          progress: 0,
-          lastMessage: "Click to start chatting",
-          lastMessageTime: "Just now"
-        }))}
-        selectedGoalId={selectedGoalId}
-        onSelectGoal={setSelectedGoalId}
-        onCreateNew={() => setShowQuickGoalModal(true)}
-        onDeleteGoal={handleDeleteGoal}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
-      <QuickGoalModal
-        isOpen={showQuickGoalModal}
-        onClose={() => setShowQuickGoalModal(false)}
-        onCreateGoal={handleQuickGoalCreate}
-        onOpenFullEditor={() => {
-          setShowQuickGoalModal(false);
-          setShowCreateGoal(true);
-        }}
-      />
-      <ChatView
-        goal={selectedGoal}
-        onBack={() => setSelectedGoalId(null)}
-        onDeleteGoal={handleDeleteGoal}
-        onGoalCreated={handleGoalCreatedFromChat}
-        debugSettings={debugSettings}
-      />
-      <div className="debug-toggle-container">
-        <button 
-          className={`debug-toggle ${debugSettings.enabled ? 'active' : ''}`}
-          onClick={() => setShowDebugMenu(true)}
-          title="Open debug settings"
-        >
-          🐛 Debug
-        </button>
-        <button 
-          className="debug-toggle"
-          onClick={handleLogout}
-          title="Logout"
-        >
-          🚪 Выход
-        </button>
+    <div className="App app-with-bottom-nav">
+      <div className={`main-content ${activeTab === 'chat' ? 'chat-layout' : ''}`}>
+        {renderTabContent()}
       </div>
+      
+      {/* Debug buttons - только на табе чата */}
+      {activeTab === 'chat' && (
+        <div className="debug-toggle-container">
+          <button 
+            className={`debug-toggle ${debugSettings.enabled ? 'active' : ''}`}
+            onClick={() => setShowDebugMenu(true)}
+            title="Open debug settings"
+          >
+            🐛 Debug
+          </button>
+        </div>
+      )}
+      
       {showDebugMenu && (
         <DebugMenu
           settings={debugSettings}
           onSettingsChange={setDebugSettings}
           onClose={() => setShowDebugMenu(false)}
+        />
+      )}
+      
+      {/* Bottom Navigation */}
+      {userId && (
+        <BottomNavigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
       )}
     </div>
