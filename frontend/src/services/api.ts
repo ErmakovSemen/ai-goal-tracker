@@ -3,7 +3,7 @@ import { getApiUrl } from '../config/api';
 export interface User {
   id: number;
   username: string;
-  email: string;
+  email?: string | null;
   created_at: string;
   updated_at?: string;
 }

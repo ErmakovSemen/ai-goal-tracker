@@ -10,7 +10,7 @@ interface ProfileProps {
 interface UserData {
   id: number;
   username: string;
-  email: string;
+  email?: string | null;
 }
 
 interface Stats {
@@ -46,7 +46,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
         setUser({
           id: userData.id,
           username: userData.username,
-          email: userData.email || '',
+          email: userData.email || null,
         });
       }
     } catch (err) {
@@ -124,87 +124,95 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
 
       <div className="profile-content">
         {/* Аватар и информация */}
-        <section className="profile-widget">
-          <div className="profile-avatar">
+        <div className="profile-card">
+          <div className="profile-avatar-section">
             <div className="avatar-circle">
               {user.username.charAt(0).toUpperCase()}
             </div>
+            <div className="profile-info">
+              <h2>{user.username}</h2>
+              {user.email && <p className="profile-email">{user.email}</p>}
+            </div>
           </div>
-          <div className="profile-info">
-            <h2>{user.username}</h2>
-            {user.email && <p className="profile-email">{user.email}</p>}
-          </div>
-        </section>
+        </div>
 
         {/* Статистика */}
-        <section className="profile-widget">
-          <div className="widget-header">
-            <span className="widget-title">Статистика</span>
+        <div className="profile-card">
+          <div className="card-header">
+            <span className="card-title">Статистика</span>
           </div>
           <div className="stats-grid">
-            <div className="stat-item">
+            <div className="stat-box">
+              <div className="stat-icon">🎯</div>
               <div className="stat-value">{stats.totalGoals}</div>
-              <div className="stat-label">Активных целей</div>
+              <div className="stat-label">Целей</div>
             </div>
-            <div className="stat-item">
+            <div className="stat-box">
+              <div className="stat-icon">✅</div>
               <div className="stat-value">{stats.completedMilestones}</div>
-              <div className="stat-label">Выполнено milestones</div>
+              <div className="stat-label">Milestones</div>
             </div>
-            <div className="stat-item">
+            <div className="stat-box">
+              <div className="stat-icon">📝</div>
               <div className="stat-value">{stats.completedTasks}</div>
-              <div className="stat-label">Выполнено задач</div>
+              <div className="stat-label">Задач</div>
             </div>
-            <div className="stat-item">
+            <div className="stat-box streak-box">
+              <div className="stat-icon">🔥</div>
               <div className="stat-value">{stats.streak}</div>
               <div className="stat-label">Дней подряд</div>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Настройки */}
-        <section className="profile-widget">
-          <div className="widget-header">
-            <span className="widget-title">Настройки</span>
+        <div className="profile-card">
+          <div className="card-header">
+            <span className="card-title">Настройки</span>
           </div>
           <div className="settings-list">
             <button className="settings-item">
-              <span className="settings-icon">🔔</span>
-              <span className="settings-label">Уведомления</span>
+              <div className="settings-item-content">
+                <span className="settings-icon">🔔</span>
+                <span className="settings-label">Уведомления</span>
+              </div>
               <span className="settings-arrow">›</span>
             </button>
             <button className="settings-item">
-              <span className="settings-icon">🌙</span>
-              <span className="settings-label">Темная тема</span>
+              <div className="settings-item-content">
+                <span className="settings-icon">🌙</span>
+                <span className="settings-label">Темная тема</span>
+              </div>
               <span className="settings-arrow">›</span>
             </button>
             <button className="settings-item">
-              <span className="settings-icon">🔒</span>
-              <span className="settings-label">Безопасность</span>
+              <div className="settings-item-content">
+                <span className="settings-icon">🔒</span>
+                <span className="settings-label">Безопасность</span>
+              </div>
               <span className="settings-arrow">›</span>
             </button>
           </div>
-        </section>
+        </div>
 
         {/* О приложении */}
-        <section className="profile-widget">
-          <div className="widget-header">
-            <span className="widget-title">О приложении</span>
+        <div className="profile-card">
+          <div className="card-header">
+            <span className="card-title">О приложении</span>
           </div>
-          <div className="about-info">
-            <p className="app-name">AI Goal Tracker</p>
-            <p className="app-version">Версия 1.0.0</p>
+          <div className="about-content">
+            <div className="app-name">AI Goal Tracker</div>
+            <div className="app-version">Версия 1.0.0</div>
             <p className="app-description">
               Умный помощник для достижения целей с искусственным интеллектом
             </p>
           </div>
-        </section>
+        </div>
 
         {/* Выход */}
-        <section className="profile-widget">
-          <button className="logout-button" onClick={onLogout}>
-            <span className="logout-label">Выйти из аккаунта</span>
-          </button>
-        </section>
+        <button className="logout-button" onClick={onLogout}>
+          Выйти из аккаунта
+        </button>
       </div>
     </div>
   );
