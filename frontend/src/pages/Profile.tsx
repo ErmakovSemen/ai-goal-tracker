@@ -48,10 +48,22 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
           username: userData.username,
           email: userData.email || null,
         });
+        setLoading(false);
+      } else {
+        setLoading(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load user data:', err);
-    } finally {
+      // Try to get user from localStorage as fallback
+      const storedUserId = authAPI.getUserId();
+      if (storedUserId) {
+        // At least set username from stored data
+        setUser({
+          id: storedUserId,
+          username: 'Пользователь',
+          email: null,
+        });
+      }
       setLoading(false);
     }
   };

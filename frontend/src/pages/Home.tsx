@@ -59,7 +59,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
             let nearestDeadline = undefined;
             try {
               const { getApiUrl } = await import('../config/api');
-              const token = localStorage.getItem('token');
+              const token = localStorage.getItem('auth_token');
               const response = await fetch(getApiUrl(`/api/goals/${goal.id}/nearest-deadline/`), {
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -120,18 +120,23 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   const handleGoalClick = (goalId: number) => {
     if (onGoalClick) {
       onGoalClick(goalId);
-      // Switch to chat tab
-      const chatTab = document.querySelector('[aria-label="Общение"]') as HTMLElement;
-      if (chatTab) {
-        chatTab.click();
-      }
+      // Switch to chat tab after a short delay to ensure state is updated
+      setTimeout(() => {
+        const chatTab = document.querySelector('[aria-label="Общение"]') as HTMLElement;
+        if (chatTab) {
+          chatTab.click();
+        }
+      }, 100);
     }
   };
 
   if (loading) {
     return (
       <div className="home-page">
-        <div className="home-loading">Загрузка...</div>
+        <div className="home-loading">
+          <div className="loading-spinner"></div>
+          <div>Загрузка...</div>
+        </div>
       </div>
     );
   }
@@ -139,84 +144,102 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   return (
     <div className="home-page">
       <div className="home-header">
-        <h1>Главная</h1>
+        <h1>Добро пожаловать!</h1>
+        <p className="home-subtitle">Твой прогресс сегодня</p>
       </div>
 
       <div className="home-content">
         {/* Ближайшие дедлайны */}
         {upcomingDeadlines.length > 0 && (
-          <section className="home-widget">
-            <div className="widget-header">
-              <span className="widget-title">Ближайшие дедлайны</span>
+          <div className="home-card">
+            <div className="card-title-section">
+              <div className="card-icon">⏰</div>
+              <h2 className="card-title">Ближайшие дедлайны</h2>
             </div>
-            <div className="widget-content">
-              {upcomingDeadlines.map((goal) => (
+            <div className="deadlines-list">
+              {upcomingDeadlines.map((goal, index) => (
                 goal.nearestDeadline && (
                   <div 
                     key={goal.id} 
-                    className="deadline-widget"
+                    className="deadline-card"
                     onClick={() => handleGoalClick(goal.id)}
+                    style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="deadline-widget-content">
-                      <div className="deadline-widget-title">{goal.title}</div>
-                      <div className="deadline-widget-task">{goal.nearestDeadline.title}</div>
-                      <div className="deadline-widget-date">{goal.nearestDeadline.formatted}</div>
+                    <div className="deadline-card-content">
+                      <div className="deadline-header">
+                        <span className="deadline-type-icon">
+                          {goal.nearestDeadline.type === 'milestone' ? '🎯' : '📝'}
+                        </span>
+                        <span className="deadline-title">{goal.title}</span>
+                      </div>
+                      <div className="deadline-task">{goal.nearestDeadline.title}</div>
+                      <div className="deadline-date-badge">
+                        {goal.nearestDeadline.formatted}
+                      </div>
                     </div>
-                    <div className="deadline-widget-icon">
-                      {goal.nearestDeadline.type === 'milestone' ? '🎯' : '📝'}
-                    </div>
+                    <div className="deadline-arrow">→</div>
                   </div>
                 )
               ))}
             </div>
-          </section>
+          </div>
         )}
 
         {/* Цели */}
-        <section className="home-widget">
-          <div className="widget-header">
-            <span className="widget-title">Мои цели</span>
-            <span className="widget-count">{goals.length}</span>
+        <div className="home-card">
+          <div className="card-title-section">
+            <div className="card-icon">🎯</div>
+            <h2 className="card-title">Мои цели</h2>
+            {goals.length > 0 && (
+              <span className="card-badge">{goals.length}</span>
+            )}
           </div>
-          <div className="widget-content">
+          <div className="goals-list">
             {goals.length > 0 ? (
-              goals.map((goal) => (
+              goals.map((goal, index) => (
                 <div 
                   key={goal.id} 
-                  className="goal-widget"
+                  className="goal-card"
                   onClick={() => handleGoalClick(goal.id)}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="goal-widget-content">
-                    <div className="goal-widget-title">{goal.title}</div>
-                    <div className="goal-widget-progress-container">
-                      <div className="goal-widget-progress-bar">
-                        <div 
-                          className="goal-widget-progress-fill" 
-                          style={{ width: `${goal.progress}%` }}
-                        />
+                  <div className="goal-card-header">
+                    <h3 className="goal-title">{goal.title}</h3>
+                    <div className="goal-progress-percent">{goal.progress}%</div>
+                  </div>
+                  <div className="goal-progress-wrapper">
+                    <div className="goal-progress-bar">
+                      <div 
+                        className="goal-progress-fill" 
+                        style={{ width: `${goal.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="goal-stats">
+                    {goal.milestoneCount > 0 && (
+                      <div className="goal-stat-item">
+                        <span className="stat-label">Milestones:</span>
+                        <span className="stat-value">{goal.completedMilestones}/{goal.milestoneCount}</span>
                       </div>
-                      <span className="goal-widget-progress-text">{goal.progress}%</span>
-                    </div>
-                    <div className="goal-widget-meta">
-                      {goal.milestoneCount > 0 && (
-                        <span className="goal-widget-meta-item">
-                          {goal.completedMilestones}/{goal.milestoneCount} milestones
-                        </span>
-                      )}
-                      {goal.taskCount > 0 && (
-                        <span className="goal-widget-meta-item">
-                          {goal.completedTasks}/{goal.taskCount} задач
-                        </span>
-                      )}
-                    </div>
+                    )}
+                    {goal.taskCount > 0 && (
+                      <div className="goal-stat-item">
+                        <span className="stat-label">Задачи:</span>
+                        <span className="stat-value">{goal.completedTasks}/{goal.taskCount}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="empty-state">У вас пока нет целей. Создайте первую!</div>
+              <div className="empty-state-card">
+                <div className="empty-icon">🎯</div>
+                <p className="empty-title">У вас пока нет целей</p>
+                <p className="empty-description">Создайте первую цель и начните свой путь к успеху!</p>
+              </div>
             )}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
