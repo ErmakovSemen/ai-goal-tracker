@@ -8,6 +8,18 @@ from app.models.user import User
 
 router = APIRouter()
 
+@router.get("/me")
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current authenticated user"""
+    # Return user data directly without response_model to avoid validation issues
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email if current_user.email else None,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+        "updated_at": current_user.updated_at.isoformat() if current_user.updated_at else None
+    }
+
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Validate password length
@@ -30,17 +42,17 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return crud.user.create_user(db=db, user=user)
 
+@router.get("/", response_model=List[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.user.get_users(db, skip=skip, limit=limit)
+    return users
+
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = crud.user.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
-
-@router.get("/", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.user.get_users(db, skip=skip, limit=limit)
-    return users
 
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
@@ -55,15 +67,3 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
-
-@router.get("/me")
-def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """Get current authenticated user"""
-    # Return user data directly without response_model to avoid validation issues
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email if current_user.email else None,
-        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
-        "updated_at": current_user.updated_at.isoformat() if current_user.updated_at else None
-    }
