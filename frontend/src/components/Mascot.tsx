@@ -1,12 +1,21 @@
 import React from 'react';
+import { useRive } from 'rive-react';
 import './Mascot.css';
 
 interface MascotProps {
-  mood: 'happy' | 'sad' | 'neutral' | 'excited';
+  mood?: 'happy' | 'sad' | 'neutral' | 'excited';
   size?: 'small' | 'medium' | 'large';
 }
 
-const Mascot: React.FC<MascotProps> = ({ mood, size = 'medium' }) => {
+const Mascot: React.FC<MascotProps> = ({ 
+  mood = 'neutral', 
+  size = 'medium'
+}) => {
+  const { RiveComponent } = useRive({
+    src: '/mascot.riv',
+    autoplay: true,
+  });
+
   const getSizeClass = () => {
     switch (size) {
       case 'small': return 'mascot-small';
@@ -15,26 +24,9 @@ const Mascot: React.FC<MascotProps> = ({ mood, size = 'medium' }) => {
     }
   };
 
-  const getMoodClass = () => {
-    return `mascot-${mood}`;
-  };
-
   return (
-    <div className={`mascot ${getSizeClass()} ${getMoodClass()}`}>
-      <div className="mascot-body">
-        <div className="mascot-ears">
-          <div className="ear left-ear"></div>
-          <div className="ear right-ear"></div>
-        </div>
-        <div className="mascot-face">
-          <div className="mascot-eyes">
-            <div className="eye left-eye"></div>
-            <div className="eye right-eye"></div>
-          </div>
-          <div className="mascot-nose"></div>
-          <div className="mascot-mouth"></div>
-        </div>
-      </div>
+    <div className={`mascot-rive ${getSizeClass()}`}>
+      <RiveComponent />
     </div>
   );
 };

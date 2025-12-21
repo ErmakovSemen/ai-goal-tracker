@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
+import Mascot from '../components/Mascot';
 import './Home.css';
 
 interface HomeProps {
@@ -141,11 +142,28 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
     );
   }
 
+  // Определяем настроение маскота на основе прогресса
+  const getMascotMood = (): 'happy' | 'sad' | 'neutral' | 'excited' => {
+    if (goals.length === 0) return 'neutral';
+    const avgProgress = goals.reduce((sum, g) => sum + g.progress, 0) / goals.length;
+    if (avgProgress >= 80) return 'excited';
+    if (avgProgress >= 50) return 'happy';
+    if (avgProgress >= 25) return 'neutral';
+    return 'sad';
+  };
+
   return (
     <div className="home-page">
       <div className="home-header">
-        <h1>Добро пожаловать!</h1>
-        <p className="home-subtitle">Твой прогресс сегодня</p>
+        <div className="home-header-content">
+          <div className="home-header-text">
+            <h1>Добро пожаловать!</h1>
+            <p className="home-subtitle">Твой прогресс сегодня</p>
+          </div>
+          <div className="home-header-mascot">
+            <Mascot mood={getMascotMood()} size="medium" />
+          </div>
+        </div>
       </div>
 
       <div className="home-content">

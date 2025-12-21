@@ -1,3 +1,33 @@
+/* Rive mascot styles */
+.mascot-rive {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+
+.mascot-rive canvas,
+.mascot-rive svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.mascot-small {
+  width: 90px;
+  height: 90px;
+}
+
+.mascot-medium {
+  width: 120px;
+  height: 120px;
+}
+
+.mascot-large {
+  width: 150px;
+  height: 150px;
+}
+
+/* Fallback CSS mascot (старый стиль) */
 .mascot {
   display: inline-block;
   position: relative;

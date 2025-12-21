@@ -16,6 +16,17 @@
   box-shadow: 0 4px 20px rgba(88, 204, 2, 0.2);
 }
 
+.home-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.home-header-text {
+  flex: 1;
+}
+
 .home-header h1 {
   margin: 0 0 8px 0;
   font-size: 32px;
@@ -30,6 +41,18 @@
   font-size: 16px;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+}
+
+.home-header-mascot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .home-content {
