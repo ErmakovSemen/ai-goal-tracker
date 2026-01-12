@@ -435,7 +435,7 @@ def validate_response(parsed: Dict) -> tuple[bool, Optional[str]]:
         try:
             parsed["message"] = str(parsed["message"])
         except Exception:
-        return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
+            return False, f"Field 'message' must be string, got {type(parsed['message']).__name__}"
     
     # Normalize the response first
     normalized = normalize_response(parsed)
@@ -548,17 +548,17 @@ async def execute_actions(db: Session, goal_id: int, actions: List[Dict], user_i
                     results.append(f"❌ Не могу создать подцель: не найден goal_id")
                     continue
                 try:
-                new_milestone = schemas.MilestoneCreate(
-                    goal_id=target_goal_id,
-                    title=title,
-                    description=data.get("description", ""),
-                    target_date=data.get("target_date"),
-                    completed=False
-                )
-                created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
+                    new_milestone = schemas.MilestoneCreate(
+                        goal_id=target_goal_id,
+                        title=title,
+                        description=data.get("description", ""),
+                        target_date=data.get("target_date"),
+                        completed=False
+                    )
+                    created = crud.milestone.create_milestone(db=db, milestone=new_milestone)
                     db.flush()  # Ensure milestone is saved before continuing
-                results.append(f"✅ Создана подцель: {created.title}")
-                print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
+                    results.append(f"✅ Создана подцель: {created.title}")
+                    print(f"✅ Created milestone: {created.id} - {created.title} for goal {target_goal_id}")
                 except Exception as e:
                     error_msg = f"❌ Ошибка создания подцели '{title}': {str(e)}"
                     results.append(error_msg)
