@@ -3,7 +3,7 @@ import { authAPI, goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
 import './Profile.css';
 
 interface ProfileProps {
-  userId: number;
+  userId?: number | null;
   onLogout: () => void;
   onRegisterRequest: () => void;
 }
@@ -52,6 +52,13 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         });
         setLoading(false);
       } else {
+        if (!isRegistered) {
+          setUser({
+            id: userId || 0,
+            username: 'Гость',
+            email: null,
+          });
+        }
         setLoading(false);
       }
     } catch (err: any) {
@@ -63,6 +70,12 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         setUser({
           id: storedUserId,
           username: 'Пользователь',
+          email: null,
+        });
+      } else if (!isRegistered) {
+        setUser({
+          id: userId || 0,
+          username: 'Гость',
           email: null,
         });
       }

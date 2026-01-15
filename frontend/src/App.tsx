@@ -447,8 +447,8 @@ function App() {
         );
       
       case 'profile':
-        return userId ? (
-          <Profile userId={userId} onLogout={handleLogout} onRegisterRequest={handleRegisterRequest} />
+        return isLoggedIn ? (
+          <Profile userId={userId ?? null} onLogout={handleLogout} onRegisterRequest={handleRegisterRequest} />
         ) : (
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <p>Войдите, чтобы открыть профиль.</p>
