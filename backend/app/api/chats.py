@@ -1205,7 +1205,7 @@ async def create_message(
                             if debug_mode:
                                 debug_log.append("⚠️ Message was empty after normalization, using fallback")
                         
-                    actions = normalized.get("actions", [])
+                        actions = normalized.get("actions", [])
                     except Exception as norm_err:
                         print(f"Error normalizing response: {norm_err}")
                         import traceback
