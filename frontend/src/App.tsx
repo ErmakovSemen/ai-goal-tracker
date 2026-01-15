@@ -170,7 +170,7 @@ function App() {
   const handleGoalCreated = async (newGoal?: Goal) => {
     setShowCreateGoal(false);
     if (newGoal) {
-      if (!userId) {
+      if (!userId || newGoal.user_id !== userId) {
         setUserId(newGoal.user_id);
         authAPI.setUserId(newGoal.user_id);
         if (!isLoggedIn) {
@@ -208,7 +208,7 @@ function App() {
   const handleQuickGoalCreate = async (title: string, description?: string) => {
     try {
       const newGoal = await goalsAPI.create({ title, description }, userId ?? undefined);
-      if (!userId) {
+      if (!userId || newGoal.user_id !== userId) {
         setUserId(newGoal.user_id);
         authAPI.setUserId(newGoal.user_id);
         if (!isLoggedIn) {

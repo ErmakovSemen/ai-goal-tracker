@@ -37,7 +37,8 @@ def create_goal(goal: schemas.GoalCreate, user_id: Optional[int] = None, db: Ses
             from app import crud as crud_module
             user = crud_module.user.get_user(db, user_id=user_id)
             if not user:
-                raise HTTPException(status_code=404, detail=f"User with id {user_id} not found. Please register first.")
+                # Fall back to guest user if stored user_id is stale
+                user_id = _create_guest_user(db)
         
         return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
     except HTTPException:
