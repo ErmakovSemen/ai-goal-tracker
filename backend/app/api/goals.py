@@ -1,19 +1,43 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from uuid import uuid4
 from app import crud, schemas
 from app.database.database import get_db
 
 router = APIRouter()
 
+def _create_guest_user(db: Session) -> int:
+    """Create a lightweight guest user and return its ID."""
+    from app.schemas.user import UserCreate
+
+    for _ in range(3):
+        username = f"guest_{uuid4().hex[:10]}"
+        password = uuid4().hex  # 32 chars, satisfies min length
+        try:
+            user = crud.user.create_user(
+                db=db,
+                user=UserCreate(username=username, email=None, password=password)
+            )
+            return user.id
+        except Exception:
+            # Retry on rare username collisions
+            continue
+    raise HTTPException(status_code=500, detail="Failed to create guest user")
+
+
 @router.post("/", response_model=schemas.Goal)
-def create_goal(goal: schemas.GoalCreate, user_id: int, db: Session = Depends(get_db)):
+def create_goal(goal: schemas.GoalCreate, user_id: Optional[int] = None, db: Session = Depends(get_db)):
     try:
-        # Verify user exists before creating goal
-        from app import crud as crud_module
-        user = crud_module.user.get_user(db, user_id=user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail=f"User with id {user_id} not found. Please register first.")
+        # Allow anonymous goal creation by creating a guest user on demand
+        if user_id is None:
+            user_id = _create_guest_user(db)
+        else:
+            # Verify user exists before creating goal
+            from app import crud as crud_module
+            user = crud_module.user.get_user(db, user_id=user_id)
+            if not user:
+                raise HTTPException(status_code=404, detail=f"User with id {user_id} not found. Please register first.")
         
         return crud.goal.create_goal(db=db, goal=goal, user_id=user_id)
     except HTTPException:

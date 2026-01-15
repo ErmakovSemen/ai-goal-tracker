@@ -12,7 +12,7 @@ interface Message {
 
 interface CreateGoalProps {
   onNavigate: (goal?: Goal) => void;
-  userId: number;
+  userId?: number | null;
   debugSettings?: { enabled: boolean; showRawResponse: boolean };
 }
 
@@ -42,7 +42,7 @@ const CreateGoal: React.FC<CreateGoalProps> = ({ onNavigate, userId, debugSettin
   // Create temporary goal and chat
   const createTempGoalAndChat = async (title: string, description?: string) => {
     try {
-      const goal = await goalsAPI.create({ title, description }, userId);
+      const goal = await goalsAPI.create({ title, description }, userId ?? undefined);
       setTempGoalId(goal.id);
       const chat = await chatsAPI.create({ goal_id: goal.id });
       setChatId(chat.id);
@@ -319,7 +319,7 @@ const CreateGoal: React.FC<CreateGoalProps> = ({ onNavigate, userId, debugSettin
         goal = await goalsAPI.create({
           title: goalTitle,
           description: goalDescription || undefined
-        }, userId);
+        }, userId ?? undefined);
       }
 
       // Create milestones

@@ -214,6 +214,10 @@ export const authAPI = {
     return getUserId();
   },
 
+  setUserId: (userId: number): void => {
+    setUserId(userId);
+  },
+
   logout: (): void => {
     removeToken();
   },
@@ -233,8 +237,9 @@ export const goalsAPI = {
     return apiRequest<Goal>(`/api/goals/${goalId}`);
   },
 
-  create: async (goal: { title: string; description?: string }, userId: number): Promise<Goal> => {
-    return apiRequest<Goal>(`/api/goals/?user_id=${userId}`, {
+  create: async (goal: { title: string; description?: string }, userId?: number | null): Promise<Goal> => {
+    const query = userId ? `?user_id=${userId}` : '';
+    return apiRequest<Goal>(`/api/goals/${query}`, {
       method: 'POST',
       body: JSON.stringify(goal),
     });

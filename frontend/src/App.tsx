@@ -68,6 +68,15 @@ function App() {
         });
       }
     }
+    if (!isAuth) {
+      // Allow guest session if user_id is stored
+      const storedUserId = authAPI.getUserId();
+      if (storedUserId) {
+        setUserId(storedUserId);
+        setUsername('Гость');
+        setIsLoggedIn(true);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -161,6 +170,16 @@ function App() {
   const handleGoalCreated = async (newGoal?: Goal) => {
     setShowCreateGoal(false);
     if (newGoal) {
+      if (!userId) {
+        setUserId(newGoal.user_id);
+        authAPI.setUserId(newGoal.user_id);
+        if (!isLoggedIn) {
+          setIsLoggedIn(true);
+        }
+        if (!username) {
+          setUsername('Гость');
+        }
+      }
       // Add new goal to the list immediately
       setGoals([...goals, newGoal]);
       setSelectedGoalId(newGoal.id);
@@ -187,11 +206,18 @@ function App() {
   };
 
   const handleQuickGoalCreate = async (title: string, description?: string) => {
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
     try {
-      const newGoal = await goalsAPI.create({ title, description }, userId);
+      const newGoal = await goalsAPI.create({ title, description }, userId ?? undefined);
+      if (!userId) {
+        setUserId(newGoal.user_id);
+        authAPI.setUserId(newGoal.user_id);
+        if (!isLoggedIn) {
+          setIsLoggedIn(true);
+        }
+        if (!username) {
+          setUsername('Гость');
+        }
+      }
       setGoals([...goals, newGoal]);
       setSelectedGoalId(newGoal.id);
       setShowQuickGoalModal(false);
@@ -317,6 +343,30 @@ function App() {
                 }
               </button>
             </div>
+            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegisterMode(false);
+                  setError(null);
+                  setPassword('');
+                  setUsername('Гость');
+                  setIsLoggedIn(true);
+                  setActiveTab('chat');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#666',
+                  padding: '6px 16px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Продолжить без регистрации
+              </button>
+            </div>
           </div>
         </main>
       </div>
@@ -324,24 +374,14 @@ function App() {
   }
 
   if (showCreateGoal) {
-    if (!userId) {
-      return (
-        <div className="App">
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <p>Пожалуйста, войдите в систему</p>
-            <button onClick={() => setShowCreateGoal(false)}>Назад</button>
-          </div>
-        </div>
-      );
-    }
-  return (
-    <div className="App">
+    return (
+      <div className="App">
         <CreateGoal 
           onNavigate={(goal?: Goal) => handleGoalCreated(goal)} 
-          userId={userId}
+          userId={userId ?? undefined}
           debugSettings={debugSettings}
         />
-        </div>
+      </div>
     );
   }
 
@@ -356,7 +396,11 @@ function App() {
               setActiveTab('chat');
             }}
           />
-        ) : null;
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p>Создайте первую цель, чтобы увидеть статистику.</p>
+          </div>
+        );
       
       case 'chat':
         return (
@@ -395,7 +439,13 @@ function App() {
         );
       
       case 'profile':
-        return userId ? <Profile userId={userId} onLogout={handleLogout} /> : null;
+        return userId ? (
+          <Profile userId={userId} onLogout={handleLogout} />
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p>Войдите, чтобы открыть профиль.</p>
+          </div>
+        );
       
       default:
         return null;
@@ -430,7 +480,7 @@ function App() {
       )}
       
       {/* Bottom Navigation */}
-      {userId && (
+      {isLoggedIn && (
         <BottomNavigation
           activeTab={activeTab}
           onTabChange={setActiveTab}
