@@ -138,7 +138,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   if (!user) {
     return (
       <div className="profile-page">
-        <div className="profile-error">Не удалось загрузить данные пользователя</div>
+        <div className="profile-error">Профиль временно недоступен (обновление v2)</div>
       </div>
     );
   }
