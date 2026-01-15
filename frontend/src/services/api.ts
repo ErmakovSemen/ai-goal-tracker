@@ -135,7 +135,13 @@ const apiRequest = async <T>(
   } catch (err) {
     console.error('API Request Error:', err);
     if (err instanceof TypeError && (err.message.includes('fetch') || err.message.includes('Failed to fetch'))) {
-      throw new Error(`Failed to connect to API at ${url}. Is the backend running at http://localhost:8000? Check CORS settings.`);
+      // Check if we're in production (not localhost)
+      const isProduction = !url.includes('localhost') && !url.includes('127.0.0.1');
+      if (isProduction) {
+        throw new Error(`Failed to connect to API at ${url}. Please check if the backend service is running and CORS is properly configured.`);
+      } else {
+        throw new Error(`Failed to connect to API at ${url}. Is the backend running at http://localhost:8000? Check CORS settings.`);
+      }
     }
     throw err;
   }

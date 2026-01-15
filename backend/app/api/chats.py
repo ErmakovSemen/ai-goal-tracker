@@ -1148,7 +1148,7 @@ async def create_message(
                                     debug_log.append(f"❌ Fallback creation failed: {fallback_err}")
                                 continue
                         else:
-                        continue
+                            continue
                     
                     if debug_mode:
                         debug_log.append(f"✅ PARSED JSON:")
@@ -1188,8 +1188,8 @@ async def create_message(
                     
                     # Normalize the response
                     try:
-                    normalized = normalize_response(parsed)
-                    ai_content = normalized.get("message", "")
+                        normalized = normalize_response(parsed)
+                        ai_content = normalized.get("message", "")
                         
                         # Ensure ai_content is a string and not empty
                         if not isinstance(ai_content, str):

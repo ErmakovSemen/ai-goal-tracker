@@ -19,10 +19,13 @@ app = FastAPI(
 # In production, allow all origins for mobile apps (Capacitor uses file:// or custom schemes)
 # For web, you can restrict to specific domains
 import os
-cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
-if cors_origins == ["*"]:
-    # Allow all for mobile apps and development
+cors_origins_str = os.getenv("CORS_ORIGINS", "*")
+if cors_origins_str == "*":
+    # FastAPI accepts ["*"] to allow all origins
     cors_origins = ["*"]
+else:
+    # Split comma-separated origins and strip whitespace
+    cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +60,24 @@ async def startup_event():
 @app.get("/")
 async def root():
     return {"message": "AI Goal Tracker API"}
+
+@app.get("/health")
+async def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint to verify API and database status"""
+    from sqlalchemy import text
+    try:
+        # Test database connection
+        db.execute(text("SELECT 1"))
+        db.commit()
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "ok",
+        "database": db_status,
+        "api": "running"
+    }
 
 @app.get("/test-llm")
 async def test_llm():

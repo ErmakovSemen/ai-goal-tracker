@@ -27,10 +27,17 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
+            print(f"⚠️  JWT Error: 'sub' field is missing in token payload")
             raise credentials_exception
-    except JWTError:
+    except JWTError as e:
+        print(f"⚠️  JWT Error: {e}")
         raise credentials_exception
+    except Exception as e:
+        print(f"⚠️  Unexpected error decoding JWT: {e}")
+        raise credentials_exception
+    
     user = crud.user.get_user_by_username(db, username=username)
     if user is None:
+        print(f"⚠️  User not found: {username}")
         raise credentials_exception
     return user
