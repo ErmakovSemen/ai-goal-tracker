@@ -167,6 +167,14 @@ function App() {
     setIsRegisterMode(false);
   }, []);
 
+  const handleRegisterRequest = () => {
+    setIsRegisterMode(true);
+    setError(null);
+    setPassword('');
+    setIsLoggedIn(false);
+    setActiveTab('home');
+  };
+
   const handleGoalCreated = async (newGoal?: Goal) => {
     setShowCreateGoal(false);
     if (newGoal) {
@@ -440,7 +448,7 @@ function App() {
       
       case 'profile':
         return userId ? (
-          <Profile userId={userId} onLogout={handleLogout} />
+          <Profile userId={userId} onLogout={handleLogout} onRegisterRequest={handleRegisterRequest} />
         ) : (
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <p>Войдите, чтобы открыть профиль.</p>

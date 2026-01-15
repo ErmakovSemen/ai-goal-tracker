@@ -83,6 +83,53 @@
 }
 
 /* Статистика */
+.stats-wrapper {
+  position: relative;
+}
+
+.stats-locked .stats-grid {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.stats-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.stats-overlay-content {
+  text-align: center;
+  padding: 16px;
+}
+
+.stats-overlay-title {
+  font-size: 15px;
+  color: #1a1a1a;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.register-button {
+  background: #58cc02;
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(88, 204, 2, 0.25);
+}
+
+.register-button:hover {
+  background: #4fb300;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

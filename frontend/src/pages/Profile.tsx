@@ -5,6 +5,7 @@ import './Profile.css';
 interface ProfileProps {
   userId: number;
   onLogout: () => void;
+  onRegisterRequest: () => void;
 }
 
 interface UserData {
@@ -22,9 +23,10 @@ interface Stats {
   streak: number;
 }
 
-const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
+const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const isRegistered = authAPI.isAuthenticated();
   const [stats, setStats] = useState<Stats>({
     totalGoals: 0,
     totalMilestones: 0,
@@ -153,7 +155,8 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
           <div className="card-header">
             <span className="card-title">Статистика</span>
           </div>
-          <div className="stats-grid">
+          <div className={`stats-wrapper ${!isRegistered ? 'stats-locked' : ''}`}>
+            <div className="stats-grid">
             <div className="stat-box">
               <div className="stat-icon">🎯</div>
               <div className="stat-value">{stats.totalGoals}</div>
@@ -174,6 +177,17 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout }) => {
               <div className="stat-value">{stats.streak}</div>
               <div className="stat-label">Дней подряд</div>
             </div>
+            </div>
+            {!isRegistered && (
+              <div className="stats-overlay">
+                <div className="stats-overlay-content">
+                  <div className="stats-overlay-title">Статистика доступна после регистрации</div>
+                  <button className="register-button" onClick={onRegisterRequest}>
+                    Зарегистрироваться
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
