@@ -52,11 +52,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   });
 
   useEffect(() => {
-    loadUserData();
-    loadStats();
-  }, [userId]);
-
-  useEffect(() => {
     const loadAppInfo = async () => {
       try {
         if (Capacitor.getPlatform() !== 'web') {
