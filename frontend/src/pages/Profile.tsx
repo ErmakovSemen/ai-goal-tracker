@@ -26,7 +26,7 @@ interface Stats {
 const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const isRegistered = authAPI.isAuthenticated();
+  const [isRegistered, setIsRegistered] = useState(authAPI.isAuthenticated());
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalGoals: 0,
@@ -54,13 +54,14 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         setLoading(false);
       } else {
         setErrorDetails('getCurrentUser вернул null');
-        if (!isRegistered) {
-          setUser({
-            id: userId || 0,
-            username: 'Гость',
-            email: null,
-          });
-        }
+        // Token is stale or missing — treat as guest
+        authAPI.logout();
+        setIsRegistered(false);
+        setUser({
+          id: userId || 0,
+          username: 'Гость',
+          email: null,
+        });
         setLoading(false);
       }
     } catch (err: any) {
@@ -82,6 +83,14 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
           email: null,
         });
       } else if (!isRegistered) {
+        setUser({
+          id: userId || 0,
+          username: 'Гость',
+          email: null,
+        });
+      } else {
+        authAPI.logout();
+        setIsRegistered(false);
         setUser({
           id: userId || 0,
           username: 'Гость',
