@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authAPI, goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
 import { useI18n } from '../i18n';
-import { App as CapacitorApp } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
-import { ApkInstaller } from '../plugins/apkInstaller';
-import { fetchLatestRelease } from '../services/devBuilds';
 import './Profile.css';
 
 interface ProfileProps {
@@ -34,14 +30,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(authAPI.isAuthenticated());
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
-  const [debugEnabled, setDebugEnabled] = useState<boolean>(() => {
-    return localStorage.getItem('debug_mode_enabled') === 'true';
-  });
-  const [appVersion, setAppVersion] = useState<string>('web');
-  const [appBuild, setAppBuild] = useState<string>('N/A');
-  const [latestStatus, setLatestStatus] = useState<string | null>(null);
-  const [latestError, setLatestError] = useState<string | null>(null);
-  const [canInstall, setCanInstall] = useState<boolean | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalGoals: 0,
     totalMilestones: 0,
@@ -51,68 +39,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
     streak: 0,
   });
 
-  useEffect(() => {
-    const loadAppInfo = async () => {
-      try {
-        if (Capacitor.getPlatform() !== 'web') {
-          const info = await CapacitorApp.getInfo();
-          setAppVersion(info.version || 'N/A');
-          setAppBuild(info.build || 'N/A');
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-    loadAppInfo();
-  }, []);
-
-  const handleToggleDebug = () => {
-    const next = !debugEnabled;
-    setDebugEnabled(next);
-    localStorage.setItem('debug_mode_enabled', String(next));
-  };
-
-  const handleUpdateLatest = async () => {
-    setLatestError(null);
-    setLatestStatus(t('loading'));
-
-    if (Capacitor.getPlatform() !== 'android') {
-      setLatestStatus(null);
-      setLatestError(t('android_only'));
-      return;
-    }
-
-    try {
-      setLatestStatus(t('fetching_latest'));
-      const latest = await fetchLatestRelease();
-      if (!latest.apk) {
-        throw new Error('APK not found in latest release');
-      }
-
-      const installCheck = await ApkInstaller.canInstall();
-      setCanInstall(installCheck.canInstall);
-      if (!installCheck.canInstall) {
-        setLatestStatus(null);
-        setLatestError(t('allow_unknown_sources'));
-        return;
-      }
-
-      setLatestStatus(t('downloading'));
-      await ApkInstaller.downloadAndInstall({ url: latest.apk.url, fileName: latest.apk.name });
-      setLatestStatus(t('ready_to_install'));
-    } catch (err: any) {
-      setLatestStatus(null);
-      setLatestError(err?.message || t('update_failed'));
-    }
-  };
-
-  const handleOpenInstallSettings = async () => {
-    try {
-      await ApkInstaller.openInstallSettings();
-    } catch (err) {
-      // ignore
-    }
-  };
 
   const loadUserData = React.useCallback(async () => {
     try {
@@ -325,16 +251,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
                 <option value="ru">Русский</option>
               </select>
             </div>
-            <div className="settings-item">
-              <div className="settings-item-content">
-                <span className="settings-icon">🛠️</span>
-                <span className="settings-label">{t('debug_title')}</span>
-              </div>
-              <label className="debug-toggle">
-                <input type="checkbox" checked={debugEnabled} onChange={handleToggleDebug} />
-                <span className="debug-toggle-slider" />
-              </label>
-            </div>
             <button className="settings-item">
               <div className="settings-item-content">
                 <span className="settings-icon">🔔</span>
@@ -358,39 +274,6 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
             </button>
           </div>
         </div>
-
-        {debugEnabled && (
-          <div className="profile-card">
-            <div className="card-header">
-              <span className="card-title">{t('debug_title')}</span>
-            </div>
-            <div className="debug-builds-content">
-              <div className="debug-row">
-                <span className="debug-label">{t('language_label')}</span>
-                <span className="debug-value">{locale}</span>
-              </div>
-              <div className="debug-row">
-                <span className="debug-label">{t('version_label')}</span>
-                <span className="debug-value">{appVersion} ({appBuild})</span>
-              </div>
-              <button className="update-latest-button" onClick={handleUpdateLatest}>
-                {t('update_latest')}
-              </button>
-              {latestStatus && <div className="debug-status">{latestStatus}</div>}
-              {latestError && (
-                <div className="debug-error">
-                  {latestError}
-                  {canInstall === false && (
-                    <button className="debug-link" onClick={handleOpenInstallSettings}>
-                      {t('open_settings')}
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className="debug-hint">{t('restart_after_install')}</div>
-            </div>
-          </div>
-        )}
 
         {/* О приложении */}
         <div className="profile-card">

@@ -5,6 +5,7 @@ import ChatView from './pages/ChatView';
 import CreateGoal from './pages/CreateGoal';
 import QuickGoalModal from './components/QuickGoalModal';
 import DebugMenu, { DebugSettings } from './components/DebugMenu';
+import FloatingDebugButton from './components/FloatingDebugButton';
 import BottomNavigation, { TabType } from './components/BottomNavigation';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -465,17 +466,9 @@ function App() {
         {renderTabContent()}
       </div>
       
-      {/* Debug buttons - только на табе чата */}
-      {activeTab === 'chat' && (
-        <div className="debug-toggle-container">
-          <button 
-            className={`debug-toggle ${debugSettings.enabled ? 'active' : ''}`}
-            onClick={() => setShowDebugMenu(true)}
-            title="Open debug settings"
-          >
-            🐛 Debug
-          </button>
-        </div>
+      {/* Floating Debug Button */}
+      {isLoggedIn && (
+        <FloatingDebugButton onClick={() => setShowDebugMenu(true)} />
       )}
       
       {showDebugMenu && (
