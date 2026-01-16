@@ -4,6 +4,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "@capacitor/app": "^6.0.3",
     "@capacitor/core": "^6.2.1",
     "@capacitor/device": "^6.0.3",
     "@capacitor/push-notifications": "^6.0.5",
@@ -40,6 +41,8 @@
     ]
   },
   "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "yaml": "^2.8.2"
