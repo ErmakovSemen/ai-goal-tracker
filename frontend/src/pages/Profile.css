@@ -5,7 +5,7 @@
   max-width: 600px;
   margin: 0 auto;
   min-height: calc(100vh - 60px);
-  background: #f7f7f7;
+  background: transparent;
 }
 
 .profile-header {
@@ -16,7 +16,7 @@
   margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
@@ -28,22 +28,24 @@
 
 /* Карточки в стиле Duolingo */
 .profile-card {
-  background: #ffffff;
+  background: var(--glass-bg);
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--glass-shadow-soft);
+  border: 1px solid var(--glass-stroke);
   overflow: hidden;
+  backdrop-filter: blur(18px);
 }
 
 .card-header {
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
+  border-bottom: 1px solid var(--glass-stroke);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
 }
 
@@ -57,7 +59,7 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #58cc02 0%, #3ea600 100%);
+  background: linear-gradient(135deg, rgba(79, 124, 255, 0.9), rgba(122, 92, 255, 0.9));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,13 +74,13 @@
   margin: 0 0 6px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
 .profile-email {
   margin: 0;
-  color: #888;
+  color: var(--text-secondary);
   font-size: 15px;
 }
 
@@ -134,12 +136,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1px;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.35);
   padding: 1px;
 }
 
 .stat-box {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.65);
   padding: 20px;
   text-align: center;
   display: flex;
@@ -149,7 +151,7 @@
 }
 
 .streak-box {
-  background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%);
+  background: linear-gradient(135deg, rgba(255, 215, 160, 0.35) 0%, rgba(255, 236, 200, 0.6) 100%);
 }
 
 .stat-icon {
@@ -160,7 +162,7 @@
 .stat-value {
   font-size: 32px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   line-height: 1;
   letter-spacing: -1px;
 }
@@ -171,7 +173,7 @@
 
 .stat-label {
   font-size: 13px;
-  color: #888;
+  color: var(--text-secondary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -190,11 +192,131 @@
   padding: 16px 20px;
   background: none;
   border: none;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
   cursor: pointer;
   transition: background-color 0.2s ease;
   text-align: left;
   width: 100%;
+}
+
+.language-select {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: #fff;
+  font-size: 14px;
+  color: #333;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #58cc02;
+  box-shadow: 0 0 0 2px rgba(88, 204, 2, 0.15);
+}
+
+.debug-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.debug-toggle input {
+  display: none;
+}
+
+.debug-toggle-slider {
+  width: 44px;
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.debug-toggle-slider::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.debug-toggle input:checked + .debug-toggle-slider {
+  background: #58cc02;
+}
+
+.debug-toggle input:checked + .debug-toggle-slider::after {
+  transform: translateX(20px);
+}
+
+.debug-builds-content {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.debug-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.debug-label {
+  color: #666;
+}
+
+.debug-value {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.update-latest-button {
+  background: #2d6cdf;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.update-latest-button:hover {
+  background: #2558b8;
+}
+
+.debug-status {
+  font-size: 13px;
+  color: #333;
+}
+
+.debug-error {
+  font-size: 13px;
+  color: #b00020;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.debug-link {
+  background: none;
+  border: none;
+  color: #2d6cdf;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.debug-hint {
+  font-size: 12px;
+  color: #666;
 }
 
 .settings-item:last-child {
@@ -202,7 +324,7 @@
 }
 
 .settings-item:hover {
-  background-color: #fafafa;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .settings-item-content {
@@ -219,13 +341,13 @@
 
 .settings-label {
   font-size: 16px;
-  color: #1a1a1a;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .settings-arrow {
   font-size: 20px;
-  color: #ccc;
+  color: rgba(27, 31, 42, 0.35);
   font-weight: 300;
 }
 
@@ -238,21 +360,21 @@
 .app-name {
   font-size: 20px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0 0 6px 0;
   letter-spacing: -0.5px;
 }
 
 .app-version {
   font-size: 13px;
-  color: #888;
+  color: var(--text-secondary);
   margin: 0 0 16px 0;
   font-weight: 500;
 }
 
 .app-description {
   font-size: 15px;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
 }
@@ -261,9 +383,9 @@
 .logout-button {
   width: 100%;
   padding: 16px;
-  background: #ffffff;
-  color: #d32f2f;
-  border: 2px solid #ffebee;
+  background: rgba(255, 255, 255, 0.7);
+  color: #c62828;
+  border: 1px solid rgba(198, 40, 40, 0.2);
   border-radius: 16px;
   font-size: 16px;
   font-weight: 600;
@@ -274,17 +396,17 @@
 }
 
 .logout-button:hover {
-  background: #fff5f5;
-  border-color: #ffcdd2;
+  background: rgba(255, 245, 245, 0.7);
+  border-color: rgba(198, 40, 40, 0.35);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--glass-shadow-soft);
 }
 
 .profile-loading,
 .profile-error {
   text-align: center;
   padding: 60px 20px;
-  color: #888;
+  color: var(--text-secondary);
   font-size: 16px;
 }
 

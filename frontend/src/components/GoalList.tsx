@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../i18n';
 import './GoalList.css';
 
 interface Goal {
@@ -21,12 +22,17 @@ interface GoalListProps {
 }
 
 const GoalList: React.FC<GoalListProps> = ({ goals, selectedGoalId, onCreateNew, onSelectGoal, onDeleteGoal, isCollapsed, onToggleCollapse }) => {
+  const { t } = useI18n();
   return (
     <div className={`goal-list ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="goal-list-header">
-        {!isCollapsed && <h2>Цели</h2>}
+        {!isCollapsed && <h2>{t('goals')}</h2>}
         <div className="goal-list-actions">
-          <button className="collapse-button" onClick={onToggleCollapse} title={isCollapsed ? "Expand" : "Collapse"}>
+          <button
+            className="collapse-button"
+            onClick={onToggleCollapse}
+            title={isCollapsed ? t('expand') : t('collapse')}
+          >
             {isCollapsed ? '→' : '←'}
           </button>
         </div>
@@ -39,14 +45,14 @@ const GoalList: React.FC<GoalListProps> = ({ goals, selectedGoalId, onCreateNew,
             onClick={onCreateNew}
           >
             <div className="goal-item-header">
-              <h3>✨ Новая цель</h3>
+              <h3>✨ {t('new_goal')}</h3>
             </div>
-            <p className="goal-item-preview">Создать цель с AI или вручную</p>
+            <p className="goal-item-preview">{t('create_goal_with_ai')}</p>
           </div>
           
           {goals.length === 0 ? (
             <div className="empty-state">
-              <p>Пока нет целей</p>
+              <p>{t('no_goals')}</p>
             </div>
           ) : (
             goals.map((goal) => (
@@ -66,11 +72,11 @@ const GoalList: React.FC<GoalListProps> = ({ goals, selectedGoalId, onCreateNew,
                         className="delete-goal-button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (window.confirm(`Удалить цель "${goal.title}"? Это действие нельзя отменить.`)) {
+                          if (window.confirm(t('delete_goal_confirm', { title: goal.title }))) {
                             onDeleteGoal(goal.id);
                           }
                         }}
-                        title="Удалить цель"
+                        title={t('delete_goal_title')}
                       >
                         🗑️
                       </button>

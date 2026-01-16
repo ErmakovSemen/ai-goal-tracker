@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(15, 23, 42, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,13 +12,15 @@
 }
 
 .debug-menu {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: var(--glass-bg-strong);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-stroke);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  backdrop-filter: blur(18px);
 }
 
 .debug-menu-header {
@@ -26,20 +28,20 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--glass-stroke);
 }
 
 .debug-menu-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .debug-menu-close {
   background: none;
   border: none;
   font-size: 28px;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -52,7 +54,7 @@
 }
 
 .debug-menu-close:hover {
-  background-color: #f0f0f0;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .debug-menu-content {
@@ -72,7 +74,7 @@
   align-items: center;
   cursor: pointer;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .debug-menu-item input[type="checkbox"] {
@@ -94,7 +96,7 @@
 .debug-menu-description {
   margin: 8px 0 0 32px;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 

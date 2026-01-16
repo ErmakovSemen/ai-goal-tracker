@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n';
 import ChatInterface from '../components/ChatInterface';
 import ProgressBar from '../components/ProgressBar';
 import GoalDetailModal from '../components/GoalDetailModal';
@@ -31,6 +32,7 @@ interface ChatViewProps {
 }
 
 const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalCreated, debugSettings }) => {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<Message[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -500,8 +502,8 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
       <div className="chat-view empty">
         <div className="empty-chat">
           <div className="empty-icon">🎯</div>
-          <h2>Welcome to AI Goal Tracker</h2>
-          <p>Select a goal from the left to start chatting, or create a new goal to get started!</p>
+          <h2>{t('chat_empty_title')}</h2>
+          <p>{t('chat_empty_subtitle')}</p>
         </div>
       </div>
     );
@@ -519,18 +521,18 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
             title="Нажмите для просмотра деталей"
           >
             {loadingMilestones && isInitialLoad ? (
-              <div className="progress-loading">Loading progress...</div>
+              <div className="progress-loading">{t('loading_progress')}</div>
             ) : (
               <>
                 <div className="header-progress-info">
                   <span className="progress-text">
                     {milestones.length > 0 
                       ? `${completedCount}/${milestones.length} milestones`
-                      : 'No milestones yet'
+                      : t('no_milestones')
                     }
                     {tasks.length > 0 && (
                       <span style={{ marginLeft: '12px', color: '#666' }}>
-                        • {tasks.filter(t => !t.is_completed).length} задач
+                        • {tasks.filter(t => !t.is_completed).length} {t('tasks_label')}
                       </span>
                     )}
                   </span>
@@ -586,10 +588,10 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                   }}>
                     <span style={{ fontSize: '18px' }}>⏰</span>
                     <span>
-                      Ближайший дедлайн: <strong style={{ color: '#0066cc' }}>{nearestDeadline.formatted}</strong>
+                      {t('nearest_deadline')} <strong style={{ color: '#0066cc' }}>{nearestDeadline.formatted}</strong>
                       {nearestDeadline.title && ` (${nearestDeadline.title.substring(0, 30)}${nearestDeadline.title.length > 30 ? '...' : ''})`}
-                      {nearestDeadline.type === 'task' && ' 📝 задача'}
-                      {nearestDeadline.type === 'milestone' && ' 🎯 подцель'}
+                      {nearestDeadline.type === 'task' && ` 📝 ${t('task_label')}`}
+                      {nearestDeadline.type === 'milestone' && ` 🎯 ${t('milestone_label')}`}
                     </span>
                   </div>
                 )}
@@ -685,7 +687,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
                       handleSendMessage(planMessage);
                     }}
                   >
-                    Create Plan
+                    {t('create_plan')}
                   </button>
                 )}
               </>
@@ -797,7 +799,7 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
         />
         {loadingAI && (
           <div style={{ padding: '10px', textAlign: 'center', color: '#666', fontSize: '0.9rem' }}>
-            AI думает...
+            {t('ai_thinking')}
           </div>
         )}
       </div>

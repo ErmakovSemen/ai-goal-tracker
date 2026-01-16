@@ -9,9 +9,11 @@ import BottomNavigation, { TabType } from './components/BottomNavigation';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import { authAPI, goalsAPI, Goal } from './services/api';
+import { useI18n } from './i18n';
 import { pushNotificationService } from './services/pushNotifications';
 
 function App() {
+  const { t } = useI18n();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -73,7 +75,7 @@ function App() {
       const storedUserId = authAPI.getUserId();
       if (storedUserId) {
         setUserId(storedUserId);
-        setUsername('Гость');
+        setUsername(t('profile_guest'));
         setIsLoggedIn(true);
       }
     }
@@ -113,12 +115,12 @@ function App() {
       if (isRegisterMode) {
         // Registration
         if (!email || !email.includes('@')) {
-          setError('Пожалуйста, введите корректный email');
+          setError(t('invalid_email'));
           setLoading(false);
           return;
         }
         if (password.length < 6) {
-          setError('Пароль должен быть не менее 6 символов');
+          setError(t('password_too_short'));
           setLoading(false);
           return;
         }
@@ -148,7 +150,7 @@ function App() {
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      const errorMessage = err.message || (isRegisterMode ? 'Не удалось зарегистрироваться' : 'Неверный логин или пароль');
+      const errorMessage = err.message || (isRegisterMode ? t('register_failed') : t('login_failed'));
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -185,7 +187,7 @@ function App() {
           setIsLoggedIn(true);
         }
         if (!username) {
-          setUsername('Гость');
+          setUsername(t('profile_guest'));
         }
       }
       // Add new goal to the list immediately
@@ -223,7 +225,7 @@ function App() {
           setIsLoggedIn(true);
         }
         if (!username) {
-          setUsername('Гость');
+          setUsername(t('profile_guest'));
         }
       }
       setGoals([...goals, newGoal]);
@@ -263,20 +265,20 @@ function App() {
       <div className="App">
         <header className="App-header">
           <h1>🎯 AI Goal Tracker</h1>
-          <p>Умный помощник для достижения целей</p>
+          <p>{t('about_description')}</p>
         </header>
         <main className="login-container">
           <div className="login-form">
-            <h2>{isRegisterMode ? 'Регистрация' : 'Вход'}</h2>
+            <h2>{isRegisterMode ? t('register_title') : t('login_title')}</h2>
             <form onSubmit={handleLogin}>
               <div className="form-group">
-                <label htmlFor="username">Имя пользователя</label>
+                <label htmlFor="username">{t('username_label')}</label>
                 <input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Введите имя пользователя"
+                  placeholder={t('username_label')}
                   required
                   autoComplete="username"
                 />
@@ -289,20 +291,20 @@ function App() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Введите email"
+                    placeholder={t('email_label')}
                     required
                     autoComplete="email"
                   />
                 </div>
               )}
               <div className="form-group">
-                <label htmlFor="password">Пароль</label>
+                <label htmlFor="password">{t('password_label')}</label>
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isRegisterMode ? "Минимум 6 символов" : "Введите пароль"}
+                  placeholder={t('password_label')}
                   required
                   autoComplete={isRegisterMode ? "new-password" : "current-password"}
                   minLength={isRegisterMode ? 6 : undefined}
@@ -310,8 +312,8 @@ function App() {
               </div>
               <button type="submit" className="login-button" disabled={loading}>
                 {loading 
-                  ? (isRegisterMode ? 'Регистрация...' : 'Вход...') 
-                  : (isRegisterMode ? 'Зарегистрироваться' : 'Войти')
+                  ? (isRegisterMode ? t('register_loading') : t('login_loading')) 
+                  : (isRegisterMode ? t('register_button') : t('login_button'))
                 }
               </button>
             </form>
@@ -345,10 +347,7 @@ function App() {
                   fontSize: '0.9rem'
                 }}
               >
-                {isRegisterMode 
-                  ? 'Уже есть аккаунт? Войти' 
-                  : 'Нет аккаунта? Зарегистрироваться'
-                }
+                {isRegisterMode ? t('toggle_to_login') : t('toggle_to_register')}
               </button>
             </div>
             <div style={{ marginTop: '10px', textAlign: 'center' }}>
@@ -372,7 +371,7 @@ function App() {
                   fontSize: '0.9rem'
                 }}
               >
-                Продолжить без регистрации
+                {t('continue_as_guest')}
               </button>
             </div>
           </div>

@@ -1,12 +1,13 @@
 .goal-list {
   width: 300px;
   height: 100vh;
-  background-color: #f5f5f5;
-  border-right: 1px solid #e0e0e0;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-stroke);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s ease;
+  backdrop-filter: blur(18px);
 }
 
 .goal-list.collapsed {
@@ -19,8 +20,8 @@
 
 .goal-list-header {
   padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #ffffff;
+  border-bottom: 1px solid var(--glass-stroke);
+  background: rgba(255, 255, 255, 0.45);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -31,7 +32,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -43,31 +44,31 @@
 }
 
 .new-goal-item {
-  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-  border: 2px dashed #007bff;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px dashed rgba(79, 124, 255, 0.6);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .new-goal-item:hover {
-  background: linear-gradient(135deg, #bbdefb, #e1bee7);
-  border-color: #0056b3;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(79, 124, 255, 0.9);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+  box-shadow: var(--glass-shadow-soft);
 }
 
 .new-goal-item h3 {
-  color: #007bff;
+  color: var(--accent);
 }
 
 .collapse-button {
   background-color: transparent;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--glass-stroke);
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 1rem;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
   transition: all 0.2s;
   min-width: 36px;
   display: flex;
@@ -76,8 +77,8 @@
 }
 
 .collapse-button:hover {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.4);
+  color: var(--text-primary);
 }
 
 .goal-list.collapsed .goal-list-header {
@@ -94,7 +95,7 @@
 .empty-state {
   padding: 40px 20px;
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .empty-state p {
@@ -113,19 +114,19 @@
 
 .goal-item {
   padding: 15px 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: background-color 0.2s;
-  background-color: #ffffff;
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .goal-item:hover {
-  background-color: #f9f9f9;
+  background-color: rgba(255, 255, 255, 0.75);
 }
 
 .goal-item.active {
-  background-color: #e3f2fd;
-  border-left: 3px solid #007bff;
+  background-color: rgba(79, 124, 255, 0.12);
+  border-left: 3px solid var(--accent);
 }
 
 .goal-item-header {
@@ -139,7 +140,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,7 +186,7 @@
 .goal-item-preview {
   margin: 5px 0 0 0;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -193,7 +194,7 @@
 
 .goal-item-time {
   font-size: 0.75rem;
-  color: #999;
+  color: rgba(27, 31, 42, 0.45);
   margin-top: 5px;
   display: block;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useI18n } from '../i18n';
 import './QuickGoalModal.css';
 
 interface QuickGoalModalProps {
@@ -9,6 +10,7 @@ interface QuickGoalModalProps {
 }
 
 const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCreateGoal, onOpenFullEditor }) => {
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
@@ -20,7 +22,7 @@ const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCrea
     e.preventDefault();
     
     if (!title.trim()) {
-      setError('Введите название цели');
+      setError(t('enter_goal_name'));
       return;
     }
 
@@ -33,7 +35,7 @@ const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCrea
       setDescription('');
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при создании цели');
+      setError(err instanceof Error ? err.message : t('goal_create_error'));
     } finally {
       setSaving(false);
     }
@@ -50,31 +52,31 @@ const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCrea
     <div className="quick-goal-overlay" onClick={handleClose}>
       <div className="quick-goal-modal" onClick={e => e.stopPropagation()}>
         <div className="quick-goal-header">
-          <h2>✨ Новая цель</h2>
+          <h2>✨ {t('quick_goal_title')}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="goal-title">Название цели *</label>
+            <label htmlFor="goal-title">{t('goal_title_label')}</label>
             <input
               id="goal-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Например: Выучить испанский"
+              placeholder={t('goal_title_placeholder')}
               autoFocus
               disabled={saving}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="goal-description">Описание (опционально)</label>
+            <label htmlFor="goal-description">{t('goal_description_label')}</label>
             <textarea
               id="goal-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Подробности о цели, мотивация, сроки..."
+              placeholder={t('goal_description_placeholder')}
               rows={3}
               disabled={saving}
             />
@@ -86,16 +88,16 @@ const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCrea
 
           <div className="quick-goal-actions">
             <button type="button" className="cancel-btn" onClick={handleClose} disabled={saving}>
-              Отмена
+              {t('cancel')}
             </button>
             <button type="submit" className="create-btn" disabled={saving || !title.trim()}>
-              {saving ? 'Создание...' : '🎯 Создать цель'}
+              {saving ? t('creating') : `🎯 ${t('create_goal')}`}
             </button>
           </div>
         </form>
 
         <div className="quick-goal-tip">
-          💡 После создания вы сможете добавить подцели и обсудить план с AI
+          💡 {t('goal_tip')}
           {onOpenFullEditor && (
             <div className="ai-assistant-section">
               <button
@@ -106,7 +108,7 @@ const QuickGoalModal: React.FC<QuickGoalModalProps> = ({ isOpen, onClose, onCrea
                 }}
                 className="ai-assistant-btn"
               >
-                🤖 Создать с AI-ассистентом
+                🤖 {t('create_goal_with_ai')}
               </button>
             </div>
           )}

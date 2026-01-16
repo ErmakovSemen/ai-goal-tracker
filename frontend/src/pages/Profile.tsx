@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { authAPI, goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
+import { useI18n } from '../i18n';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { ApkInstaller } from '../plugins/apkInstaller';
+import { fetchLatestRelease } from '../services/devBuilds';
 import './Profile.css';
 
 interface ProfileProps {
@@ -24,10 +29,19 @@ interface Stats {
 }
 
 const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }) => {
+  const { t, locale, setLocale } = useI18n();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(authAPI.isAuthenticated());
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [debugEnabled, setDebugEnabled] = useState<boolean>(() => {
+    return localStorage.getItem('debug_mode_enabled') === 'true';
+  });
+  const [appVersion, setAppVersion] = useState<string>('web');
+  const [appBuild, setAppBuild] = useState<string>('N/A');
+  const [latestStatus, setLatestStatus] = useState<string | null>(null);
+  const [latestError, setLatestError] = useState<string | null>(null);
+  const [canInstall, setCanInstall] = useState<boolean | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalGoals: 0,
     totalMilestones: 0,
@@ -41,6 +55,69 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
     loadUserData();
     loadStats();
   }, [userId]);
+
+  useEffect(() => {
+    const loadAppInfo = async () => {
+      try {
+        if (Capacitor.getPlatform() !== 'web') {
+          const info = await CapacitorApp.getInfo();
+          setAppVersion(info.version || 'N/A');
+          setAppBuild(info.build || 'N/A');
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    loadAppInfo();
+  }, []);
+
+  const handleToggleDebug = () => {
+    const next = !debugEnabled;
+    setDebugEnabled(next);
+    localStorage.setItem('debug_mode_enabled', String(next));
+  };
+
+  const handleUpdateLatest = async () => {
+    setLatestError(null);
+    setLatestStatus(t('loading'));
+
+    if (Capacitor.getPlatform() !== 'android') {
+      setLatestStatus(null);
+      setLatestError(t('android_only'));
+      return;
+    }
+
+    try {
+      setLatestStatus(t('fetching_latest'));
+      const latest = await fetchLatestRelease();
+      if (!latest.apk) {
+        throw new Error('APK not found in latest release');
+      }
+
+      const installCheck = await ApkInstaller.canInstall();
+      setCanInstall(installCheck.canInstall);
+      if (!installCheck.canInstall) {
+        setLatestStatus(null);
+        setLatestError(t('allow_unknown_sources'));
+        return;
+      }
+
+      setLatestStatus(t('downloading'));
+      await ApkInstaller.downloadAndInstall({ url: latest.apk.url, fileName: latest.apk.name });
+      setLatestStatus(t('ready_to_install'));
+    } catch (err: any) {
+      setLatestStatus(null);
+      setLatestError(err?.message || t('update_failed'));
+    }
+  };
+
+  const handleOpenInstallSettings = async () => {
+    try {
+      await ApkInstaller.openInstallSettings();
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -59,7 +136,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         setIsRegistered(false);
         setUser({
           id: userId || 0,
-          username: 'Гость',
+          username: t('profile_guest'),
           email: null,
         });
         setLoading(false);
@@ -79,13 +156,13 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         // At least set username from stored data
         setUser({
           id: storedUserId,
-          username: 'Пользователь',
+          username: t('profile_guest'),
           email: null,
         });
       } else if (!isRegistered) {
         setUser({
           id: userId || 0,
-          username: 'Гость',
+          username: t('profile_guest'),
           email: null,
         });
       } else {
@@ -93,7 +170,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         setIsRegistered(false);
         setUser({
           id: userId || 0,
-          username: 'Гость',
+          username: t('profile_guest'),
           email: null,
         });
       }
@@ -148,7 +225,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   if (loading) {
     return (
       <div className="profile-page">
-        <div className="profile-loading">Загрузка...</div>
+        <div className="profile-loading">{t('loading')}</div>
       </div>
     );
   }
@@ -156,7 +233,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   if (!user) {
     return (
       <div className="profile-page">
-        <div className="profile-error">Профиль временно недоступен (обновление v2)</div>
+        <div className="profile-error">{t('profile_unavailable')}</div>
         {errorDetails && (
           <div className="profile-debug">
             <div className="profile-debug-title">Debug</div>
@@ -170,7 +247,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   return (
     <div className="profile-page">
       <div className="profile-header">
-        <h1>Профиль</h1>
+        <h1>{t('profile_title')}</h1>
       </div>
 
       <div className="profile-content">
@@ -190,37 +267,37 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         {/* Статистика */}
         <div className="profile-card">
           <div className="card-header">
-            <span className="card-title">Статистика</span>
+            <span className="card-title">{t('stats_title')}</span>
           </div>
           <div className={`stats-wrapper ${!isRegistered ? 'stats-locked' : ''}`}>
             <div className="stats-grid">
             <div className="stat-box">
               <div className="stat-icon">🎯</div>
               <div className="stat-value">{stats.totalGoals}</div>
-              <div className="stat-label">Целей</div>
+              <div className="stat-label">{t('stats_goals')}</div>
             </div>
             <div className="stat-box">
               <div className="stat-icon">✅</div>
               <div className="stat-value">{stats.completedMilestones}</div>
-              <div className="stat-label">Milestones</div>
+              <div className="stat-label">{t('stats_milestones')}</div>
             </div>
             <div className="stat-box">
               <div className="stat-icon">📝</div>
               <div className="stat-value">{stats.completedTasks}</div>
-              <div className="stat-label">Задач</div>
+              <div className="stat-label">{t('stats_tasks')}</div>
             </div>
             <div className="stat-box streak-box">
               <div className="stat-icon">🔥</div>
               <div className="stat-value">{stats.streak}</div>
-              <div className="stat-label">Дней подряд</div>
+              <div className="stat-label">{t('stats_streak')}</div>
             </div>
             </div>
             {!isRegistered && (
               <div className="stats-overlay">
                 <div className="stats-overlay-content">
-                  <div className="stats-overlay-title">Статистика доступна после регистрации</div>
+                  <div className="stats-overlay-title">{t('stats_locked')}</div>
                   <button className="register-button" onClick={onRegisterRequest}>
-                    Зарегистрироваться
+                    {t('register_cta')}
                   </button>
                 </div>
               </div>
@@ -231,50 +308,107 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         {/* Настройки */}
         <div className="profile-card">
           <div className="card-header">
-            <span className="card-title">Настройки</span>
+            <span className="card-title">{t('settings_title')}</span>
           </div>
           <div className="settings-list">
+            <div className="settings-item">
+              <div className="settings-item-content">
+                <span className="settings-icon">🌐</span>
+                <span className="settings-label">{t('language_label')}</span>
+              </div>
+              <select
+                className="language-select"
+                value={locale}
+                onChange={(e) => setLocale(e.target.value as 'en' | 'ru')}
+              >
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+              </select>
+            </div>
+            <div className="settings-item">
+              <div className="settings-item-content">
+                <span className="settings-icon">🛠️</span>
+                <span className="settings-label">{t('debug_title')}</span>
+              </div>
+              <label className="debug-toggle">
+                <input type="checkbox" checked={debugEnabled} onChange={handleToggleDebug} />
+                <span className="debug-toggle-slider" />
+              </label>
+            </div>
             <button className="settings-item">
               <div className="settings-item-content">
                 <span className="settings-icon">🔔</span>
-                <span className="settings-label">Уведомления</span>
+                <span className="settings-label">{t('settings_notifications')}</span>
               </div>
               <span className="settings-arrow">›</span>
             </button>
             <button className="settings-item">
               <div className="settings-item-content">
                 <span className="settings-icon">🌙</span>
-                <span className="settings-label">Темная тема</span>
+                <span className="settings-label">{t('settings_theme')}</span>
               </div>
               <span className="settings-arrow">›</span>
             </button>
             <button className="settings-item">
               <div className="settings-item-content">
                 <span className="settings-icon">🔒</span>
-                <span className="settings-label">Безопасность</span>
+                <span className="settings-label">{t('settings_security')}</span>
               </div>
               <span className="settings-arrow">›</span>
             </button>
           </div>
         </div>
 
+        {debugEnabled && (
+          <div className="profile-card">
+            <div className="card-header">
+              <span className="card-title">{t('debug_title')}</span>
+            </div>
+            <div className="debug-builds-content">
+              <div className="debug-row">
+                <span className="debug-label">{t('language_label')}</span>
+                <span className="debug-value">{locale}</span>
+              </div>
+              <div className="debug-row">
+                <span className="debug-label">{t('version_label')}</span>
+                <span className="debug-value">{appVersion} ({appBuild})</span>
+              </div>
+              <button className="update-latest-button" onClick={handleUpdateLatest}>
+                {t('update_latest')}
+              </button>
+              {latestStatus && <div className="debug-status">{latestStatus}</div>}
+              {latestError && (
+                <div className="debug-error">
+                  {latestError}
+                  {canInstall === false && (
+                    <button className="debug-link" onClick={handleOpenInstallSettings}>
+                      {t('open_settings')}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="debug-hint">{t('restart_after_install')}</div>
+            </div>
+          </div>
+        )}
+
         {/* О приложении */}
         <div className="profile-card">
           <div className="card-header">
-            <span className="card-title">О приложении</span>
+            <span className="card-title">{t('about_title')}</span>
           </div>
           <div className="about-content">
-            <div className="app-name">AI Goal Tracker</div>
-            <div className="app-version">Версия 1.0.0</div>
+            <div className="app-name">{t('about_app_name')}</div>
+            <div className="app-version">{t('about_version')}</div>
             <p className="app-description">
-              Умный помощник для достижения целей с искусственным интеллектом
+              {t('about_description')}
             </p>
           </div>
         </div>
 
         {/* Выход */}
         <button className="logout-button" onClick={onLogout}>
-          Выйти из аккаунта
+          {t('logout')}
         </button>
       </div>
     </div>

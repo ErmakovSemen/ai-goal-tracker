@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
 import Mascot from '../components/Mascot';
+import { useI18n } from '../i18n';
 import './Home.css';
 
 interface HomeProps {
@@ -25,6 +26,7 @@ interface GoalStats {
 }
 
 const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
+  const { t } = useI18n();
   const [goals, setGoals] = useState<GoalStats[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -136,7 +138,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
       <div className="home-page">
         <div className="home-loading">
           <div className="loading-spinner"></div>
-          <div>Загрузка...</div>
+          <div>{t('loading')}</div>
         </div>
       </div>
     );
@@ -157,8 +159,8 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
       <div className="home-header">
         <div className="home-header-content">
           <div className="home-header-text">
-            <h1>Добро пожаловать!</h1>
-            <p className="home-subtitle">Твой прогресс сегодня</p>
+            <h1>{t('welcome_title')}</h1>
+            <p className="home-subtitle">{t('welcome_subtitle')}</p>
           </div>
           <div className="home-header-mascot">
             <Mascot mood={getMascotMood()} size="medium" />
@@ -172,7 +174,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
           <div className="home-card">
             <div className="card-title-section">
               <div className="card-icon">⏰</div>
-              <h2 className="card-title">Ближайшие дедлайны</h2>
+              <h2 className="card-title">{t('nearest_deadlines') ?? 'Nearest deadlines'}</h2>
             </div>
             <div className="deadlines-list">
               {upcomingDeadlines.map((goal, index) => (
@@ -207,7 +209,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
         <div className="home-card">
           <div className="card-title-section">
             <div className="card-icon">🎯</div>
-            <h2 className="card-title">Мои цели</h2>
+            <h2 className="card-title">{t('goals')}</h2>
             {goals.length > 0 && (
               <span className="card-badge">{goals.length}</span>
             )}
@@ -252,8 +254,8 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
             ) : (
               <div className="empty-state-card">
                 <div className="empty-icon">🎯</div>
-                <p className="empty-title">У вас пока нет целей</p>
-                <p className="empty-description">Создайте первую цель и начните свой путь к успеху!</p>
+                <p className="empty-title">{t('no_goals_title')}</p>
+                <p className="empty-description">{t('no_goals_subtitle')}</p>
               </div>
             )}
           </div>

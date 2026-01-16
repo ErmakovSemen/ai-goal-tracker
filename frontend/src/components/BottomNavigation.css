@@ -7,13 +7,14 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  background-color: #ffffff;
-  border-top: 1px solid #e8e8e8;
+  background: var(--glass-bg);
+  border-top: 1px solid var(--glass-stroke);
   padding: 8px 0 max(8px, env(safe-area-inset-bottom));
   z-index: 1000;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -10px 30px rgba(17, 24, 39, 0.12);
   height: 60px;
   max-width: 100%;
+  backdrop-filter: blur(18px);
 }
 
 .bottom-nav-item {
@@ -26,17 +27,17 @@
   cursor: pointer;
   padding: 8px 20px;
   min-width: 70px;
-  color: #888;
+  color: var(--text-secondary);
   transition: color 0.2s ease;
   gap: 4px;
 }
 
 .bottom-nav-item:hover {
-  color: #58cc02;
+  color: var(--accent);
 }
 
 .bottom-nav-item.active {
-  color: #58cc02;
+  color: var(--accent);
 }
 
 .nav-icon {
