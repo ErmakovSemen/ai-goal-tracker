@@ -79,7 +79,7 @@ function App() {
         setIsLoggedIn(true);
       }
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (isLoggedIn && userId) {

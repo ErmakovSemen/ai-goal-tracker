@@ -30,13 +30,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   const [goals, setGoals] = useState<GoalStats[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
-  }, [userId]);
-
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -110,7 +104,13 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const upcomingDeadlines = goals
     .filter(g => g.nearestDeadline)

@@ -119,7 +119,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
     }
   };
 
-  const loadUserData = async () => {
+  const loadUserData = React.useCallback(async () => {
     try {
       const userData = await authAPI.getCurrentUser();
       if (userData) {
@@ -176,9 +176,9 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
       }
       setLoading(false);
     }
-  };
+  }, [isRegistered, t, userId]);
 
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -220,7 +220,12 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
     } catch (err) {
       console.error('Failed to load stats:', err);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadUserData();
+    loadStats();
+  }, [loadUserData, loadStats]);
 
   if (loading) {
     return (
