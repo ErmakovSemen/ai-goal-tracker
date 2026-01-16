@@ -26,9 +26,34 @@ const pickApk = (assets: Array<{ name: string; browser_download_url: string; siz
 
 export const fetchLatestRelease = async (): Promise<LatestRelease> => {
   const { githubOwner, githubRepo, latestTag } = DEV_BUILDS;
-  const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/releases/tags/${latestTag}`;
+  
+  // First try to get release by tag if latestTag is specified
+  if (latestTag && latestTag !== 'latest') {
+    try {
+      const tagUrl = `https://api.github.com/repos/${githubOwner}/${githubRepo}/releases/tags/${latestTag}`;
+      const tagResponse = await fetch(tagUrl);
+      if (tagResponse.ok) {
+        const tagData = await tagResponse.json();
+        return {
+          tag: tagData.tag_name,
+          name: tagData.name,
+          publishedAt: tagData.published_at,
+          apk: pickApk(tagData.assets || []),
+          body: tagData.body || '',
+        };
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch release by tag ${latestTag}, trying latest:`, err);
+    }
+  }
+  
+  // Fallback to latest release
+  const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/releases/latest`;
   const response = await fetch(url);
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('No releases found. Please create a release with an APK asset in GitHub.');
+    }
     throw new Error(`Failed to fetch latest release: ${response.status}`);
   }
   const data = await response.json();
