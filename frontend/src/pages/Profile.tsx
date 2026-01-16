@@ -27,6 +27,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const isRegistered = authAPI.isAuthenticated();
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalGoals: 0,
     totalMilestones: 0,
@@ -52,6 +53,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
         });
         setLoading(false);
       } else {
+        setErrorDetails('getCurrentUser вернул null');
         if (!isRegistered) {
           setUser({
             id: userId || 0,
@@ -63,8 +65,15 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
       }
     } catch (err: any) {
       console.error('Failed to load user data:', err);
-      // Try to get user from localStorage as fallback
       const storedUserId = authAPI.getUserId();
+      const details = [
+        `message: ${err?.message || 'unknown error'}`,
+        `isRegistered: ${isRegistered}`,
+        `storedUserId: ${storedUserId ?? 'none'}`,
+        `propUserId: ${userId ?? 'none'}`
+      ].join(' | ');
+      setErrorDetails(details);
+      // Try to get user from localStorage as fallback
       if (storedUserId) {
         // At least set username from stored data
         setUser({
@@ -139,6 +148,12 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
     return (
       <div className="profile-page">
         <div className="profile-error">Профиль временно недоступен (обновление v2)</div>
+        {errorDetails && (
+          <div className="profile-debug">
+            <div className="profile-debug-title">Debug</div>
+            <div className="profile-debug-text">{errorDetails}</div>
+          </div>
+        )}
       </div>
     );
   }
