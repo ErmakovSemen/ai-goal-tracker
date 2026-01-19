@@ -191,6 +191,66 @@ jobs:
           fi
           # Set source and target compatibility
           echo "android.defaults.buildfeatures.buildconfig=true" >> gradle.properties || true
+
+      - name: Setup Android signing
+        working-directory: ./frontend/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/keystore.jks
+          else
+            echo "Warning: ANDROID_KEYSTORE_BASE64 is not set. Generating a new keystore (updates will NOT work across builds)."
+            keytool -genkeypair -v -storetype PKCS12 -keystore app/keystore.jks \
+              -alias key -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass android -keypass android \
+              -dname "CN=AI Goal Tracker, OU=Mobile, O=Company, L=City, ST=State, C=US"
+            ANDROID_KEYSTORE_PASSWORD=android
+            ANDROID_KEY_ALIAS=key
+            ANDROID_KEY_PASSWORD=android
+          fi
+
+          cat >> gradle.properties << EOF
+          KEYSTORE_FILE=app/keystore.jks
+          KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
+          KEY_ALIAS=$ANDROID_KEY_ALIAS
+          KEY_PASSWORD=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Inject signing config into app/build.gradle
+        working-directory: ./frontend/android/app
+        run: |
+          cat >> build.gradle << 'EOF'
+
+          // Injected by CI to ensure consistent signing for updates
+          def keystoreProps = new Properties()
+          def keystorePropsFile = rootProject.file("gradle.properties")
+          if (keystorePropsFile.exists()) {
+              keystoreProps.load(new FileInputStream(keystorePropsFile))
+          }
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file(keystoreProps['KEYSTORE_FILE'])
+                      storePassword keystoreProps['KEYSTORE_PASSWORD']
+                      keyAlias keystoreProps['KEY_ALIAS']
+                      keyPassword keystoreProps['KEY_PASSWORD']
+                  }
+              }
+              buildTypes {
+                  debug {
+                      signingConfig signingConfigs.release
+                  }
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          EOF
           
       - name: Configure app build.gradle
         working-directory: ./frontend/android/app
