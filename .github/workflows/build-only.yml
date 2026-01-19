@@ -235,7 +235,7 @@ jobs:
           android {
               signingConfigs {
                   release {
-                      storeFile file(keystoreProps['KEYSTORE_FILE'])
+                      storeFile rootProject.file(keystoreProps['KEYSTORE_FILE'])
                       storePassword keystoreProps['KEYSTORE_PASSWORD']
                       keyAlias keystoreProps['KEY_ALIAS']
                       keyPassword keystoreProps['KEY_PASSWORD']
