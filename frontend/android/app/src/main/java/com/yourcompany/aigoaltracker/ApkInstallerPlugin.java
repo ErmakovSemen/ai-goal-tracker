@@ -55,7 +55,7 @@ public class ApkInstallerPlugin extends Plugin {
         }
 
         PluginCall savedCall = call;
-        getBridge().getThreadPool().execute(() -> {
+        new Thread(() -> {
             try {
                 File downloadsDir = getContext().getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
                 if (downloadsDir == null) {
@@ -68,15 +68,11 @@ public class ApkInstallerPlugin extends Plugin {
                 File apkFile = new File(downloadsDir, fileName);
                 downloadFile(urlString, apkFile);
                 
-                getBridge().executeOnMainThread(() -> {
-                    installApk(apkFile, savedCall);
-                });
+                getActivity().runOnUiThread(() -> installApk(apkFile, savedCall));
             } catch (Exception ex) {
-                getBridge().executeOnMainThread(() -> {
-                    savedCall.reject(ex.getMessage());
-                });
+                getActivity().runOnUiThread(() -> savedCall.reject(ex.getMessage()));
             }
-        });
+        }).start();
     }
 
     private void downloadFile(String urlString, File target) throws Exception {
