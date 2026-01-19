@@ -55,7 +55,7 @@ public class ApkInstallerPlugin extends Plugin {
         }
 
         PluginCall savedCall = call;
-        getBridge().executeOnThreadPool(() -> {
+        getBridge().getThreadPool().execute(() -> {
             try {
                 File downloadsDir = getContext().getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
                 if (downloadsDir == null) {
