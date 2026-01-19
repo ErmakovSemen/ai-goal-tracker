@@ -62,10 +62,6 @@ coverage/
 
 # Capacitor
 frontend/android/
-# But keep plugin source files
-!frontend/android/app/src/main/java/com/yourcompany/aigoaltracker/ApkInstallerPlugin.java
-!frontend/android/app/src/main/assets/capacitor.plugins.json
-!frontend/android/app/src/main/res/xml/file_paths.xml
 frontend/ios/
 .capacitor/
 

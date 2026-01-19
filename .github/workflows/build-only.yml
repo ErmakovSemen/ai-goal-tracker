@@ -168,6 +168,16 @@ jobs:
         run: |
           npx cap sync android
           
+      - name: Restore custom Android files
+        working-directory: ./frontend
+        run: |
+          git checkout -- \
+            android/app/src/main/java/com/yourcompany/aigoaltracker/ApkInstallerPlugin.java \
+            android/app/src/main/java/com/yourcompany/aigoaltracker/MainActivity.java \
+            android/app/src/main/AndroidManifest.xml \
+            android/app/src/main/res/xml/file_paths.xml \
+            android/app/src/main/assets/capacitor.plugins.json
+          
       - name: Configure Gradle Java version
         working-directory: ./frontend/android
         run: |
