@@ -114,7 +114,6 @@ plan_constraints — ограничения, которые вводит пол�
   "hours_per_day": 5,
   "days_per_week": 5,
   "time_window": { "start": "12:00", "end": "17:00" },
-  "exclude_holidays": true,
   "workdays_only": true,
   "deadline": "2025-03-01",
   "plan_intensity": "medium",
