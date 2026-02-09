@@ -197,3 +197,115 @@ notification_window_end: str | None    # например "21:00"
 Все уведомления (успех / провал / мотивация) отправляются только в пределах окна
 Если окно не задано — используется дефолт (например 09:00–21:00)
 
+
+
+Что обновить в проекте (по шагам)
+1) Модели и миграции
+Добавить модели тренеров и полей:
+trainer_profiles
+trainer_genders
+trainer_assets
+Обновить существующие модели:
+Goal: trainer_id, trainer_gender, plan_constraints
+User: default_trainer_id, default_trainer_gender, notification_window_*
+Milestone, Task: plan_version
+
+2) CRUD слой
+Добавить CRUD для:
+тренеров (trainer_profiles)
+пола (trainer_genders)
+ассетов (trainer_assets)
+Цель: можно получить тренера и его профиль по trainer_id, а пол — по trainer_gender.
+
+3) Схемы (Pydantic)
+Добавить схемы:
+TrainerProfile
+TrainerGender
+TrainerAsset
+И обновить Goal / User схемы, чтобы новые поля приходили/уходили через API.
+
+4) API (эндпоинты)
+Добавить эндпоинты для:
+получения списка тренеров
+получения тренера по id
+получения пола (если нужно отдельно)
+Это нужно для UI выбора тренера.
+
+5) Изменение build_system_prompt
+Файл: backend/app/api/chats.py
+Сейчас:
+build_system_prompt(goal, milestones, agreements)
+Нужно:
+добавить входы:
+trainer_profile
+gender_profile
+plan_constraints
+И в промпт вставить блоки:
+ПЛАН (из plan_constraints)
+ТОН (из trainer_profile)
+Gender hint (из gender_profile)
+
+6) Обновление pipeline чата
+Файл: backend/app/api/chats.py → create_message
+Нужно добавить в сбор контекста:
+trainer_profile = get_trainer(goal.trainer_id)
+gender_profile = get_gender(goal.trainer_gender)
+plan_constraints = goal.plan_constraints
+Потом передать их в build_system_prompt.
+
+7) Валидация стиля
+Добавить простой фильтр:
+если в message есть stop_words тренера → 1 ретрай
+если снова нарушает — принять и логировать (или удалить стоп‑слова)
+
+8) Обновление промптов в других местах
+Если используются промпты в:
+generate_greeting
+follow_up_prompt
+то их тоже нужно привести к единому стилю (ПЛАН + ТОН).
+
+Итог
+Основные изменения будут в:
+models
+schemas
+crud
+api/chats.py (system prompt + pipeline)
+новые endpoints для тренеров
+
+1) Что такое CRUD
+CRUD — это четыре базовые операции с данными:
+Create — создать
+Read — прочитать
+Update — обновить
+Delete — удалить
+В проекте это обычно отдельные функции, которые работают с БД.
+Например:
+создать тренера
+получить список тренеров
+обновить тренера
+удалить тренера
+
+2) Что такое “Схемы (Pydantic)”
+Pydantic‑схемы — это описания данных, которые проходят через API.
+Они нужны, чтобы:
+проверять, что данные корректны
+понимать, какие поля есть в запросе/ответе
+автоматически валидировать типы
+Пример:
+Модель БД говорит “в таблице есть поле trainer_id”.
+А схема говорит “когда клиент присылает запрос, он может прислать trainer_id и это число”.
+То есть:
+DB‑модель = как хранится
+Pydantic‑схема = как передаётся
+
+3) Что такое API (эндпоинты)
+API‑эндпоинт — это адрес, по которому фронтенд или другой клиент общается с сервером.
+Пример:
+GET /api/trainers → получить список тренеров
+GET /api/trainers/{id} → получить конкретного тренера
+POST /api/trainers → создать нового
+Эндпоинты позволяют UI:
+показывать список тренеров
+получать данные по тренеру
+сохранять выбор тренера
+

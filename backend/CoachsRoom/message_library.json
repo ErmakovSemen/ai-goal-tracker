@@ -1,0 +1,27 @@
+{
+    "success_on_time": {
+      "strict": [],
+      "normal": ["Отлично, ты опередил план на {ahead_day}.",  "Выполнено раньше срока. Хороший темп.", "Ты сделал задачу {now_mission} заранее. Продолжаем.", "Опережение графика — это сильный результат.", "Задача закрыта раньше дедлайна. Идём дальше."],
+      "gentle": []
+    },
+    "success_ahead": {
+      "strict": [],
+      "normal": [],
+      "gentle": []
+    },
+    "success_late": {
+        "strict": [],
+        "normal": [],
+        "gentle": []
+    },
+    "missed_deadline": {
+      "strict": [],
+      "normal": [],
+      "gentle": []
+    },
+    "missed_deadline_weekly": {
+      "strict": [],
+      "normal": [],
+      "gentle": []
+    }
+  }
