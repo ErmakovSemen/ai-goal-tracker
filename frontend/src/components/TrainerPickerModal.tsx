@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   getTrainerImage,
   TrainerGender,
@@ -76,7 +76,7 @@ const TrainerPickerModal: React.FC<TrainerPickerModalProps> = ({
     setPendingTrainerId(centeredTrainerId);
   }, [centeredTrainerId, isOpen]);
 
-  const cards = useMemo(() => trainerVisualCatalog, []);
+  const cards = trainerVisualCatalog;
 
   if (!isOpen) {
     return null;
@@ -198,16 +198,23 @@ const TrainerPickerModal: React.FC<TrainerPickerModalProps> = ({
           <div
             className="trainer-cards-viewport"
             onPointerDown={(event) => {
+              event.currentTarget.setPointerCapture(event.pointerId);
               startDrag(event.clientX, event.pointerId);
             }}
             onPointerMove={(event) => {
               if (pointerIdRef.current !== null && pointerIdRef.current !== event.pointerId) return;
               updateDrag(event.clientX);
             }}
-            onPointerUp={() => {
+            onPointerUp={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
               finishDrag();
             }}
-            onPointerCancel={() => {
+            onPointerCancel={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
               finishDrag();
             }}
           >

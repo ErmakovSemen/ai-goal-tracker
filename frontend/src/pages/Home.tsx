@@ -144,6 +144,12 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
     }
   };
 
+  const handleTrainerConfirm = (trainerId: string, gender: TrainerGender) => {
+    saveActiveTrainerSelection(trainerId, gender);
+    setTrainerSelection({ trainerId, gender });
+    setIsTrainerModalOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="home-page">
@@ -154,12 +160,6 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
       </div>
     );
   }
-
-  const handleTrainerConfirm = (trainerId: string, gender: TrainerGender) => {
-    saveActiveTrainerSelection(trainerId, gender);
-    setTrainerSelection({ trainerId, gender });
-    setIsTrainerModalOpen(false);
-  };
 
   return (
     <div className="home-page">

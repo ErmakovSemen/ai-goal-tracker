@@ -75,11 +75,6 @@ export const loadActiveTrainerSelection = (): TrainerSelectionState => {
   };
 };
 
-const initialSelection = loadActiveTrainerSelection();
-
-export const activeTrainerId = initialSelection.trainerId;
-export const activeTrainerGender = initialSelection.gender;
-
 export const getTrainerImage = (trainerId: string, gender: TrainerGender): string => {
   const fallbackTrainer = trainerVisualCatalog.find((trainer) => trainer.id === DEFAULT_TRAINER_ID)
     || trainerVisualCatalog[0];
