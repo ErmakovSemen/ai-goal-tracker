@@ -19,7 +19,7 @@ def _is_trainer_prompt_test_mode_enabled() -> bool:
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _build_trainer_prompt_test_overlay() -> Optional[str]:
+def _build_trainer_prompt_test_overlay(legacy_prompt: str) -> Optional[str]:
     trainer_id = os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict")
     forced_gender = os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male")
     trainer_file = os.path.abspath(
@@ -46,13 +46,20 @@ def _build_trainer_prompt_test_overlay() -> Optional[str]:
         logger.warning("Trainer prompt test mode: gender '%s' not found", forced_gender)
         return None
 
+    trainer_test_payload = {
+        "mode": "trainer_prompt_test",
+        "trainer_id": trainer_id,
+        "gender": forced_gender,
+        "trainer_json": trainer_json,
+        "gender_json": gender_json,
+        "legacy_system_prompt": legacy_prompt,
+    }
+
+    # Keep a clear marker block so it is visible in debug logs and easy to verify.
     return (
-        "\n\n[TRAINER_TEST_PROFILE]\n"
-        f"trainer_id: {trainer_id}\n"
-        f"gender: {forced_gender}\n"
-        f"trainer_json: {json.dumps(trainer_json, ensure_ascii=False)}\n"
-        f"gender_json: {json.dumps(gender_json, ensure_ascii=False)}\n"
-        "[/TRAINER_TEST_PROFILE]"
+        "[TRAINER_TEST_PROFILE_JSON]\n"
+        f"{json.dumps(trainer_test_payload, ensure_ascii=False)}\n"
+        "[/TRAINER_TEST_PROFILE_JSON]"
     )
 
 
@@ -246,11 +253,11 @@ SUGGESTIONS — предлагай пользователю варианты о�
     if not _is_trainer_prompt_test_mode_enabled():
         return legacy_prompt
 
-    overlay = _build_trainer_prompt_test_overlay()
+    overlay = _build_trainer_prompt_test_overlay(legacy_prompt)
     if not overlay:
         return legacy_prompt
 
-    return f"{legacy_prompt}{overlay}"
+    return overlay
 
 
 def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]]:
