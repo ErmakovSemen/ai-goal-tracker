@@ -4,12 +4,56 @@ from typing import List, Optional, Dict, Any
 import re
 import json
 import os
+import logging
 from app import crud, schemas
 from app.database.database import get_db
 from app.core.auth import get_current_user
 from app.models.user import User
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _is_trainer_prompt_test_mode_enabled() -> bool:
+    raw_value = os.getenv("TRAINER_PROMPT_TEST_MODE", "false")
+    return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _build_trainer_prompt_test_overlay() -> Optional[str]:
+    trainer_id = os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict")
+    forced_gender = os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male")
+    trainer_file = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "CoachsRoom", "Trainer.json")
+    )
+
+    try:
+        with open(trainer_file, "r", encoding="utf-8") as f:
+            trainer_data = json.load(f)
+    except Exception as exc:
+        logger.warning("Trainer prompt test mode: failed to read Trainer.json (%s)", exc)
+        return None
+
+    trainers = trainer_data.get("trainers", [])
+    genders = trainer_data.get("genders", [])
+    trainer_json = next((item for item in trainers if item.get("id") == trainer_id), None)
+    gender_json = next((item for item in genders if item.get("gender") == forced_gender), None)
+
+    if not trainer_json:
+        logger.warning("Trainer prompt test mode: trainer id '%s' not found", trainer_id)
+        return None
+
+    if not gender_json:
+        logger.warning("Trainer prompt test mode: gender '%s' not found", forced_gender)
+        return None
+
+    return (
+        "\n\n[TRAINER_TEST_PROFILE]\n"
+        f"trainer_id: {trainer_id}\n"
+        f"gender: {forced_gender}\n"
+        f"trainer_json: {json.dumps(trainer_json, ensure_ascii=False)}\n"
+        f"gender_json: {json.dumps(gender_json, ensure_ascii=False)}\n"
+        "[/TRAINER_TEST_PROFILE]"
+    )
 
 
 
@@ -191,13 +235,22 @@ SUGGESTIONS — предлагай пользователю варианты о�
 
 ВСЕГДА экранируй переносы строк как \\n внутри строк!"""
 
-    return prompt_template.format(
+    legacy_prompt = prompt_template.format(
         goal=goal,
         milestones_info=milestones_info,
         agreements_info=agreements_info,
         current_date=current_date,
         current_weekday=current_weekday
     )
+
+    if not _is_trainer_prompt_test_mode_enabled():
+        return legacy_prompt
+
+    overlay = _build_trainer_prompt_test_overlay()
+    if not overlay:
+        return legacy_prompt
+
+    return f"{legacy_prompt}{overlay}"
 
 
 def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]]:

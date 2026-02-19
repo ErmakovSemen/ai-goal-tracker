@@ -29,6 +29,9 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   const { t } = useI18n();
   const [goals, setGoals] = useState<GoalStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const showTrainerTestBadge = (process.env.REACT_APP_TRAINER_TEST_BADGE ?? 'true')
+    .toLowerCase()
+    .trim() !== 'false';
 
   const loadData = React.useCallback(async () => {
     if (!userId) return;
@@ -159,7 +162,10 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
       <div className="home-header">
         <div className="home-header-content">
           <div className="home-header-text">
-            <h1>{t('welcome_title')}</h1>
+            <div className="home-title-row">
+              <h1>{t('welcome_title')}</h1>
+              {showTrainerTestBadge && <span className="trainer-test-badge">тест тренера</span>}
+            </div>
             <p className="home-subtitle">{t('welcome_subtitle')}</p>
           </div>
           <div className="home-header-mascot">
