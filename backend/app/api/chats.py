@@ -20,6 +20,16 @@ def _is_trainer_prompt_test_mode_enabled() -> bool:
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _get_trainer_test_mode_status() -> Dict[str, Any]:
+    raw_value = os.getenv("TRAINER_PROMPT_TEST_MODE", "false")
+    return {
+        "TRAINER_PROMPT_TEST_MODE_raw": raw_value,
+        "TRAINER_PROMPT_TEST_MODE_enabled": _is_trainer_prompt_test_mode_enabled(),
+        "TRAINER_PROMPT_TEST_FORCE_ID": os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict"),
+        "TRAINER_PROMPT_TEST_FORCE_GENDER": os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male"),
+    }
+
+
 def _read_coachsroom_file(file_name: str) -> Optional[str]:
     file_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "CoachsRoom", file_name)
@@ -901,6 +911,12 @@ def get_new_messages(chat_id: int, after_id: int = 0, db: Session = Depends(get_
         }
         for m in messages
     ]
+
+
+@router.get("/debug/trainer-mode/")
+def get_trainer_mode_debug():
+    """Quick debug endpoint to verify trainer prompt feature flag status from runtime env."""
+    return _get_trainer_test_mode_status()
 
 
 @router.get("/{chat_id}/agreements/")
