@@ -370,6 +370,10 @@ export const chatsAPI = {
     
     return message;
   },
+
+  getTrainerModeDebug: async (): Promise<TrainerPromptTestModeStatus> => {
+    return apiRequest<TrainerPromptTestModeStatus>('/api/chats/debug/trainer-mode/');
+  },
 };
 
 // AI API for direct chat

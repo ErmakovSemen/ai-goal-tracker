@@ -264,6 +264,16 @@ const ChatView: React.FC<ChatViewProps> = ({ goal, onBack, onDeleteGoal, onGoalC
     
     try {
       const { chatsAPI } = await import('../services/api');
+      try {
+        const trainerModeStatus = await chatsAPI.getTrainerModeDebug();
+        console.log('[TRAINER_PROMPT_TEST_MODE] linked to chat initialization:', {
+          trigger: 'initializeChat',
+          goalId: goal.id,
+          status: trainerModeStatus,
+        });
+      } catch (trainerModeErr) {
+        console.warn('[TRAINER_PROMPT_TEST_MODE] failed to load debug status on chat initialization:', trainerModeErr);
+      }
       // Get or create chat for this goal
       const chats = await chatsAPI.getByGoalId(goal.id);
       if (chats.length > 0) {
