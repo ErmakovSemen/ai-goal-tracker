@@ -26,6 +26,12 @@ services:
         sync: false  # Set manually in Render dashboard
       - key: PORT
         value: 8000
+      - key: TRAINER_PROMPT_TEST_MODE
+        value: "true"
+      - key: TRAINER_PROMPT_TEST_FORCE_ID
+        value: strict
+      - key: TRAINER_PROMPT_TEST_FORCE_GENDER
+        value: male
 
   # Frontend (React Static Site)
   - type: web
@@ -39,6 +45,8 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https://ai-goal-tracker-api.onrender.com
+      - key: REACT_APP_TRAINER_TEST_BADGE
+        value: "true"
     routes:
       - type: rewrite
         source: /*
