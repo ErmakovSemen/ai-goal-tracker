@@ -59,6 +59,13 @@ export interface Chat {
   updated_at?: string;
 }
 
+export interface TrainerPromptTestModeStatus {
+  TRAINER_PROMPT_TEST_MODE_raw: string;
+  TRAINER_PROMPT_TEST_MODE_enabled: boolean;
+  TRAINER_PROMPT_TEST_FORCE_ID: string;
+  TRAINER_PROMPT_TEST_FORCE_GENDER: string;
+}
+
 // Auth token management
 const getToken = (): string | null => {
   return localStorage.getItem('auth_token');
@@ -341,8 +348,22 @@ export const chatsAPI = {
       body: JSON.stringify({ content, sender }),
     });
     
-    // If user message, wait a bit and fetch new messages to get AI response
+    // If user message, log trainer mode runtime status linked to this POST response.
     if (sender === 'user') {
+      try {
+        const trainerModeStatus = await apiRequest<TrainerPromptTestModeStatus>('/api/chats/debug/trainer-mode/');
+        console.log(
+          '[TRAINER_PROMPT_TEST_MODE] linked to sendMessage response:',
+          {
+            triggerEndpoint: url,
+            responseMessageId: message.id,
+            status: trainerModeStatus,
+          }
+        );
+      } catch (trainerModeErr) {
+        console.warn('[TRAINER_PROMPT_TEST_MODE] failed to load debug status:', trainerModeErr);
+      }
+
       // AI response will be created automatically by backend
       return message;
     }
