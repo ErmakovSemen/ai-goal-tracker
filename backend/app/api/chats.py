@@ -12,6 +12,7 @@ from app.models.user import User
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+TRAINER_LEGACY_PROMPT_FILE = "LegacyTrainerPrompt.txt"
 
 
 def _is_trainer_prompt_test_mode_enabled() -> bool:
@@ -19,18 +20,31 @@ def _is_trainer_prompt_test_mode_enabled() -> bool:
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _build_trainer_prompt_test_overlay(legacy_prompt: str) -> Optional[str]:
+def _read_coachsroom_file(file_name: str) -> Optional[str]:
+    file_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "CoachsRoom", file_name)
+    )
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as exc:
+        logger.warning("Failed to read CoachsRoom file '%s' (%s)", file_name, exc)
+        return None
+
+
+def _build_trainer_prompt_test_overlay() -> Optional[str]:
     trainer_id = os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict")
     forced_gender = os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male")
-    trainer_file = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "CoachsRoom", "Trainer.json")
-    )
+
+    trainer_raw = _read_coachsroom_file("Trainer.json")
+    if not trainer_raw:
+        logger.warning("Trainer prompt test mode: failed to load Trainer.json")
+        return None
 
     try:
-        with open(trainer_file, "r", encoding="utf-8") as f:
-            trainer_data = json.load(f)
+        trainer_data = json.loads(trainer_raw)
     except Exception as exc:
-        logger.warning("Trainer prompt test mode: failed to read Trainer.json (%s)", exc)
+        logger.warning("Trainer prompt test mode: invalid Trainer.json (%s)", exc)
         return None
 
     trainers = trainer_data.get("trainers", [])
@@ -46,20 +60,13 @@ def _build_trainer_prompt_test_overlay(legacy_prompt: str) -> Optional[str]:
         logger.warning("Trainer prompt test mode: gender '%s' not found", forced_gender)
         return None
 
-    trainer_test_payload = {
-        "mode": "trainer_prompt_test",
-        "trainer_id": trainer_id,
-        "gender": forced_gender,
-        "trainer_json": trainer_json,
-        "gender_json": gender_json,
-        "legacy_system_prompt": legacy_prompt,
-    }
-
-    # Keep a clear marker block so it is visible in debug logs and easy to verify.
     return (
-        "[TRAINER_TEST_PROFILE_JSON]\n"
-        f"{json.dumps(trainer_test_payload, ensure_ascii=False)}\n"
-        "[/TRAINER_TEST_PROFILE_JSON]"
+        "\n\n[TRAINER_TEST_PROFILE]\n"
+        f"trainer_id: {trainer_id}\n"
+        f"gender: {forced_gender}\n"
+        f"trainer_json: {json.dumps(trainer_json, ensure_ascii=False)}\n"
+        f"gender_json: {json.dumps(gender_json, ensure_ascii=False)}\n"
+        "[/TRAINER_TEST_PROFILE]"
     )
 
 
@@ -253,11 +260,30 @@ SUGGESTIONS — предлагай пользователю варианты о�
     if not _is_trainer_prompt_test_mode_enabled():
         return legacy_prompt
 
-    overlay = _build_trainer_prompt_test_overlay(legacy_prompt)
-    if not overlay:
+    # Trainer test mode explicitly uses file-based prompt template:
+    # backend/CoachsRoom/LegacyTrainerPrompt.txt
+    legacy_trainer_template = _read_coachsroom_file(TRAINER_LEGACY_PROMPT_FILE)
+    if not legacy_trainer_template:
+        logger.warning("Trainer prompt test mode: fallback to legacy prompt (template file missing)")
         return legacy_prompt
 
-    return overlay
+    try:
+        legacy_trainer = legacy_trainer_template.format(
+            goal=goal,
+            milestones_info=milestones_info,
+            agreements_info=agreements_info,
+            current_date=current_date,
+            current_weekday=current_weekday
+        )
+    except Exception as exc:
+        logger.warning("Trainer prompt test mode: fallback to legacy prompt (template format error: %s)", exc)
+        return legacy_prompt
+
+    overlay = _build_trainer_prompt_test_overlay()
+    if not overlay:
+        return legacy_trainer
+
+    return f"{legacy_trainer}{overlay}"
 
 
 def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]]:
