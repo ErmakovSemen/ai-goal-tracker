@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
-import Mascot from '../components/Mascot';
 import { useI18n } from '../i18n';
+import TrainerPickerModal from '../components/TrainerPickerModal';
+import {
+  getTrainerImage,
+  loadActiveTrainerSelection,
+  saveActiveTrainerSelection,
+  TrainerGender,
+} from '../config/trainerVisualConfig';
 import './Home.css';
 
 interface HomeProps {
@@ -29,6 +35,8 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
   const { t } = useI18n();
   const [goals, setGoals] = useState<GoalStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTrainerModalOpen, setIsTrainerModalOpen] = useState(false);
+  const [trainerSelection, setTrainerSelection] = useState(() => loadActiveTrainerSelection());
   const showTrainerTestBadge = (process.env.REACT_APP_TRAINER_TEST_BADGE ?? 'true')
     .toLowerCase()
     .trim() !== 'false';
@@ -147,14 +155,10 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
     );
   }
 
-  // Определяем настроение маскота на основе прогресса
-  const getMascotMood = (): 'happy' | 'sad' | 'neutral' | 'excited' => {
-    if (goals.length === 0) return 'neutral';
-    const avgProgress = goals.reduce((sum, g) => sum + g.progress, 0) / goals.length;
-    if (avgProgress >= 80) return 'excited';
-    if (avgProgress >= 50) return 'happy';
-    if (avgProgress >= 25) return 'neutral';
-    return 'sad';
+  const handleTrainerConfirm = (trainerId: string, gender: TrainerGender) => {
+    saveActiveTrainerSelection(trainerId, gender);
+    setTrainerSelection({ trainerId, gender });
+    setIsTrainerModalOpen(false);
   };
 
   return (
@@ -168,11 +172,27 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
             </div>
             <p className="home-subtitle">{t('welcome_subtitle')}</p>
           </div>
-          <div className="home-header-mascot">
-            <Mascot mood={getMascotMood()} size="medium" />
-          </div>
+          <button
+            type="button"
+            className="home-header-trainer-trigger"
+            onClick={() => setIsTrainerModalOpen(true)}
+            aria-label="Открыть выбор тренера"
+          >
+            <img
+              src={getTrainerImage(trainerSelection.trainerId, trainerSelection.gender)}
+              alt="Текущий тренер"
+            />
+          </button>
         </div>
       </div>
+
+      <TrainerPickerModal
+        isOpen={isTrainerModalOpen}
+        activeTrainerId={trainerSelection.trainerId}
+        activeTrainerGender={trainerSelection.gender}
+        onClose={() => setIsTrainerModalOpen(false)}
+        onConfirm={handleTrainerConfirm}
+      />
 
       <div className="home-content">
         {/* Ближайшие дедлайны */}

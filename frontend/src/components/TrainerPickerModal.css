@@ -1,0 +1,195 @@
+.trainer-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 18, 32, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  padding: 16px;
+}
+
+.trainer-picker-modal {
+  width: min(720px, 100%);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(22px);
+  overflow: hidden;
+}
+
+.trainer-picker-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--glass-stroke);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trainer-picker-header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.trainer-gender-switch {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.trainer-gender-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.trainer-gender-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+
+.trainer-picker-carousel {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px 8px;
+}
+
+.carousel-nav {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-primary);
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.trainer-cards-viewport {
+  perspective: 1000px;
+  height: 320px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.trainer-cards-stage {
+  position: relative;
+  height: 100%;
+}
+
+.trainer-card {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 220px;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: var(--glass-shadow-soft);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.28s ease, opacity 0.28s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.trainer-card img {
+  width: 190px;
+  height: 220px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.trainer-card.centered {
+  box-shadow: var(--glass-shadow);
+}
+
+.trainer-card.selected {
+  border-color: rgba(79, 124, 255, 0.7);
+  box-shadow: 0 10px 30px rgba(79, 124, 255, 0.25);
+}
+
+.trainer-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trainer-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 20px;
+}
+
+.trainer-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trainer-btn.secondary {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
+}
+
+.trainer-btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .trainer-picker-header h2 {
+    font-size: 20px;
+  }
+
+  .trainer-picker-carousel {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 4px;
+    padding: 12px 6px 6px;
+  }
+
+  .carousel-nav {
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
+  }
+
+  .trainer-cards-viewport {
+    height: 300px;
+  }
+
+  .trainer-card {
+    width: 190px;
+  }
+
+  .trainer-card img {
+    width: 158px;
+    height: 196px;
+  }
+}
