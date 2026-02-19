@@ -6,7 +6,6 @@ import {
   getTrainerImage,
   loadActiveTrainerSelection,
   saveActiveTrainerSelection,
-  TrainerGender,
 } from '../config/trainerVisualConfig';
 import './Home.css';
 
@@ -144,9 +143,9 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
     }
   };
 
-  const handleTrainerConfirm = (trainerId: string, gender: TrainerGender) => {
-    saveActiveTrainerSelection(trainerId, gender);
-    setTrainerSelection({ trainerId, gender });
+  const handleTrainerConfirm = (trainerId: string) => {
+    saveActiveTrainerSelection(trainerId);
+    setTrainerSelection({ trainerId });
     setIsTrainerModalOpen(false);
   };
 
@@ -179,7 +178,7 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
             aria-label="Открыть выбор тренера"
           >
             <img
-              src={getTrainerImage(trainerSelection.trainerId, trainerSelection.gender)}
+              src={getTrainerImage(trainerSelection.trainerId)}
               alt="Текущий тренер"
             />
           </button>
@@ -189,7 +188,6 @@ const Home: React.FC<HomeProps> = ({ userId, onGoalClick }) => {
       <TrainerPickerModal
         isOpen={isTrainerModalOpen}
         activeTrainerId={trainerSelection.trainerId}
-        activeTrainerGender={trainerSelection.gender}
         onClose={() => setIsTrainerModalOpen(false)}
         onConfirm={handleTrainerConfirm}
       />

@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getTrainerImage,
-  TrainerGender,
+  toTrainerLoadScale,
   trainerVisualCatalog,
 } from '../config/trainerVisualConfig';
 import './TrainerPickerModal.css';
@@ -9,260 +9,209 @@ import './TrainerPickerModal.css';
 interface TrainerPickerModalProps {
   isOpen: boolean;
   activeTrainerId: string;
-  activeTrainerGender: TrainerGender;
   onClose: () => void;
-  onConfirm: (trainerId: string, gender: TrainerGender) => void;
+  onConfirm: (trainerId: string) => void;
 }
-
-const SWIPE_THRESHOLD_PX = 60;
-
-const clampIndex = (value: number, max: number): number => {
-  if (max < 0) return 0;
-  if (value < 0) return 0;
-  if (value > max) return max;
-  return value;
-};
 
 const TrainerPickerModal: React.FC<TrainerPickerModalProps> = ({
   isOpen,
   activeTrainerId,
-  activeTrainerGender,
   onClose,
   onConfirm,
 }) => {
-  const trainerCount = trainerVisualCatalog.length;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [workingGender, setWorkingGender] = useState<TrainerGender>(activeTrainerGender);
-  const [pendingTrainerId, setPendingTrainerId] = useState(activeTrainerId);
-  const [dragX, setDragX] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const dragStartXRef = useRef(0);
-  const pointerIdRef = useRef<number | null>(null);
+  const cards = trainerVisualCatalog;
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const found = cards.findIndex((item) => item.id === activeTrainerId);
+    return found >= 0 ? found : 2;
+  });
+
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const activateByIndex = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
+
+  const centerCardByIndex = useCallback((index: number, behavior: ScrollBehavior) => {
+    const card = cardRefs.current[index];
+    if (!card) return;
+    card.scrollIntoView({ behavior, inline: 'center', block: 'nearest' });
+  }, []);
+
+  const updateEdgePadding = useCallback(() => {
+    const carousel = carouselRef.current;
+    const firstCard = cardRefs.current[0];
+    if (!carousel || !firstCard) return;
+
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    const viewportWidth = carousel.clientWidth;
+    if (!cardWidth || !viewportWidth) return;
+
+    const sidePadding = Math.max(10, (viewportWidth - cardWidth) / 2);
+    carousel.style.setProperty('--edge-pad', `${sidePadding}px`);
+  }, []);
+
+  const activateNearestByCenter = useCallback(() => {
+    const carousel = carouselRef.current;
+    if (!carousel || !cardRefs.current.length) return;
+
+    const carouselRect = carousel.getBoundingClientRect();
+    const centerX = carouselRect.left + carouselRect.width / 2;
+
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    cardRefs.current.forEach((card, index) => {
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      const cardCenterX = rect.left + rect.width / 2;
+      const distance = Math.abs(centerX - cardCenterX);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    if (nearestIndex !== currentIndex) {
+      activateByIndex(nearestIndex);
+    }
+  }, [activateByIndex, currentIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const savedIndex = trainerVisualCatalog.findIndex((trainer) => trainer.id === activeTrainerId);
-    const safeIndex = savedIndex >= 0 ? savedIndex : 0;
-    setCurrentIndex(safeIndex);
-    setPendingTrainerId(trainerVisualCatalog[safeIndex]?.id || activeTrainerId);
-    setWorkingGender(activeTrainerGender);
-    setDragX(0);
-  }, [activeTrainerGender, activeTrainerId, isOpen]);
+    const savedIndex = cards.findIndex((trainer) => trainer.id === activeTrainerId);
+    const initialIndex = savedIndex >= 0 ? savedIndex : 2;
 
-  useEffect(() => {
-    if (!isOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      updateEdgePadding();
+      centerCardByIndex(initialIndex, 'auto');
+      activateByIndex(initialIndex);
+    });
+
+    const onResize = () => {
+      updateEdgePadding();
+    };
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
       }
-      if (event.key === 'ArrowLeft') {
-        setCurrentIndex((prev) => clampIndex(prev - 1, trainerCount - 1));
-      }
-      if (event.key === 'ArrowRight') {
-        setCurrentIndex((prev) => clampIndex(prev + 1, trainerCount - 1));
-      }
     };
 
+    window.addEventListener('resize', onResize);
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose, trainerCount]);
 
-  const centeredTrainerId = trainerVisualCatalog[currentIndex]?.id || activeTrainerId;
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeTrainerId, activateByIndex, cards, centerCardByIndex, isOpen, onClose, updateEdgePadding]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setPendingTrainerId(centeredTrainerId);
-  }, [centeredTrainerId, isOpen]);
-
-  const cards = trainerVisualCatalog;
+    return () => {
+      if (scrollRafRef.current) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
+  }, []);
 
   if (!isOpen) {
     return null;
   }
 
-  const moveByStep = (step: number) => {
-    setCurrentIndex((prev) => clampIndex(prev + step, trainerCount - 1));
-    setDragX(0);
-  };
-
-  const startDrag = (clientX: number, pointerId?: number) => {
-    setDragging(true);
-    dragStartXRef.current = clientX;
-    if (typeof pointerId === 'number') {
-      pointerIdRef.current = pointerId;
+  const handleCarouselScroll = () => {
+    if (scrollRafRef.current) {
+      window.cancelAnimationFrame(scrollRafRef.current);
     }
-  };
-
-  const updateDrag = (clientX: number) => {
-    if (!dragging) return;
-    setDragX(clientX - dragStartXRef.current);
-  };
-
-  const finishDrag = () => {
-    if (!dragging) return;
-
-    if (dragX <= -SWIPE_THRESHOLD_PX) {
-      moveByStep(1);
-    } else if (dragX >= SWIPE_THRESHOLD_PX) {
-      moveByStep(-1);
-    } else {
-      setDragX(0);
-    }
-
-    setDragging(false);
-    pointerIdRef.current = null;
+    scrollRafRef.current = window.requestAnimationFrame(() => {
+      activateNearestByCenter();
+    });
   };
 
   const handleCardClick = (index: number) => {
-    if (index !== currentIndex) {
-      setCurrentIndex(index);
-      return;
-    }
-
-    const centered = cards[index];
-    if (centered) {
-      setPendingTrainerId(centered.id);
-    }
+    centerCardByIndex(index, 'smooth');
+    activateByIndex(index);
   };
 
   const handleConfirm = () => {
-    const trainerId = pendingTrainerId || centeredTrainerId;
-    onConfirm(trainerId, workingGender);
-  };
-
-  const getCardStyle = (index: number): React.CSSProperties => {
-    const offset = index - currentIndex;
-    const absOffset = Math.abs(offset);
-    const influence = dragging ? dragX * 0.25 : 0;
-    const translateX = offset * 170 + influence;
-    const rotateY = offset * -30;
-    const scale = Math.max(0.72, 1 - absOffset * 0.13);
-    const opacity = Math.max(0.28, 1 - absOffset * 0.33);
-    const zIndex = 200 - absOffset;
-
-    return {
-      transform: `translateX(calc(-50% + ${translateX}px)) rotateY(${rotateY}deg) scale(${scale})`,
-      opacity,
-      zIndex,
-      pointerEvents: absOffset > 2 ? 'none' : 'auto',
-    };
+    const trainer = cards[currentIndex];
+    if (!trainer) return;
+    onConfirm(trainer.id);
   };
 
   return (
-    <div
-      className="trainer-picker-overlay"
-      onClick={onClose}
-      role="presentation"
-    >
+    <div className="trainer-picker-overlay" onClick={onClose} role="presentation">
       <div
         className="trainer-picker-modal"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Выбор тренера"
+        aria-label="Trainer selection"
       >
         <div className="trainer-picker-header">
-          <h2>Выбор тренера</h2>
-          <div className="trainer-gender-switch" aria-label="Переключатель пола тренера">
-            <button
-              type="button"
-              className={`trainer-gender-btn ${workingGender === 'male' ? 'active' : ''}`}
-              onClick={() => setWorkingGender('male')}
-              aria-label="Male"
-            >
-              Male
-            </button>
-            <button
-              type="button"
-              className={`trainer-gender-btn ${workingGender === 'female' ? 'active' : ''}`}
-              onClick={() => setWorkingGender('female')}
-              aria-label="Female"
-            >
-              Female
-            </button>
-          </div>
+          <h2>Choose your style</h2>
+          <p>Who should motivate you?</p>
+          <button type="button" className="trainer-close-btn" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
         </div>
 
-        <div className="trainer-picker-carousel">
-          <button
-            type="button"
-            className="carousel-nav carousel-prev"
-            onClick={() => moveByStep(-1)}
-            aria-label="Предыдущий тренер"
-          >
-            ‹
-          </button>
-
+        <div className="trainer-carousel-shell">
           <div
-            className="trainer-cards-viewport"
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId);
-              startDrag(event.clientX, event.pointerId);
-            }}
-            onPointerMove={(event) => {
-              if (pointerIdRef.current !== null && pointerIdRef.current !== event.pointerId) return;
-              updateDrag(event.clientX);
-            }}
-            onPointerUp={(event) => {
-              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                event.currentTarget.releasePointerCapture(event.pointerId);
-              }
-              finishDrag();
-            }}
-            onPointerCancel={(event) => {
-              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                event.currentTarget.releasePointerCapture(event.pointerId);
-              }
-              finishDrag();
-            }}
+            className="trainer-picker-carousel"
+            ref={carouselRef}
+            onScroll={handleCarouselScroll}
           >
-            <div className="trainer-cards-stage">
-              {cards.map((trainer, index) => {
-                const isCentered = index === currentIndex;
-                const isSelected = pendingTrainerId === trainer.id;
-                return (
-                  <button
-                    type="button"
-                    key={trainer.id}
-                    className={`trainer-card ${isCentered ? 'centered' : ''} ${isSelected ? 'selected' : ''}`}
-                    style={getCardStyle(index)}
-                    onClick={() => handleCardClick(index)}
-                    aria-label={`Тренер ${trainer.title}`}
-                  >
-                    <img
-                      src={getTrainerImage(trainer.id, workingGender)}
-                      alt={`${trainer.title} trainer avatar`}
-                    />
-                    <span className="trainer-card-title">{trainer.title}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {cards.map((trainer, index) => {
+              const isActive = index === currentIndex;
+              return (
+                <button
+                  type="button"
+                  key={trainer.id}
+                  ref={(el) => {
+                    cardRefs.current[index] = el;
+                  }}
+                  className={`trainer-card ${isActive ? 'active' : ''}`}
+                  onClick={() => handleCardClick(index)}
+                  aria-label={`Trainer ${trainer.displayName}`}
+                >
+                  <div className="trainer-card-topbar">
+                    <span>Style: {trainer.styleLabelRu}</span>
+                    <span className="trainer-load">Load: {toTrainerLoadScale(trainer.intensity)} / 10</span>
+                  </div>
+                  <img src={getTrainerImage(trainer.id)} alt={trainer.displayName} />
+                  <div className="trainer-card-name">{trainer.displayName}</div>
+                  <div className="trainer-card-hint">{trainer.hint}</div>
+                </button>
+              );
+            })}
           </div>
+          <div className="trainer-edge-fade" aria-hidden="true" />
+        </div>
 
-          <button
-            type="button"
-            className="carousel-nav carousel-next"
-            onClick={() => moveByStep(1)}
-            aria-label="Следующий тренер"
-          >
-            ›
-          </button>
+        <div className="trainer-dots">
+          {cards.map((trainer, index) => (
+            <button
+              key={`${trainer.id}-dot`}
+              type="button"
+              className={`trainer-dot ${index === currentIndex ? 'active' : ''}`}
+              onClick={() => handleCardClick(index)}
+              aria-label={`Go to trainer ${trainer.displayName}`}
+            />
+          ))}
         </div>
 
         <div className="trainer-picker-actions">
-          <button type="button" className="trainer-btn secondary" onClick={onClose} aria-label="Close">
-            Close
-          </button>
           <button
             type="button"
             className="trainer-btn primary"
             onClick={handleConfirm}
-            aria-label="Выбрать тренера"
+            aria-label="Select trainer"
           >
-            Выбрать
+            Select
           </button>
         </div>
       </div>
