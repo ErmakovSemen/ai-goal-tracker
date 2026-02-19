@@ -27,8 +27,8 @@ def _get_trainer_test_mode_status() -> Dict[str, Any]:
         "TRAINER_PROMPT_TEST_MODE_raw": raw_value,
         "TRAINER_PROMPT_TEST_MODE_enabled": True,
         "TRAINER_PROMPT_TEST_MODE_forced_by_code": True,
-        "TRAINER_PROMPT_TEST_FORCE_ID": os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict"),
-        "TRAINER_PROMPT_TEST_FORCE_GENDER": os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male"),
+        "TRAINER_PROMPT_TEST_FORCE_ID": "gentle",
+        "TRAINER_PROMPT_TEST_FORCE_GENDER": "female",
     }
 
 
@@ -45,9 +45,9 @@ def _read_coachsroom_file(file_name: str) -> Optional[str]:
 
 
 def _build_trainer_prompt_test_overlay() -> Optional[str]:
-    # During trainer prompt test mode, always enforce strict male trainer profile.
-    trainer_id = "strict"
-    forced_gender = "male"
+    # During trainer prompt test mode, always enforce gentle female trainer profile.
+    trainer_id = "gentle"
+    forced_gender = "female"
 
     trainer_raw = _read_coachsroom_file("Trainer.json")
     if not trainer_raw:
