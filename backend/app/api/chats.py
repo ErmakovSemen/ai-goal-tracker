@@ -45,8 +45,9 @@ def _read_coachsroom_file(file_name: str) -> Optional[str]:
 
 
 def _build_trainer_prompt_test_overlay() -> Optional[str]:
-    trainer_id = os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict")
-    forced_gender = os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male")
+    # During trainer prompt test mode, always enforce strict male trainer profile.
+    trainer_id = "strict"
+    forced_gender = "male"
 
     trainer_raw = _read_coachsroom_file("Trainer.json")
     if not trainer_raw:
@@ -72,12 +73,26 @@ def _build_trainer_prompt_test_overlay() -> Optional[str]:
         logger.warning("Trainer prompt test mode: gender '%s' not found", forced_gender)
         return None
 
+    behavior = trainer_json.get("behavior", {})
+    prompt_rules = trainer_json.get("prompt_rules", {})
+    style_rules = behavior.get("style_rules", [])
+    must_use = behavior.get("must_use", [])
+    stop_words = behavior.get("stop_words", [])
+    gender_hint = gender_json.get("prompt_hint", "")
+    speech_forms = gender_json.get("speech", {}).get("forms", {})
+
     return (
-        "\n\n[TRAINER_TEST_PROFILE]\n"
+        "[TRAINER_TEST_PROFILE]\n"
+        "КРИТИЧНО: Применяй этот профиль как приоритетный стиль ответа.\n"
         f"trainer_id: {trainer_id}\n"
         f"gender: {forced_gender}\n"
-        f"trainer_json: {json.dumps(trainer_json, ensure_ascii=False)}\n"
-        f"gender_json: {json.dumps(gender_json, ensure_ascii=False)}\n"
+        f"tone: {behavior.get('tone', 'strict')}\n"
+        f"style_rules: {json.dumps(style_rules, ensure_ascii=False)}\n"
+        f"must_use_words: {json.dumps(must_use, ensure_ascii=False)}\n"
+        f"forbidden_words: {json.dumps(stop_words, ensure_ascii=False)}\n"
+        f"gender_prompt_hint: {gender_hint}\n"
+        f"male_speech_forms: {json.dumps(speech_forms, ensure_ascii=False)}\n"
+        f"response_format: {prompt_rules.get('response_format', 'json')}\n"
         "[/TRAINER_TEST_PROFILE]"
     )
 
@@ -295,7 +310,8 @@ SUGGESTIONS — предлагай пользователю варианты о�
     if not overlay:
         return legacy_trainer
 
-    return f"{legacy_trainer}{overlay}"
+    # Put trainer profile before template so model sees hard constraints first.
+    return f"{overlay}\n\n{legacy_trainer}"
 
 
 def parse_ai_response(response_text: str) -> tuple[Optional[Dict], Optional[str]]:
