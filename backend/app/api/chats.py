@@ -16,15 +16,17 @@ TRAINER_LEGACY_PROMPT_FILE = "LegacyTrainerPrompt.txt"
 
 
 def _is_trainer_prompt_test_mode_enabled() -> bool:
-    raw_value = os.getenv("TRAINER_PROMPT_TEST_MODE", "false")
-    return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+    # Forced on for active trainer prompt testing.
+    # Disable later by restoring env-based logic.
+    return True
 
 
 def _get_trainer_test_mode_status() -> Dict[str, Any]:
     raw_value = os.getenv("TRAINER_PROMPT_TEST_MODE", "false")
     return {
         "TRAINER_PROMPT_TEST_MODE_raw": raw_value,
-        "TRAINER_PROMPT_TEST_MODE_enabled": _is_trainer_prompt_test_mode_enabled(),
+        "TRAINER_PROMPT_TEST_MODE_enabled": True,
+        "TRAINER_PROMPT_TEST_MODE_forced_by_code": True,
         "TRAINER_PROMPT_TEST_FORCE_ID": os.getenv("TRAINER_PROMPT_TEST_FORCE_ID", "strict"),
         "TRAINER_PROMPT_TEST_FORCE_GENDER": os.getenv("TRAINER_PROMPT_TEST_FORCE_GENDER", "male"),
     }
