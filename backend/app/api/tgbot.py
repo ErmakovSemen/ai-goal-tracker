@@ -17,7 +17,7 @@ def api_send_text(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        message_id = send_text_report(payload, user_id=current_user.id)
+        message_id = send_text_report(payload, username=current_user.username)
         return TelegramSendResponse(telegram_message_id=message_id)
     except TelegramValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -39,7 +39,7 @@ async def api_send_photo(
     try:
         message_id = await send_photo_report(
             photo=photo,
-            user_id=current_user.id,
+            username=current_user.username,
             caption=caption,
             meta=meta,
         )

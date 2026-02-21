@@ -44,13 +44,14 @@ def parse_meta(meta: Optional[str]) -> Optional[dict]:
 
 def build_text_message(
     text: str,
-    user_id: int,
+    username: str,
     source: Optional[str] = None,
     app_version: Optional[str] = None,
 ) -> str:
+    safe_username = (username or "").strip() or "unknown"
     lines = [
         "Bug report",
-        f"user_id: {user_id}",
+        f"username: {safe_username}",
     ]
     if source:
         lines.append(f"source: {source}")
@@ -62,10 +63,11 @@ def build_text_message(
 
 def build_caption(
     caption: Optional[str],
-    user_id: int,
+    username: str,
     meta: Optional[dict] = None,
 ) -> str:
-    lines = [f"user_id: {user_id}"]
+    safe_username = (username or "").strip() or "unknown"
+    lines = [f"username: {safe_username}"]
     if caption and caption.strip():
         lines.append(caption.strip())
     if meta:

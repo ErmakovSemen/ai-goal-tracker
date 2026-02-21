@@ -16,11 +16,11 @@ from tgbot.utils import (
 )
 
 
-def send_text_report(payload: SendTextRequest, user_id: int) -> int:
+def send_text_report(payload: SendTextRequest, username: str) -> int:
     text = validate_text_payload(payload.text)
     telegram_text = build_text_message(
         text=text,
-        user_id=user_id,
+        username=username,
         source=payload.source,
         app_version=payload.app_version,
     )
@@ -29,7 +29,7 @@ def send_text_report(payload: SendTextRequest, user_id: int) -> int:
 
 async def send_photo_report(
     photo: UploadFile,
-    user_id: int,
+    username: str,
     caption: Optional[str] = None,
     meta: Optional[str] = None,
 ) -> int:
@@ -39,7 +39,7 @@ async def send_photo_report(
     content = await photo.read()
     validate_photo_payload(photo.content_type, len(content))
     meta_payload = parse_meta(meta)
-    telegram_caption = build_caption(caption=caption, user_id=user_id, meta=meta_payload)
+    telegram_caption = build_caption(caption=caption, username=username, meta=meta_payload)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
         None,
