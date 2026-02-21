@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authAPI, goalsAPI, milestonesAPI, tasksAPI } from '../services/api';
 import { useI18n } from '../i18n';
+import BugChatModal from '../components/BugChatModal';
 import './Profile.css';
 
 interface ProfileProps {
@@ -28,6 +29,7 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
   const { t, locale, setLocale } = useI18n();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBugChatOpen, setIsBugChatOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(authAPI.isAuthenticated());
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
@@ -272,6 +274,13 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
               </div>
               <span className="settings-arrow">›</span>
             </button>
+            <button className="settings-item" onClick={() => setIsBugChatOpen(true)}>
+              <div className="settings-item-content">
+                <span className="settings-icon">🐞</span>
+                <span className="settings-label">{t('bug_chat_open')}</span>
+              </div>
+              <span className="settings-arrow">›</span>
+            </button>
           </div>
         </div>
 
@@ -294,6 +303,10 @@ const Profile: React.FC<ProfileProps> = ({ userId, onLogout, onRegisterRequest }
           {t('logout')}
         </button>
       </div>
+      <BugChatModal
+        isOpen={isBugChatOpen}
+        onClose={() => setIsBugChatOpen(false)}
+      />
     </div>
   );
 };

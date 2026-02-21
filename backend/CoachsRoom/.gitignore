@@ -1,3 +1,7 @@
 # Ignore resume workspace folder and everything inside it
 rezum/
 
+# Local HTML design prototypes (must stay local)
+*.local.html
+*.local.css
+*.local.js
