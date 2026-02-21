@@ -39,23 +39,39 @@ app.include_router(api.router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event():
-    """Create database tables on startup"""
+    """Create database tables and initialize services on startup."""
+    # 1) Database initialization
     try:
         from app.database.database import engine, Base
         from app.models import goal, milestone, task, user, chat, report, agreement, device_token
         # Create all tables
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created/verified successfully")
-        
-        # Start proactive service
-        from app.services.proactive_service import start_proactive_service
-        start_proactive_service()
-        print("✅ Proactive messaging service started")
     except Exception as e:
         import traceback
         print(f"⚠️  Warning: Could not create database tables: {e}")
         print(traceback.format_exc())
         print("Make sure PostgreSQL is running and database exists")
+
+    # 2) Proactive service initialization
+    try:
+        from app.services.proactive_service import start_proactive_service
+        start_proactive_service()
+        print("✅ Proactive messaging service started")
+    except Exception as e:
+        import traceback
+        print(f"⚠️  Warning: Could not start proactive service: {e}")
+        print(traceback.format_exc())
+
+    # 3) Telegram runtime initialization (fail-fast for token/chat config)
+    try:
+        from tgbot import configure_telegram_runtime
+        configure_telegram_runtime()
+        print("✅ Telegram runtime configured successfully")
+    except Exception as e:
+        import traceback
+        print(f"⚠️  Warning: Telegram runtime is not configured: {e}")
+        print(traceback.format_exc())
 
 @app.get("/")
 async def root():
