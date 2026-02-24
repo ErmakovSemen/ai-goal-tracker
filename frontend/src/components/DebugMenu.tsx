@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { ApkInstaller } from '../plugins/apkInstaller';
-import { fetchLatestRelease } from '../services/devBuilds';
+import { fetchLatestRelease, fetchReleasesList, type ReleaseListItem } from '../services/devBuilds';
 import { useI18n } from '../i18n';
 import './DebugMenu.css';
 
@@ -30,6 +30,10 @@ const DebugMenu: React.FC<DebugMenuProps> = ({ settings, onSettingsChange, onClo
   const [latestStatus, setLatestStatus] = useState<string | null>(null);
   const [latestError, setLatestError] = useState<string | null>(null);
   const [canInstall, setCanInstall] = useState<boolean | null>(null);
+  const [buildsList, setBuildsList] = useState<ReleaseListItem[] | null>(null);
+  const [buildsLoading, setBuildsLoading] = useState(false);
+  const [buildsError, setBuildsError] = useState<string | null>(null);
+  const [installingTag, setInstallingTag] = useState<string | null>(null);
 
   useEffect(() => {
     const loadAppInfo = async () => {
@@ -100,6 +104,52 @@ const DebugMenu: React.FC<DebugMenuProps> = ({ settings, onSettingsChange, onClo
     }
   };
 
+  const handleLoadBuilds = async () => {
+    if (Capacitor.getPlatform() !== 'android') return;
+    setBuildsError(null);
+    setBuildsLoading(true);
+    setBuildsList(null);
+    try {
+      const list = await fetchReleasesList();
+      setBuildsList(list);
+    } catch (err: any) {
+      setBuildsError(err?.message || 'Failed to load builds');
+    } finally {
+      setBuildsLoading(false);
+    }
+  };
+
+  const handleInstallBuild = async (release: ReleaseListItem) => {
+    if (Capacitor.getPlatform() !== 'android') return;
+    setInstallingTag(release.tag);
+    setBuildsError(null);
+    try {
+      const installCheck = await ApkInstaller.canInstall();
+      setCanInstall(installCheck.canInstall);
+      if (!installCheck.canInstall) {
+        setBuildsError(t('allow_unknown_sources'));
+        return;
+      }
+      await ApkInstaller.downloadAndInstall({
+        url: release.apk.url,
+        fileName: release.apk.name,
+      });
+    } catch (err: any) {
+      setBuildsError(err?.message || t('update_failed'));
+    } finally {
+      setInstallingTag(null);
+    }
+  };
+
+  const formatReleaseDate = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return iso;
+    }
+  };
+
   return (
     <div className="debug-menu-overlay" onClick={onClose}>
       <div className="debug-menu" onClick={(e) => e.stopPropagation()}>
@@ -150,6 +200,60 @@ const DebugMenu: React.FC<DebugMenuProps> = ({ settings, onSettingsChange, onClo
                 </div>
               )}
               <div className="debug-hint">{t('restart_after_install')}</div>
+            </div>
+          )}
+
+          {/* Choose build from Git */}
+          {Capacitor.getPlatform() === 'android' && (
+            <div className="debug-menu-item">
+              <div className="build-picker-label">{t('choose_build')}</div>
+              <button
+                type="button"
+                className="build-load-button"
+                onClick={handleLoadBuilds}
+                disabled={buildsLoading}
+              >
+                {buildsLoading ? t('loading_builds') : t('load_builds')}
+              </button>
+              {buildsError && (
+                <div className="debug-error">
+                  {buildsError}
+                  {canInstall === false && (
+                    <button className="debug-link" onClick={handleOpenInstallSettings}>
+                      {t('open_settings')}
+                    </button>
+                  )}
+                </div>
+              )}
+              {buildsList && (
+                <div className="build-list">
+                  <div className="build-list-hint">{t('select_build')}</div>
+                  {buildsList.length === 0 ? (
+                    <div className="build-list-empty">{t('no_builds')}</div>
+                  ) : (
+                    buildsList.map((r) => (
+                      <div key={r.tag} className="build-item">
+                        <div className="build-item-info">
+                          <span className="build-item-tag">{r.tag}</span>
+                          <span className="build-item-name">{r.name}</span>
+                          <span className="build-item-date">{formatReleaseDate(r.publishedAt)}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="build-item-install"
+                          onClick={() => handleInstallBuild(r)}
+                          disabled={installingTag !== null}
+                        >
+                          {installingTag === r.tag ? t('installing_build') : t('install_build')}
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+              {buildsList && buildsList.length > 0 && (
+                <div className="debug-hint">{t('restart_after_install')}</div>
+              )}
             </div>
           )}
 

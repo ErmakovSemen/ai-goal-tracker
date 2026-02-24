@@ -66,6 +66,43 @@ export const fetchLatestRelease = async (): Promise<LatestRelease> => {
   };
 };
 
+/** Release item for the build picker (has APK) */
+export interface ReleaseListItem {
+  tag: string;
+  name: string;
+  publishedAt: string;
+  apk: ReleaseAsset;
+}
+
+/** Fetch list of GitHub releases that have an APK asset (for in-app build picker) */
+export const fetchReleasesList = async (): Promise<ReleaseListItem[]> => {
+  const { githubOwner, githubRepo } = DEV_BUILDS;
+  const url = `https://api.github.com/repos/${githubOwner}/${githubRepo}/releases?per_page=30`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch releases: ${response.status}`);
+  }
+  const data: Array<{
+    tag_name: string;
+    name: string | null;
+    published_at: string;
+    assets: Array<{ name: string; browser_download_url: string; size?: number }>;
+  }> = await response.json();
+  const result: ReleaseListItem[] = [];
+  for (const r of data) {
+    const apk = pickApk(r.assets);
+    if (apk) {
+      result.push({
+        tag: r.tag_name,
+        name: r.name || r.tag_name,
+        publishedAt: r.published_at,
+        apk,
+      });
+    }
+  }
+  return result;
+};
+
 export const fetchBuildList = async (): Promise<any[] | null> => {
   if (!DEV_BUILDS.listUrl) return null;
   const response = await fetch(DEV_BUILDS.listUrl);
