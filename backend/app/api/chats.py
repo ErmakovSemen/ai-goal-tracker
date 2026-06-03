@@ -1191,13 +1191,32 @@ async def create_message(
             
             if not goal:
                 return user_message
-            
+
+            # Persist the user's coach personality on the goal so the background
+            # proactive service can match the tone (not just the live chat).
+            effective_trainer_id = trainer_id
+            if trainer_id or gender:
+                tone_sel, gender_sel = _normalize_trainer_selection(trainer_id, gender)
+                stored_id = f"{tone_sel}_{gender_sel}"
+                effective_trainer_id = stored_id
+                if getattr(goal, "coach_trainer_id", None) != stored_id:
+                    try:
+                        goal.coach_trainer_id = stored_id
+                        db.add(goal)
+                        db.commit()
+                    except Exception as exc:
+                        db.rollback()
+                        logger.warning("Failed to persist coach_trainer_id: %s", exc)
+            elif getattr(goal, "coach_trainer_id", None):
+                # No selection in this request — fall back to what the user chose earlier.
+                effective_trainer_id = goal.coach_trainer_id
+
             # Get agreements for context
             agreements = crud.agreement.get_pending_agreements(db, goal_id=chat.goal_id)
-            
+
             # Build messages for LLM
             chat_history = crud.chat.get_messages(db, chat_id=chat_id, skip=0, limit=20)  # Increased limit
-            system_prompt = build_system_prompt(goal, milestones, agreements, trainer_id, gender)
+            system_prompt = build_system_prompt(goal, milestones, agreements, effective_trainer_id, gender)
             llm_messages = [{"role": "system", "content": system_prompt}]
             
             # Add chat history (clean HTML markers for LLM)

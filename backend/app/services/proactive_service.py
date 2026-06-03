@@ -14,9 +14,16 @@ from app import crud, schemas
 from app.models.agreement import AgreementStatus, Agreement
 from app.models.chat import Message, Chat
 from app.models.goal import Goal
+from app.services import coach_voice
 
 # Store for tracking active chats (in production, use Redis)
 active_chats: dict = {}
+
+
+def _goal_tone(db: Session, goal_id: int) -> str:
+    """Resolve the coach tone (strict/normal/gentle) chosen for a goal."""
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    return coach_voice.resolve_tone(getattr(goal, "coach_trainer_id", None) if goal else None)
 
 # Track last proactive message per chat to avoid spam
 last_proactive_messages: Dict[int, datetime] = {}
@@ -145,73 +152,51 @@ async def check_and_send_reminders(db: Session):
     for agreement in upcoming:
         # Find the chat for this goal
         chat = db.query(Chat).filter(Chat.goal_id == agreement.goal_id).first()
-        
+
         if not chat:
             continue
-        
+
+        tone = _goal_tone(db, agreement.goal_id)
         hours_left = (agreement.deadline - now).total_seconds() / 3600
-        
+        desc = agreement.description
+
         # Multiple reminders based on time left
         # 1. First reminder: 24 hours before
         if 20 <= hours_left <= 24 and not agreement.reminder_sent:
-            reminders_24h = [
-                f"🦉 Эй! Не забыл? Ты обещал: {agreement.description}\n\nОсталось {int(hours_left)} часов. Как прогресс?",
-                f"👀 Я слежу за тобой! До дедлайна {int(hours_left)} ч.\n\nЗадача: {agreement.description}\n\nУспеваешь?",
-                f"⏰ Тик-так! {agreement.description} — осталось {int(hours_left)} часов!\n\nНе подведи меня 🦉",
-                f"🔔 Напоминалка! Мы договаривались: {agreement.description}\n\nВремя идёт... {int(hours_left)} ч. до дедлайна!"
-            ]
-            reminder_content = random.choice(reminders_24h)
+            reminder_content = coach_voice.pick("remind", tone, desc=desc, hours=int(hours_left))
             suggestions = ["Уже делаю!", "Сделаю сегодня", "Нужна помощь"]
             reminder_content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, reminder_content, min_interval=0)
             crud.agreement.mark_reminder_sent(db, agreement.id)
-            print(f"✅ 24h reminder sent for agreement {agreement.id}")
-        
+            print(f"✅ 24h reminder sent for agreement {agreement.id} (tone={tone})")
+
         # 2. Second reminder: 12 hours before (more urgent!)
         elif 10 <= hours_left <= 12:
-            reminders_12h = [
-                f"🦉 Эй-эй! Время идёт! Ты обещал: {agreement.description}\n\nОсталось всего {int(hours_left)} часов! Как дела?",
-                f"⏰ {int(hours_left)} часов до дедлайна! {agreement.description}\n\nТы же не хочешь меня расстроить? 🦉",
-                f"👀 Я всё ещё слежу! {agreement.description} — через {int(hours_left)} ч. дедлайн!\n\nВсё под контролем?",
-                f"🔔 Напоминаю ещё раз! {agreement.description}\n\nОсталось {int(hours_left)} часов. Не забудь!"
-            ]
-            reminder_content = random.choice(reminders_12h)
+            reminder_content = coach_voice.pick("remind", tone, desc=desc, hours=int(hours_left))
             suggestions = ["В процессе!", "Скоро начну", "Всё под контролем"]
             reminder_content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, reminder_content, min_interval=60)
-            print(f"✅ 12h reminder sent for agreement {agreement.id}")
-        
+            print(f"✅ 12h reminder sent for agreement {agreement.id} (tone={tone})")
+
         # 3. Third reminder: 6 hours before (very urgent!)
         elif 4 <= hours_left <= 6:
-            reminders_6h = [
-                f"🦉 ЭЙ! Внимание! {agreement.description}\n\nОсталось всего {int(hours_left)} часов! Ты точно успеешь?",
-                f"⏰ {int(hours_left)} часов! {agreement.description}\n\nЯ начинаю волноваться... 🦉 Всё ок?",
-                f"👀 Последний рывок! {agreement.description} — через {int(hours_left)} ч.!\n\nКак прогресс?",
-                f"🔔 Срочно! {agreement.description}\n\nОсталось {int(hours_left)} часов. Не подведи!"
-            ]
-            reminder_content = random.choice(reminders_6h)
+            reminder_content = coach_voice.pick("remind_urgent", tone, desc=desc, hours=int(hours_left))
             suggestions = ["Почти готово!", "Сейчас доделаю", "Нужна помощь"]
             reminder_content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, reminder_content, min_interval=60)
-            print(f"✅ 6h reminder sent for agreement {agreement.id}")
-        
+            print(f"✅ 6h reminder sent for agreement {agreement.id} (tone={tone})")
+
         # 4. Last reminder: 2 hours before (PANIC MODE!)
         elif 1 <= hours_left <= 2:
-            reminders_2h = [
-                f"🦉 ЭЙ-ЭЙ-ЭЙ! {agreement.description}\n\nОСТАЛОСЬ {int(hours_left)} ЧАСА! Ты где?!",
-                f"⏰ {int(hours_left)} часа до дедлайна! {agreement.description}\n\nЯ очень волнуюсь... 🦉 Ты успеешь?",
-                f"👀 ПОСЛЕДНИЙ ШАНС! {agreement.description} — через {int(hours_left)} ч.!\n\nВсё под контролем?",
-                f"🔔 СРОЧНО! {agreement.description}\n\nОсталось {int(hours_left)} часа. Не забудь!"
-            ]
-            reminder_content = random.choice(reminders_2h)
+            reminder_content = coach_voice.pick("remind_urgent", tone, desc=desc, hours=int(hours_left))
             suggestions = ["Почти готово!", "Сейчас доделаю", "Нужна помощь"]
             reminder_content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, reminder_content, min_interval=30)
-            print(f"✅ 2h reminder sent for agreement {agreement.id}")
+            print(f"✅ 2h reminder sent for agreement {agreement.id} (tone={tone})")
 
 
 async def check_and_send_deadline_checklists(db: Session):
@@ -235,12 +220,9 @@ async def check_and_send_deadline_checklists(db: Session):
             ]
         }
         
-        intros = [
-            f"🦉 Та-дам! Время проверки!\n\nТы обещал: {agreement.description}\n\nНу что, справился? Давай честно!",
-            f"⏰ Дедлайн! Как там с задачей?\n\n📝 {agreement.description}\n\nПокажи результат! 👇",
-            f"🔔 Время пришло! Мы договаривались: {agreement.description}\n\nРассказывай, что получилось!"
-        ]
-        content = random.choice(intros) + f"\n\n<!--CHECKLIST:{json.dumps(checklist_data, ensure_ascii=False)}-->"
+        tone = _goal_tone(db, agreement.goal_id)
+        intro = coach_voice.pick("checklist_intro", tone, desc=agreement.description)
+        content = intro + f"\n\n<!--CHECKLIST:{json.dumps(checklist_data, ensure_ascii=False)}-->"
         
         await send_proactive_message(db, chat.id, content, min_interval=0)
         crud.agreement.mark_checklist_sent(db, agreement.id)
@@ -280,62 +262,40 @@ async def check_and_send_missed_days_messages(db: Session):
         if is_chat_active(chat.id, minutes=60):
             continue
         
+        tone = _goal_tone(db, goal.id)
+
         # Different messages based on days missed
         if days_since == 1:
-            # First day missed - gentle reminder
-            messages = [
-                "🦉 Эй, ты где? Я скучаю!\n\nВчера ты не заходил. Всё в порядке?",
-                "👀 Я заметил, что ты вчера не появлялся...\n\nВсё хорошо? Может, продолжим?",
-                "🦉 Привет! Вчера тебя не было видно.\n\nКак дела с целью? Давай вернёмся к ней!"
-            ]
-            content = random.choice(messages)
+            content = coach_voice.pick("miss1", tone)
             suggestions = ["Вернулся!", "Был занят", "Продолжаю"]
             content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, content, min_interval=120)
-            print(f"✅ 1-day missed message sent for chat {chat.id}")
-        
+            print(f"✅ 1-day missed message sent for chat {chat.id} (tone={tone})")
+
         elif days_since == 2:
-            # Second day - more concerned
-            messages = [
-                "🦉 Эй-эй! Ты пропустил уже 2 дня подряд!\n\nЯ начинаю волноваться... Всё ок?",
-                "👀 Два дня без тебя! Это не похоже на тебя...\n\nЧто случилось? Может, нужна помощь?",
-                "🦉 Хм, ты пропустил 2 дня. Я немного расстроен... 😔\n\nДавай вернёмся к цели?"
-            ]
-            content = random.choice(messages)
+            content = coach_voice.pick("miss2", tone)
             suggestions = ["Вернулся!", "Был занят", "Нужна помощь"]
             content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, content, min_interval=120)
-            print(f"✅ 2-day missed message sent for chat {chat.id}")
-        
+            print(f"✅ 2-day missed message sent for chat {chat.id} (tone={tone})")
+
         elif days_since == 3:
-            # Third day - Duolingo style "shaming" (but friendly!)
-            messages = [
-                "🦉 ЭЙ! Ты пропустил 3 дня подряд! 😤\n\nЯ очень расстроен... Мы же договаривались!",
-                "👀 Три дня без тебя! Это уже серьёзно...\n\nЯ верю в тебя, но нужно возвращаться! 🦉",
-                "🦉 Хм, 3 дня пропущено. Я начинаю думать, что ты меня забыл... 😢\n\nВернись, пожалуйста!"
-            ]
-            content = random.choice(messages)
+            content = coach_voice.pick("miss3", tone)
             suggestions = ["Вернулся!", "Извини", "Продолжаю"]
             content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, content, min_interval=120)
-            print(f"✅ 3-day missed message sent for chat {chat.id}")
-        
+            print(f"✅ 3-day missed message sent for chat {chat.id} (tone={tone})")
+
         elif days_since >= 7:
-            # Week missed - very concerned but encouraging
-            messages = [
-                f"🦉 Эй... Ты пропустил уже {days_since} дней. Я очень скучаю...\n\nДавай вернёмся? Я верю, что у тебя всё получится!",
-                f"👀 {days_since} дней без тебя... Это долго.\n\nНо я не сдаюсь! Давай начнём заново? 🦉",
-                f"🦉 Я всё ещё здесь! Ты пропустил {days_since} дней, но я не теряю надежду.\n\nВернись, пожалуйста. Я помогу тебе!"
-            ]
-            content = random.choice(messages)
+            content = coach_voice.pick("miss_week", tone, days=days_since)
             suggestions = ["Вернулся!", "Начну заново", "Нужна помощь"]
             content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
-            
+
             await send_proactive_message(db, chat.id, content, min_interval=180)
-            print(f"✅ {days_since}-day missed message sent for chat {chat.id}")
+            print(f"✅ {days_since}-day missed message sent for chat {chat.id} (tone={tone})")
 
 
 async def check_and_send_morning_motivations(db: Session):
@@ -377,24 +337,19 @@ async def check_and_send_morning_motivations(db: Session):
         
         # Get pending agreements
         pending_agreements = crud.agreement.get_pending_agreements(db, goal.id)
-        
-        morning_messages = [
-            f"🌅 Доброе утро! Готов к новому дню?\n\nСегодня отличный день, чтобы поработать над целью: {goal.title}",
-            f"🦉 Привет! Утро — лучшее время для продуктивности!\n\nКак дела с целью '{goal.title}'?",
-            f"☀️ Доброе утро! Я проснулся и сразу подумал о тебе!\n\nДавай сегодня сделаем шаг к цели: {goal.title}"
-        ]
-        
+        tone = _goal_tone(db, goal.id)
+
+        content = coach_voice.pick("morning", tone, goal=goal.title)
+
         if pending_agreements:
             agreement = pending_agreements[0]
             hours_left = (agreement.deadline - now).total_seconds() / 3600
             if hours_left <= 24:
-                morning_messages = [
-                    f"🌅 Доброе утро! Напоминаю: сегодня дедлайн по '{agreement.description}'!\n\nОсталось {int(hours_left)} часов. Успеешь?",
-                    f"🦉 Утро! Сегодня важный день — дедлайн по '{agreement.description}'!\n\nОсталось {int(hours_left)} часов. Всё под контролем?",
-                    f"☀️ Доброе утро! Не забудь: '{agreement.description}' — дедлайн через {int(hours_left)} ч.!\n\nГотов?"
-                ]
-        
-        content = random.choice(morning_messages)
+                content = coach_voice.pick(
+                    "morning_deadline", tone,
+                    desc=agreement.description, hours=int(hours_left),
+                )
+
         suggestions = ["Доброе утро!", "Начну сейчас", "Позже"]
         content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
         
@@ -420,12 +375,8 @@ async def check_and_mark_missed_agreements(db: Session):
         # Send "shaming" message
         chat = db.query(Chat).filter(Chat.goal_id == agreement.goal_id).first()
         if chat:
-            missed_messages = [
-                f"🦉 Хм... Дедлайн по '{agreement.description}' прошёл, а я не получил ответа...\n\nЧто случилось? 😔",
-                f"👀 Я заметил, что дедлайн по '{agreement.description}' прошёл...\n\nВсё в порядке? Может, нужно было больше времени?",
-                f"🦉 Эй, дедлайн по '{agreement.description}' прошёл...\n\nЯ немного расстроен, но понимаю, что бывает. Что дальше?"
-            ]
-            content = random.choice(missed_messages)
+            tone = _goal_tone(db, agreement.goal_id)
+            content = coach_voice.pick("missed_agreement", tone, desc=agreement.description)
             suggestions = ["Извини, забыл", "Нужна помощь", "Продолжаю"]
             content += f"\n\n<!--SUGGESTIONS:{json.dumps(suggestions, ensure_ascii=False)}-->"
             

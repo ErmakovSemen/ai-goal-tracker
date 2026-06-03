@@ -15,6 +15,9 @@ class Goal(Base):
     frequency = Column(String, default="daily")  # daily, weekly, custom
     start_date = Column(DateTime(timezone=True))
     end_date = Column(DateTime(timezone=True))
+    # Coach personality chosen by the user (e.g. "strict_male", "gentle_female").
+    # Persisted so the background proactive service can match the tone, not just the live chat.
+    coach_trainer_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
