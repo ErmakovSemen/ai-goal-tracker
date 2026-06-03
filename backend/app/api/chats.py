@@ -15,20 +15,58 @@ logger = logging.getLogger(__name__)
 TRAINER_LEGACY_PROMPT_FILE = "LegacyTrainerPrompt.txt"
 
 
-def _is_trainer_prompt_test_mode_enabled() -> bool:
-    # Forced on for active trainer prompt testing.
-    # Disable later by restoring env-based logic.
+VALID_TRAINER_TONES = {"strict", "normal", "gentle"}
+VALID_TRAINER_GENDERS = {"male", "female"}
+TRAINER_DEFAULT_TONE = "normal"
+TRAINER_DEFAULT_GENDER = "female"
+
+
+def _is_trainer_prompt_mode_enabled() -> bool:
+    # Trainer-profile prompting is always on. The actual personality
+    # (strict / normal / gentle) is driven by the user's selection,
+    # passed per-request — NOT hardcoded anymore.
     return True
 
 
-def _get_trainer_test_mode_status() -> Dict[str, Any]:
-    raw_value = os.getenv("TRAINER_PROMPT_TEST_MODE", "false")
+def _normalize_trainer_selection(
+    trainer_id: Optional[str] = None,
+    gender: Optional[str] = None,
+) -> tuple[str, str]:
+    """
+    Resolve a user's trainer choice into (tone, gender).
+    Accepts combined frontend ids like 'strict_male' / 'gentle_female',
+    or a bare tone ('strict') plus a separate gender. Falls back to defaults.
+    """
+    tone: Optional[str] = None
+    resolved_gender: Optional[str] = gender.strip().lower() if isinstance(gender, str) else None
+
+    if isinstance(trainer_id, str) and trainer_id.strip():
+        tid = trainer_id.strip().lower()
+        parts = tid.split("_")
+        if parts[0] in VALID_TRAINER_TONES:
+            tone = parts[0]
+        if len(parts) > 1 and parts[1] in VALID_TRAINER_GENDERS:
+            resolved_gender = parts[1]
+
+    if tone not in VALID_TRAINER_TONES:
+        tone = TRAINER_DEFAULT_TONE
+    if resolved_gender not in VALID_TRAINER_GENDERS:
+        resolved_gender = TRAINER_DEFAULT_GENDER
+    return tone, resolved_gender
+
+
+def _get_trainer_mode_status(
+    trainer_id: Optional[str] = None,
+    gender: Optional[str] = None,
+) -> Dict[str, Any]:
+    tone, resolved_gender = _normalize_trainer_selection(trainer_id, gender)
     return {
-        "TRAINER_PROMPT_TEST_MODE_raw": raw_value,
-        "TRAINER_PROMPT_TEST_MODE_enabled": True,
-        "TRAINER_PROMPT_TEST_MODE_forced_by_code": True,
-        "TRAINER_PROMPT_TEST_FORCE_ID": "gentle",
-        "TRAINER_PROMPT_TEST_FORCE_GENDER": "female",
+        "TRAINER_PROMPT_MODE_enabled": True,
+        "TRAINER_PROMPT_MODE_driven_by_user_selection": True,
+        "resolved_tone": tone,
+        "resolved_gender": resolved_gender,
+        "default_tone": TRAINER_DEFAULT_TONE,
+        "default_gender": TRAINER_DEFAULT_GENDER,
     }
 
 
@@ -44,33 +82,38 @@ def _read_coachsroom_file(file_name: str) -> Optional[str]:
         return None
 
 
-def _build_trainer_prompt_test_overlay() -> Optional[str]:
-    # During trainer prompt test mode, always enforce gentle female trainer profile.
-    trainer_id = "gentle"
-    forced_gender = "female"
+def _build_trainer_prompt_overlay(
+    trainer_id: Optional[str] = None,
+    gender: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Build the trainer personality overlay for the requested trainer.
+    Personality is driven by the user's selection (strict / normal / gentle × gender).
+    """
+    tone, forced_gender = _normalize_trainer_selection(trainer_id, gender)
 
     trainer_raw = _read_coachsroom_file("Trainer.json")
     if not trainer_raw:
-        logger.warning("Trainer prompt test mode: failed to load Trainer.json")
+        logger.warning("Trainer prompt: failed to load Trainer.json")
         return None
 
     try:
         trainer_data = json.loads(trainer_raw)
     except Exception as exc:
-        logger.warning("Trainer prompt test mode: invalid Trainer.json (%s)", exc)
+        logger.warning("Trainer prompt: invalid Trainer.json (%s)", exc)
         return None
 
     trainers = trainer_data.get("trainers", [])
     genders = trainer_data.get("genders", [])
-    trainer_json = next((item for item in trainers if item.get("id") == trainer_id), None)
+    trainer_json = next((item for item in trainers if item.get("id") == tone), None)
     gender_json = next((item for item in genders if item.get("gender") == forced_gender), None)
 
     if not trainer_json:
-        logger.warning("Trainer prompt test mode: trainer id '%s' not found", trainer_id)
+        logger.warning("Trainer prompt: trainer tone '%s' not found", tone)
         return None
 
     if not gender_json:
-        logger.warning("Trainer prompt test mode: gender '%s' not found", forced_gender)
+        logger.warning("Trainer prompt: gender '%s' not found", forced_gender)
         return None
 
     behavior = trainer_json.get("behavior", {})
@@ -82,24 +125,35 @@ def _build_trainer_prompt_test_overlay() -> Optional[str]:
     speech_forms = gender_json.get("speech", {}).get("forms", {})
 
     return (
-        "[TRAINER_TEST_PROFILE]\n"
-        "КРИТИЧНО: Применяй этот профиль как приоритетный стиль ответа.\n"
-        f"trainer_id: {trainer_id}\n"
+        "[TRAINER_PROFILE]\n"
+        "КРИТИЧНО: Это выбранный пользователем характер тренера. "
+        "Применяй его как ПРИОРИТЕТНЫЙ стиль ответа поверх любых других тональных инструкций ниже. "
+        "Строго используй must_use_words, строго избегай forbidden_words.\n"
+        f"trainer_id: {tone}\n"
         f"gender: {forced_gender}\n"
-        f"tone: {behavior.get('tone', 'strict')}\n"
+        f"tone: {behavior.get('tone', tone)}\n"
         f"style_rules: {json.dumps(style_rules, ensure_ascii=False)}\n"
         f"must_use_words: {json.dumps(must_use, ensure_ascii=False)}\n"
         f"forbidden_words: {json.dumps(stop_words, ensure_ascii=False)}\n"
         f"gender_prompt_hint: {gender_hint}\n"
-        f"male_speech_forms: {json.dumps(speech_forms, ensure_ascii=False)}\n"
+        f"speech_forms: {json.dumps(speech_forms, ensure_ascii=False)}\n"
         f"response_format: {prompt_rules.get('response_format', 'json')}\n"
-        "[/TRAINER_TEST_PROFILE]"
+        "[/TRAINER_PROFILE]"
     )
 
 
 
-def build_system_prompt(goal, milestones: List, agreements: List = None) -> str:
-    """Build comprehensive system prompt with JSON schema"""
+def build_system_prompt(
+    goal,
+    milestones: List,
+    agreements: List = None,
+    trainer_id: Optional[str] = None,
+    gender: Optional[str] = None,
+) -> str:
+    """Build comprehensive system prompt with JSON schema.
+
+    trainer_id / gender select the coach personality (strict / normal / gentle × gender).
+    """
     from datetime import datetime
     
     # Current date for deadline calculations
@@ -284,14 +338,14 @@ SUGGESTIONS — предлагай пользователю варианты о�
         current_weekday=current_weekday
     )
 
-    if not _is_trainer_prompt_test_mode_enabled():
+    if not _is_trainer_prompt_mode_enabled():
         return legacy_prompt
 
-    # Trainer test mode explicitly uses file-based prompt template:
+    # Trainer mode uses the file-based prompt template:
     # backend/CoachsRoom/LegacyTrainerPrompt.txt
     legacy_trainer_template = _read_coachsroom_file(TRAINER_LEGACY_PROMPT_FILE)
     if not legacy_trainer_template:
-        logger.warning("Trainer prompt test mode: fallback to legacy prompt (template file missing)")
+        logger.warning("Trainer prompt: fallback to legacy prompt (template file missing)")
         return legacy_prompt
 
     try:
@@ -303,10 +357,10 @@ SUGGESTIONS — предлагай пользователю варианты о�
             current_weekday=current_weekday
         )
     except Exception as exc:
-        logger.warning("Trainer prompt test mode: fallback to legacy prompt (template format error: %s)", exc)
+        logger.warning("Trainer prompt: fallback to legacy prompt (template format error: %s)", exc)
         return legacy_prompt
 
-    overlay = _build_trainer_prompt_test_overlay()
+    overlay = _build_trainer_prompt_overlay(trainer_id, gender)
     if not overlay:
         return legacy_trainer
 
@@ -932,9 +986,12 @@ def get_new_messages(chat_id: int, after_id: int = 0, db: Session = Depends(get_
 
 
 @router.get("/debug/trainer-mode/")
-def get_trainer_mode_debug():
-    """Quick debug endpoint to verify trainer prompt feature flag status from runtime env."""
-    return _get_trainer_test_mode_status()
+def get_trainer_mode_debug(
+    trainer_id: Optional[str] = Query(None, description="e.g. strict_male, gentle_female"),
+    gender: Optional[str] = Query(None, description="male | female"),
+):
+    """Debug endpoint: show how a given trainer selection resolves into tone/gender."""
+    return _get_trainer_mode_status(trainer_id, gender)
 
 
 @router.get("/{chat_id}/agreements/")
@@ -1103,10 +1160,12 @@ def delete_chat(chat_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{chat_id}/messages/", response_model=schemas.Message)
 async def create_message(
-    chat_id: int, 
-    message: schemas.MessageCreate, 
+    chat_id: int,
+    message: schemas.MessageCreate,
     db: Session = Depends(get_db),
     debug_mode: bool = Query(False, description="Enable debug mode"),
+    trainer_id: Optional[str] = Query(None, description="Coach personality, e.g. strict_male, gentle_female"),
+    gender: Optional[str] = Query(None, description="male | female (if not encoded in trainer_id)"),
     current_user: Optional[User] = Depends(lambda: None)  # Optional auth
 ):
     """Create a message and get AI response"""
@@ -1138,7 +1197,7 @@ async def create_message(
             
             # Build messages for LLM
             chat_history = crud.chat.get_messages(db, chat_id=chat_id, skip=0, limit=20)  # Increased limit
-            system_prompt = build_system_prompt(goal, milestones, agreements)
+            system_prompt = build_system_prompt(goal, milestones, agreements, trainer_id, gender)
             llm_messages = [{"role": "system", "content": system_prompt}]
             
             # Add chat history (clean HTML markers for LLM)
