@@ -342,7 +342,18 @@ export const chatsAPI = {
   },
 
   sendMessage: async (chatId: number, content: string, sender: 'user' | 'ai', debugMode: boolean = false): Promise<Message> => {
-    const url = `/api/chats/${chatId}/messages/?debug_mode=${debugMode}`;
+    // Pass the user's chosen coach personality so the backend tone matches the selection.
+    // Without this, the backend falls back to the neutral default and the differentiator is lost.
+    let trainerParam = '';
+    try {
+      const selectedTrainerId = localStorage.getItem('selectedTrainerId');
+      if (selectedTrainerId) {
+        trainerParam = `&trainer_id=${encodeURIComponent(selectedTrainerId)}`;
+      }
+    } catch (e) {
+      // localStorage may be unavailable; fall back to backend default silently.
+    }
+    const url = `/api/chats/${chatId}/messages/?debug_mode=${debugMode}${trainerParam}`;
     const message = await apiRequest<Message>(url, {
       method: 'POST',
       body: JSON.stringify({ content, sender }),
