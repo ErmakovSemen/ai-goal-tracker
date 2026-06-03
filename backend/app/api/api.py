@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api import users, goals, milestones, tasks, chats, reports, ai, push, tgbot
+from app.api import users, goals, milestones, tasks, chats, reports, ai, push, tgbot, stats
 
 router = APIRouter()
 
@@ -12,3 +12,4 @@ router.include_router(reports.router, prefix="/reports", tags=["reports"])
 router.include_router(ai.router, prefix="/ai", tags=["ai"])
 router.include_router(push.router, prefix="/push", tags=["push"])
 router.include_router(tgbot.router, prefix="/tgbot", tags=["tgbot"])
+router.include_router(stats.router, prefix="/stats", tags=["stats"])
