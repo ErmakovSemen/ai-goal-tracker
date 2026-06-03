@@ -42,10 +42,12 @@ async def startup_event():
     """Create database tables and initialize services on startup."""
     # 1) Database initialization
     try:
-        from app.database.database import engine, Base
+        from app.database.database import engine, Base, ensure_additive_columns
         from app.models import goal, milestone, task, user, chat, report, agreement, device_token
         # Create all tables
         Base.metadata.create_all(bind=engine)
+        # Add any new additive columns on already-existing tables (no migration tool here)
+        ensure_additive_columns()
         print("✅ Database tables created/verified successfully")
     except Exception as e:
         import traceback

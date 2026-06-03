@@ -36,3 +36,31 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def ensure_additive_columns():
+    """Lightweight, DB-agnostic safety net for additive columns when there is no
+    migration tool. Adds missing nullable columns so deploys don't require manual SQL.
+
+    Only ever ADDs nullable columns — never drops or alters existing data.
+    """
+    from sqlalchemy import inspect, text
+
+    # (table, column, SQL type) — keep types simple/portable.
+    required = [
+        ("goals", "coach_trainer_id", "VARCHAR"),
+    ]
+    try:
+        inspector = inspect(engine)
+        existing_tables = set(inspector.get_table_names())
+        with engine.begin() as conn:
+            for table, column, col_type in required:
+                if table not in existing_tables:
+                    continue
+                cols = {c["name"] for c in inspector.get_columns(table)}
+                if column in cols:
+                    continue
+                conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} {col_type}'))
+                print(f"🧩 Added missing column {table}.{column}")
+    except Exception as exc:  # never block startup on this best-effort helper
+        print(f"⚠️  ensure_additive_columns skipped: {exc}")
